@@ -15,7 +15,7 @@
 
 using namespace std;
 
-int main( int argc, char **argv )
+int main( size_t argc, char **argv )
 {
     if( argc != 5 )
     {
