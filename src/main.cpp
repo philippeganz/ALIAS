@@ -27,5 +27,9 @@ int main( size_t argc, char **argv )
         return EXIT_FAILURE;
     }
 
+    unsigned int* source = load_image(argv[1]);
+    unsigned int* sensitivity = load_image(argv[2]);
+    unsigned int* background = load_image(argv[3]);
+
     return EXIT_SUCCESS;
 }
