@@ -27,9 +27,11 @@ int main( int argc, char **argv )
         return EXIT_FAILURE;
     }
 
-    unsigned int* source = LoadImage(argv[1]);
-    unsigned int* sensitivity = LoadImage(argv[2]);
-    unsigned int* background = LoadImage(argv[3]);
+    astroqut::DataContainer source(argv[1]);
+    astroqut::DataContainer sensitivity(argv[2]);
+    astroqut::DataContainer background(argv[3]);
+    astroqut::Configuration configuration(argv[4]);
+    astroqut::Operators operators(source.width, configuration);
 
     return EXIT_SUCCESS;
 }
