@@ -3,7 +3,7 @@
 /// \brief Launcher for the ASTROQUT solver.
 /// \author Philippe Ganz <philippe.ganz@gmail.com>
 /// \version 0.1.0
-/// \date 2017-04-08
+/// \date 2017-04-15
 /// \copyright GPL-3.0
 ///
 
@@ -15,7 +15,7 @@
 
 using namespace std;
 
-int main( size_t argc, char **argv )
+int main( int argc, char **argv )
 {
     if( argc != 5 )
     {
@@ -27,9 +27,9 @@ int main( size_t argc, char **argv )
         return EXIT_FAILURE;
     }
 
-    unsigned int* source = load_image(argv[1]);
-    unsigned int* sensitivity = load_image(argv[2]);
-    unsigned int* background = load_image(argv[3]);
+    unsigned int* source = LoadImage(argv[1]);
+    unsigned int* sensitivity = LoadImage(argv[2]);
+    unsigned int* background = LoadImage(argv[3]);
 
     return EXIT_SUCCESS;
 }
