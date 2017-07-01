@@ -3,7 +3,7 @@
 /// \brief Launcher for the ASTROQUT solver.
 /// \author Philippe Ganz <philippe.ganz@gmail.com>
 /// \version 0.1.0
-/// \date 2017-04-15
+/// \date 2017-07-01
 /// \copyright GPL-3.0
 ///
 
@@ -11,27 +11,28 @@
 #include <iostream>
 #include <string>
 
+#include "datacontainer.hpp"
 #include "const.hpp"
-
-using namespace std;
 
 int main( int argc, char **argv )
 {
-    if( argc != 5 )
-    {
-        cerr << "usage : ASTROQUT <source> <sensitivity> <background> <option file>" << endl << endl;
-        cerr << "  source - Path to the source image;" << endl;
-        cerr << "  sensitivity - Path to the sensitivity image or an integer >= 1 in which case we consider constant sensitivity;" << endl;
-        cerr << "  background - Path to the background image or an integer >= 0 in which case we consider constant background;" << endl;
-        cerr << "  option file - Path to the parameters file." << endl << endl;
-        return EXIT_FAILURE;
-    }
 
-    astroqut::DataContainer source(argv[1]);
-    astroqut::DataContainer sensitivity(argv[2]);
-    astroqut::DataContainer background(argv[3]);
-    astroqut::Configuration configuration(argv[4]);
-    astroqut::Operators operators(source.width, configuration);
+//    if( argc != 6 )
+//    {
+//        std::cerr << "usage : ASTROQUT <source> <sensitivity> <background> <size> <option file>" << std::endl << std::endl;
+//        std::cerr << "  source - Path to the source image;" << std::endl;
+//        std::cerr << "  sensitivity - Path to the sensitivity image or an integer >= 1 in which case we consider constant sensitivity;" << std::endl;
+//        std::cerr << "  background - Path to the background image or an integer >= 0 in which case we consider constant background;" << std::endl;
+//        std::cerr << "  option file - Path to the parameters file." << std::endl << std::endl;
+//        return EXIT_FAILURE;
+//    }
+
+    size_t picture_size = strtol(argv[4], nullptr, 0);
+    astroqut::DataContainer source(std::string(argv[1]), picture_size);
+    astroqut::DataContainer sensitivity(std::string(argv[2]), picture_size);
+    astroqut::DataContainer background(std::string(argv[3]), picture_size);
+//    astroqut::Configuration configuration(argv[5]);
+//    astroqut::Operators operators(source.width, configuration);
 
     return EXIT_SUCCESS;
 }
