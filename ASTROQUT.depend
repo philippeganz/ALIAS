@@ -1,0 +1,1288 @@
+# depslib dependency file v1.0
+1499377699 source:e:\switchdrive\astro\astroqut\src\main.cpp
+	<cstdlib>
+	<iostream>
+	<string>
+	"const.hpp"
+	"datacontainer.hpp"
+	"fista.hpp"
+
+1490419332 c:\program files\imagemagick-7.0.5-q16\include\magick++.h
+	<Magick++/Include.h>
+	<Magick++/Functions.h>
+	<Magick++/Image.h>
+	<Magick++/Pixels.h>
+	<Magick++/ResourceLimits.h>
+	<Magick++/STL.h>
+
+1490419332 c:\program files\imagemagick-7.0.5-q16\include\magick++\include.h
+	"MagickCore/magick-config.h"
+	"magick-config.h"
+	<stdio.h>
+	<stdarg.h>
+	<stdlib.h>
+	<time.h>
+	<math.h>
+	<sys/types.h>
+	<vcl.h>
+	<MagickCore/MagickCore.h>
+	<MagickWand/MagickWand.h>
+
+1490419332 c:\program files\imagemagick-7.0.5-q16\include\magickcore\magick-config.h
+	"MagickCore/magick-baseconfig.h"
+
+1490419468 c:\program files\imagemagick-7.0.5-q16\include\magickcore\magick-baseconfig.h
+
+1490419332 c:\program files\imagemagick-7.0.5-q16\include\magickcore\magickcore.h
+	"MagickCore/magick-config.h"
+	"magick-config.h"
+	<stdio.h>
+	<stdarg.h>
+	<stdlib.h>
+	<math.h>
+	<sys/types.h>
+	<time.h>
+	"MagickCore/method-attribute.h"
+	"MagickCore/methods.h"
+	"MagickCore/magick-type.h"
+	"MagickCore/animate.h"
+	"MagickCore/annotate.h"
+	"MagickCore/artifact.h"
+	"MagickCore/attribute.h"
+	"MagickCore/blob.h"
+	"MagickCore/cache.h"
+	"MagickCore/cache-view.h"
+	"MagickCore/channel.h"
+	"MagickCore/cipher.h"
+	"MagickCore/client.h"
+	"MagickCore/coder.h"
+	"MagickCore/color.h"
+	"MagickCore/colorspace.h"
+	"MagickCore/colormap.h"
+	"MagickCore/compare.h"
+	"MagickCore/composite.h"
+	"MagickCore/compress.h"
+	"MagickCore/configure.h"
+	"MagickCore/constitute.h"
+	"MagickCore/decorate.h"
+	"MagickCore/delegate.h"
+	"MagickCore/deprecate.h"
+	"MagickCore/display.h"
+	"MagickCore/distort.h"
+	"MagickCore/distribute-cache.h"
+	"MagickCore/draw.h"
+	"MagickCore/effect.h"
+	"MagickCore/enhance.h"
+	"MagickCore/exception.h"
+	"MagickCore/feature.h"
+	"MagickCore/fourier.h"
+	"MagickCore/fx.h"
+	"MagickCore/gem.h"
+	"MagickCore/geometry.h"
+	"MagickCore/histogram.h"
+	"MagickCore/identify.h"
+	"MagickCore/image.h"
+	"MagickCore/image-view.h"
+	"MagickCore/layer.h"
+	"MagickCore/linked-list.h"
+	"MagickCore/list.h"
+	"MagickCore/locale_.h"
+	"MagickCore/log.h"
+	"MagickCore/magic.h"
+	"MagickCore/magick.h"
+	"MagickCore/matrix.h"
+	"MagickCore/memory_.h"
+	"MagickCore/module.h"
+	"MagickCore/mime.h"
+	"MagickCore/monitor.h"
+	"MagickCore/montage.h"
+	"MagickCore/morphology.h"
+	"MagickCore/opencl.h"
+	"MagickCore/option.h"
+	"MagickCore/paint.h"
+	"MagickCore/pixel.h"
+	"MagickCore/pixel-accessor.h"
+	"MagickCore/policy.h"
+	"MagickCore/prepress.h"
+	"MagickCore/profile.h"
+	"MagickCore/property.h"
+	"MagickCore/quantize.h"
+	"MagickCore/quantum.h"
+	"MagickCore/registry.h"
+	"MagickCore/random_.h"
+	"MagickCore/resample.h"
+	"MagickCore/resize.h"
+	"MagickCore/resource_.h"
+	"MagickCore/segment.h"
+	"MagickCore/shear.h"
+	"MagickCore/signature.h"
+	"MagickCore/splay-tree.h"
+	"MagickCore/stream.h"
+	"MagickCore/statistic.h"
+	"MagickCore/string_.h"
+	"MagickCore/timer.h"
+	"MagickCore/token.h"
+	"MagickCore/transform.h"
+	"MagickCore/threshold.h"
+	"MagickCore/type.h"
+	"MagickCore/utility.h"
+	"MagickCore/version.h"
+	"MagickCore/vision.h"
+	"MagickCore/xml-tree.h"
+	"MagickCore/xwindow.h"
+
+1490419332 c:\program files\imagemagick-7.0.5-q16\include\magickcore\method-attribute.h
+
+1490419332 c:\program files\imagemagick-7.0.5-q16\include\magickcore\methods.h
+
+1490419332 c:\program files\imagemagick-7.0.5-q16\include\magickcore\magick-type.h
+	"MagickCore/magick-config.h"
+	<float.h>
+
+1490419332 c:\program files\imagemagick-7.0.5-q16\include\magickcore\animate.h
+
+1490419332 c:\program files\imagemagick-7.0.5-q16\include\magickcore\annotate.h
+	"MagickCore/draw.h"
+
+1490419332 c:\program files\imagemagick-7.0.5-q16\include\magickcore\draw.h
+	"MagickCore/geometry.h"
+	"MagickCore/image.h"
+	"MagickCore/pixel.h"
+	"MagickCore/type.h"
+
+1490419332 c:\program files\imagemagick-7.0.5-q16\include\magickcore\geometry.h
+
+1490419332 c:\program files\imagemagick-7.0.5-q16\include\magickcore\image.h
+	"MagickCore/blob.h"
+	"MagickCore/colorspace.h"
+	"MagickCore/cache-view.h"
+	"MagickCore/color.h"
+	"MagickCore/composite.h"
+	"MagickCore/compress.h"
+	"MagickCore/effect.h"
+	"MagickCore/geometry.h"
+	"MagickCore/layer.h"
+	"MagickCore/locale_.h"
+	"MagickCore/monitor.h"
+	"MagickCore/pixel.h"
+	"MagickCore/profile.h"
+	"MagickCore/quantum.h"
+	"MagickCore/resample.h"
+	"MagickCore/resize.h"
+	"MagickCore/semaphore.h"
+	"MagickCore/stream.h"
+	"MagickCore/timer.h"
+
+1490419332 c:\program files\imagemagick-7.0.5-q16\include\magickcore\blob.h
+	"MagickCore/image.h"
+	"MagickCore/stream.h"
+
+1490419332 c:\program files\imagemagick-7.0.5-q16\include\magickcore\stream.h
+	"MagickCore/pixel.h"
+
+1490419332 c:\program files\imagemagick-7.0.5-q16\include\magickcore\pixel.h
+	"MagickCore/colorspace.h"
+
+1490419332 c:\program files\imagemagick-7.0.5-q16\include\magickcore\colorspace.h
+
+1490419332 c:\program files\imagemagick-7.0.5-q16\include\magickcore\cache-view.h
+	"MagickCore/pixel.h"
+
+1490419332 c:\program files\imagemagick-7.0.5-q16\include\magickcore\color.h
+	"MagickCore/pixel.h"
+	"MagickCore/exception.h"
+
+1490419332 c:\program files\imagemagick-7.0.5-q16\include\magickcore\exception.h
+	"MagickCore/semaphore.h"
+
+1490419332 c:\program files\imagemagick-7.0.5-q16\include\magickcore\semaphore.h
+
+1490419332 c:\program files\imagemagick-7.0.5-q16\include\magickcore\composite.h
+
+1490419332 c:\program files\imagemagick-7.0.5-q16\include\magickcore\compress.h
+
+1490419332 c:\program files\imagemagick-7.0.5-q16\include\magickcore\effect.h
+	"MagickCore/morphology.h"
+
+1490419332 c:\program files\imagemagick-7.0.5-q16\include\magickcore\morphology.h
+	"MagickCore/geometry.h"
+
+1490419332 c:\program files\imagemagick-7.0.5-q16\include\magickcore\layer.h
+	"MagickCore/composite.h"
+
+1490419332 c:\program files\imagemagick-7.0.5-q16\include\magickcore\locale_.h
+	"MagickCore/linked-list.h"
+
+1490419332 c:\program files\imagemagick-7.0.5-q16\include\magickcore\linked-list.h
+
+1490419332 c:\program files\imagemagick-7.0.5-q16\include\magickcore\monitor.h
+
+1490419332 c:\program files\imagemagick-7.0.5-q16\include\magickcore\profile.h
+	"MagickCore/string_.h"
+
+1490419332 c:\program files\imagemagick-7.0.5-q16\include\magickcore\string_.h
+	"MagickCore/exception.h"
+
+1490419332 c:\program files\imagemagick-7.0.5-q16\include\magickcore\quantum.h
+	"MagickCore/image.h"
+	"MagickCore/semaphore.h"
+
+1490419332 c:\program files\imagemagick-7.0.5-q16\include\magickcore\resample.h
+	"MagickCore/cache-view.h"
+
+1490419332 c:\program files\imagemagick-7.0.5-q16\include\magickcore\resize.h
+
+1490419332 c:\program files\imagemagick-7.0.5-q16\include\magickcore\timer.h
+
+1490419332 c:\program files\imagemagick-7.0.5-q16\include\magickcore\type.h
+
+1490419332 c:\program files\imagemagick-7.0.5-q16\include\magickcore\artifact.h
+
+1490419332 c:\program files\imagemagick-7.0.5-q16\include\magickcore\attribute.h
+	"MagickCore/image.h"
+	"MagickCore/exception.h"
+
+1490419332 c:\program files\imagemagick-7.0.5-q16\include\magickcore\cache.h
+	"MagickCore/blob.h"
+
+1490419332 c:\program files\imagemagick-7.0.5-q16\include\magickcore\channel.h
+	<MagickCore/image.h>
+
+1490419332 c:\program files\imagemagick-7.0.5-q16\include\magickcore\cipher.h
+
+1490419332 c:\program files\imagemagick-7.0.5-q16\include\magickcore\client.h
+
+1490419332 c:\program files\imagemagick-7.0.5-q16\include\magickcore\coder.h
+
+1490419332 c:\program files\imagemagick-7.0.5-q16\include\magickcore\colormap.h
+
+1490419332 c:\program files\imagemagick-7.0.5-q16\include\magickcore\compare.h
+	"MagickCore/image.h"
+
+1490419332 c:\program files\imagemagick-7.0.5-q16\include\magickcore\configure.h
+	"MagickCore/linked-list.h"
+
+1490419332 c:\program files\imagemagick-7.0.5-q16\include\magickcore\constitute.h
+	"MagickCore/pixel.h"
+
+1490419332 c:\program files\imagemagick-7.0.5-q16\include\magickcore\decorate.h
+	"MagickCore/image.h"
+
+1490419332 c:\program files\imagemagick-7.0.5-q16\include\magickcore\delegate.h
+	<stdarg.h>
+	"MagickCore/semaphore.h"
+
+1490419332 c:\program files\imagemagick-7.0.5-q16\include\magickcore\deprecate.h
+	"MagickCore/magick.h"
+
+1490419332 c:\program files\imagemagick-7.0.5-q16\include\magickcore\magick.h
+	<stdarg.h>
+	"MagickCore/semaphore.h"
+
+1490419332 c:\program files\imagemagick-7.0.5-q16\include\magickcore\display.h
+
+1490419332 c:\program files\imagemagick-7.0.5-q16\include\magickcore\distort.h
+
+1490419332 c:\program files\imagemagick-7.0.5-q16\include\magickcore\distribute-cache.h
+	"MagickCore/exception.h"
+
+1490419332 c:\program files\imagemagick-7.0.5-q16\include\magickcore\enhance.h
+	"MagickCore/pixel.h"
+
+1490419332 c:\program files\imagemagick-7.0.5-q16\include\magickcore\feature.h
+
+1490419332 c:\program files\imagemagick-7.0.5-q16\include\magickcore\fourier.h
+
+1490419332 c:\program files\imagemagick-7.0.5-q16\include\magickcore\fx.h
+	"MagickCore/draw.h"
+
+1490419332 c:\program files\imagemagick-7.0.5-q16\include\magickcore\gem.h
+	"MagickCore/fx.h"
+	"MagickCore/random_.h"
+
+1490419332 c:\program files\imagemagick-7.0.5-q16\include\magickcore\random_.h
+	"MagickCore/string_.h"
+
+1490419332 c:\program files\imagemagick-7.0.5-q16\include\magickcore\histogram.h
+
+1490419332 c:\program files\imagemagick-7.0.5-q16\include\magickcore\identify.h
+
+1490419332 c:\program files\imagemagick-7.0.5-q16\include\magickcore\image-view.h
+
+1490419332 c:\program files\imagemagick-7.0.5-q16\include\magickcore\list.h
+
+1490419332 c:\program files\imagemagick-7.0.5-q16\include\magickcore\log.h
+	"MagickCore/exception.h"
+
+1490419332 c:\program files\imagemagick-7.0.5-q16\include\magickcore\magic.h
+
+1490419332 c:\program files\imagemagick-7.0.5-q16\include\magickcore\matrix.h
+
+1490419332 c:\program files\imagemagick-7.0.5-q16\include\magickcore\memory_.h
+
+1490419332 c:\program files\imagemagick-7.0.5-q16\include\magickcore\module.h
+	"MagickCore/version.h"
+
+1490419468 c:\program files\imagemagick-7.0.5-q16\include\magickcore\version.h
+
+1490419332 c:\program files\imagemagick-7.0.5-q16\include\magickcore\mime.h
+
+1490419332 c:\program files\imagemagick-7.0.5-q16\include\magickcore\montage.h
+
+1490419332 c:\program files\imagemagick-7.0.5-q16\include\magickcore\opencl.h
+
+1490419332 c:\program files\imagemagick-7.0.5-q16\include\magickcore\option.h
+
+1490419332 c:\program files\imagemagick-7.0.5-q16\include\magickcore\paint.h
+	"MagickCore/color.h"
+	"MagickCore/draw.h"
+
+1490419332 c:\program files\imagemagick-7.0.5-q16\include\magickcore\pixel-accessor.h
+	<assert.h>
+	"MagickCore/cache.h"
+	"MagickCore/cache-view.h"
+	"MagickCore/color.h"
+	"MagickCore/colorspace.h"
+	"MagickCore/gem.h"
+	"MagickCore/image.h"
+
+1490419332 c:\program files\imagemagick-7.0.5-q16\include\magickcore\policy.h
+	"MagickCore/pixel.h"
+	"MagickCore/exception.h"
+
+1490419332 c:\program files\imagemagick-7.0.5-q16\include\magickcore\prepress.h
+
+1490419332 c:\program files\imagemagick-7.0.5-q16\include\magickcore\property.h
+
+1490419332 c:\program files\imagemagick-7.0.5-q16\include\magickcore\quantize.h
+	"MagickCore/colorspace.h"
+
+1490419332 c:\program files\imagemagick-7.0.5-q16\include\magickcore\registry.h
+
+1490419332 c:\program files\imagemagick-7.0.5-q16\include\magickcore\resource_.h
+
+1490419332 c:\program files\imagemagick-7.0.5-q16\include\magickcore\segment.h
+
+1490419332 c:\program files\imagemagick-7.0.5-q16\include\magickcore\shear.h
+
+1490419332 c:\program files\imagemagick-7.0.5-q16\include\magickcore\signature.h
+
+1490419332 c:\program files\imagemagick-7.0.5-q16\include\magickcore\splay-tree.h
+
+1490419332 c:\program files\imagemagick-7.0.5-q16\include\magickcore\statistic.h
+
+1490419332 c:\program files\imagemagick-7.0.5-q16\include\magickcore\token.h
+
+1490419332 c:\program files\imagemagick-7.0.5-q16\include\magickcore\transform.h
+
+1490419332 c:\program files\imagemagick-7.0.5-q16\include\magickcore\threshold.h
+
+1490419332 c:\program files\imagemagick-7.0.5-q16\include\magickcore\utility.h
+
+1490419332 c:\program files\imagemagick-7.0.5-q16\include\magickcore\vision.h
+
+1490419332 c:\program files\imagemagick-7.0.5-q16\include\magickcore\xml-tree.h
+
+1490419332 c:\program files\imagemagick-7.0.5-q16\include\magickcore\xwindow.h
+
+1490419332 c:\program files\imagemagick-7.0.5-q16\include\magickwand\magickwand.h
+	"MagickCore/magick-config.h"
+	"magick-config.h"
+	<stdio.h>
+	<stdarg.h>
+	<stdlib.h>
+	<math.h>
+	<sys/types.h>
+	<time.h>
+	"MagickWand/method-attribute.h"
+	"MagickCore/MagickCore.h"
+	"MagickWand/animate.h"
+	"MagickWand/compare.h"
+	"MagickWand/composite.h"
+	"MagickWand/conjure.h"
+	"MagickWand/convert.h"
+	"MagickWand/deprecate.h"
+	"MagickWand/display.h"
+	"MagickWand/drawing-wand.h"
+	"MagickWand/identify.h"
+	"MagickWand/import.h"
+	"MagickWand/wandcli.h"
+	"MagickWand/operation.h"
+	"MagickWand/magick-cli.h"
+	"MagickWand/magick-property.h"
+	"MagickWand/magick-image.h"
+	"MagickWand/mogrify.h"
+	"MagickWand/montage.h"
+	"MagickWand/pixel-iterator.h"
+	"MagickWand/pixel-wand.h"
+	"MagickWand/stream.h"
+	"MagickWand/wand-view.h"
+
+1490419332 c:\program files\imagemagick-7.0.5-q16\include\magickwand\method-attribute.h
+
+1490419332 c:\program files\imagemagick-7.0.5-q16\include\magickwand\animate.h
+
+1490419332 c:\program files\imagemagick-7.0.5-q16\include\magickwand\compare.h
+
+1490419332 c:\program files\imagemagick-7.0.5-q16\include\magickwand\composite.h
+
+1490419332 c:\program files\imagemagick-7.0.5-q16\include\magickwand\conjure.h
+
+1490419332 c:\program files\imagemagick-7.0.5-q16\include\magickwand\convert.h
+
+1490419332 c:\program files\imagemagick-7.0.5-q16\include\magickwand\deprecate.h
+	"MagickWand/pixel-wand.h"
+
+1490419332 c:\program files\imagemagick-7.0.5-q16\include\magickwand\pixel-wand.h
+
+1490419332 c:\program files\imagemagick-7.0.5-q16\include\magickwand\display.h
+
+1490419332 c:\program files\imagemagick-7.0.5-q16\include\magickwand\drawing-wand.h
+	"MagickWand/pixel-wand.h"
+
+1490419332 c:\program files\imagemagick-7.0.5-q16\include\magickwand\identify.h
+
+1490419332 c:\program files\imagemagick-7.0.5-q16\include\magickwand\import.h
+
+1490419332 c:\program files\imagemagick-7.0.5-q16\include\magickwand\wandcli.h
+
+1490419332 c:\program files\imagemagick-7.0.5-q16\include\magickwand\operation.h
+
+1490419332 c:\program files\imagemagick-7.0.5-q16\include\magickwand\magick-cli.h
+
+1490419332 c:\program files\imagemagick-7.0.5-q16\include\magickwand\magick-property.h
+
+1490419332 c:\program files\imagemagick-7.0.5-q16\include\magickwand\magick-image.h
+
+1490419332 c:\program files\imagemagick-7.0.5-q16\include\magickwand\mogrify.h
+
+1490419332 c:\program files\imagemagick-7.0.5-q16\include\magickwand\montage.h
+
+1490419332 c:\program files\imagemagick-7.0.5-q16\include\magickwand\pixel-iterator.h
+	"MagickWand/MagickWand.h"
+	"MagickWand/pixel-wand.h"
+
+1490419332 c:\program files\imagemagick-7.0.5-q16\include\magickwand\stream.h
+
+1490419332 c:\program files\imagemagick-7.0.5-q16\include\magickwand\wand-view.h
+
+1490419332 c:\program files\imagemagick-7.0.5-q16\include\magick++\functions.h
+	"Magick++/Include.h"
+	<string>
+
+1490419332 c:\program files\imagemagick-7.0.5-q16\include\magick++\image.h
+	"Magick++/Include.h"
+	<string>
+	<list>
+	"Magick++/Blob.h"
+	"Magick++/Color.h"
+	"Magick++/Drawable.h"
+	"Magick++/Exception.h"
+	"Magick++/Geometry.h"
+	"Magick++/Statistic.h"
+	"Magick++/TypeMetric.h"
+
+1490419332 c:\program files\imagemagick-7.0.5-q16\include\magick++\blob.h
+	"Magick++/Include.h"
+	<string>
+
+1490419332 c:\program files\imagemagick-7.0.5-q16\include\magick++\color.h
+	"Magick++/Include.h"
+	<string>
+
+1490419332 c:\program files\imagemagick-7.0.5-q16\include\magick++\drawable.h
+	"Magick++/Include.h"
+	<functional>
+	<string>
+	<vector>
+	<utility>
+	"Magick++/Color.h"
+	"Magick++/Geometry.h"
+
+1490419332 c:\program files\imagemagick-7.0.5-q16\include\magick++\geometry.h
+	"Magick++/Include.h"
+	<string>
+
+1490419332 c:\program files\imagemagick-7.0.5-q16\include\magick++\exception.h
+	"Magick++/Include.h"
+	<string>
+	<exception>
+
+1490419332 c:\program files\imagemagick-7.0.5-q16\include\magick++\statistic.h
+	"Magick++/Include.h"
+	<vector>
+
+1490419332 c:\program files\imagemagick-7.0.5-q16\include\magick++\typemetric.h
+	"Magick++/Include.h"
+
+1490419332 c:\program files\imagemagick-7.0.5-q16\include\magick++\pixels.h
+	"Magick++/Include.h"
+	"Magick++/Color.h"
+	"Magick++/Image.h"
+
+1490419332 c:\program files\imagemagick-7.0.5-q16\include\magick++\resourcelimits.h
+	"Magick++/Include.h"
+
+1490419332 c:\program files\imagemagick-7.0.5-q16\include\magick++\stl.h
+	"Magick++/Include.h"
+	<algorithm>
+	<functional>
+	<iterator>
+	<map>
+	<utility>
+	"Magick++/CoderInfo.h"
+	"Magick++/Drawable.h"
+	"Magick++/Exception.h"
+	"Magick++/Montage.h"
+
+1490419332 c:\program files\imagemagick-7.0.5-q16\include\magick++\coderinfo.h
+	"Magick++/Include.h"
+	<string>
+
+1490419332 c:\program files\imagemagick-7.0.5-q16\include\magick++\montage.h
+	"Magick++/Include.h"
+	<string>
+	"Magick++/Color.h"
+	"Magick++/Geometry.h"
+
+1499194376 e:\switchdrive\astro\astroqut\include\const.hpp
+
+1487687794 e:\switchdrive\astro\astroqut\include\eigen\dense
+	"Core"
+	"LU"
+	"Cholesky"
+	"QR"
+	"SVD"
+	"Geometry"
+	"Eigenvalues"
+
+1487687794 e:\switchdrive\astro\astroqut\include\eigen\core
+	"src/Core/util/DisableStupidWarnings.h"
+	<math_functions.hpp>
+	<new>
+	"src/Core/util/Macros.h"
+	<complex>
+	"src/Core/util/MKL_support.h"
+	<malloc.h>
+	<immintrin.h>
+	<mmintrin.h>
+	<emmintrin.h>
+	<xmmintrin.h>
+	<pmmintrin.h>
+	<tmmintrin.h>
+	<smmintrin.h>
+	<nmmintrin.h>
+	<immintrin.h>
+	<altivec.h>
+	<altivec.h>
+	<arm_neon.h>
+	<vecintrin.h>
+	<vector_types.h>
+	<host_defines.h>
+	<cuda_fp16.h>
+	<omp.h>
+	<cerrno>
+	<cstddef>
+	<cstdlib>
+	<cmath>
+	<cassert>
+	<functional>
+	<iosfwd>
+	<cstring>
+	<string>
+	<limits>
+	<climits>
+	<algorithm>
+	<type_traits>
+	<iostream>
+	<intrin.h>
+	"src/Core/util/Constants.h"
+	"src/Core/util/Meta.h"
+	"src/Core/util/ForwardDeclarations.h"
+	"src/Core/util/StaticAssert.h"
+	"src/Core/util/XprHelper.h"
+	"src/Core/util/Memory.h"
+	"src/Core/NumTraits.h"
+	"src/Core/MathFunctions.h"
+	"src/Core/GenericPacketMath.h"
+	"src/Core/MathFunctionsImpl.h"
+	"src/Core/arch/SSE/PacketMath.h"
+	"src/Core/arch/AVX/PacketMath.h"
+	"src/Core/arch/AVX512/PacketMath.h"
+	"src/Core/arch/AVX512/MathFunctions.h"
+	"src/Core/arch/SSE/PacketMath.h"
+	"src/Core/arch/SSE/Complex.h"
+	"src/Core/arch/SSE/MathFunctions.h"
+	"src/Core/arch/AVX/PacketMath.h"
+	"src/Core/arch/AVX/MathFunctions.h"
+	"src/Core/arch/AVX/Complex.h"
+	"src/Core/arch/AVX/TypeCasting.h"
+	"src/Core/arch/SSE/PacketMath.h"
+	"src/Core/arch/SSE/MathFunctions.h"
+	"src/Core/arch/SSE/Complex.h"
+	"src/Core/arch/SSE/TypeCasting.h"
+	"src/Core/arch/AltiVec/PacketMath.h"
+	"src/Core/arch/AltiVec/MathFunctions.h"
+	"src/Core/arch/AltiVec/Complex.h"
+	"src/Core/arch/NEON/PacketMath.h"
+	"src/Core/arch/NEON/MathFunctions.h"
+	"src/Core/arch/NEON/Complex.h"
+	"src/Core/arch/ZVector/PacketMath.h"
+	"src/Core/arch/ZVector/MathFunctions.h"
+	"src/Core/arch/ZVector/Complex.h"
+	"src/Core/arch/CUDA/Half.h"
+	"src/Core/arch/CUDA/PacketMathHalf.h"
+	"src/Core/arch/CUDA/TypeCasting.h"
+	"src/Core/arch/CUDA/PacketMath.h"
+	"src/Core/arch/CUDA/MathFunctions.h"
+	"src/Core/arch/Default/Settings.h"
+	"src/Core/functors/TernaryFunctors.h"
+	"src/Core/functors/BinaryFunctors.h"
+	"src/Core/functors/UnaryFunctors.h"
+	"src/Core/functors/NullaryFunctors.h"
+	"src/Core/functors/StlFunctors.h"
+	"src/Core/functors/AssignmentFunctors.h"
+	"src/Core/arch/CUDA/Complex.h"
+	"src/Core/IO.h"
+	"src/Core/DenseCoeffsBase.h"
+	"src/Core/DenseBase.h"
+	"src/Core/MatrixBase.h"
+	"src/Core/EigenBase.h"
+	"src/Core/Product.h"
+	"src/Core/CoreEvaluators.h"
+	"src/Core/AssignEvaluator.h"
+	"src/Core/Assign.h"
+	"src/Core/ArrayBase.h"
+	"src/Core/util/BlasUtil.h"
+	"src/Core/DenseStorage.h"
+	"src/Core/NestByValue.h"
+	"src/Core/ReturnByValue.h"
+	"src/Core/NoAlias.h"
+	"src/Core/PlainObjectBase.h"
+	"src/Core/Matrix.h"
+	"src/Core/Array.h"
+	"src/Core/CwiseTernaryOp.h"
+	"src/Core/CwiseBinaryOp.h"
+	"src/Core/CwiseUnaryOp.h"
+	"src/Core/CwiseNullaryOp.h"
+	"src/Core/CwiseUnaryView.h"
+	"src/Core/SelfCwiseBinaryOp.h"
+	"src/Core/Dot.h"
+	"src/Core/StableNorm.h"
+	"src/Core/Stride.h"
+	"src/Core/MapBase.h"
+	"src/Core/Map.h"
+	"src/Core/Ref.h"
+	"src/Core/Block.h"
+	"src/Core/VectorBlock.h"
+	"src/Core/Transpose.h"
+	"src/Core/DiagonalMatrix.h"
+	"src/Core/Diagonal.h"
+	"src/Core/DiagonalProduct.h"
+	"src/Core/Redux.h"
+	"src/Core/Visitor.h"
+	"src/Core/Fuzzy.h"
+	"src/Core/Swap.h"
+	"src/Core/CommaInitializer.h"
+	"src/Core/GeneralProduct.h"
+	"src/Core/Solve.h"
+	"src/Core/Inverse.h"
+	"src/Core/SolverBase.h"
+	"src/Core/PermutationMatrix.h"
+	"src/Core/Transpositions.h"
+	"src/Core/TriangularMatrix.h"
+	"src/Core/SelfAdjointView.h"
+	"src/Core/products/GeneralBlockPanelKernel.h"
+	"src/Core/products/Parallelizer.h"
+	"src/Core/ProductEvaluators.h"
+	"src/Core/products/GeneralMatrixVector.h"
+	"src/Core/products/GeneralMatrixMatrix.h"
+	"src/Core/SolveTriangular.h"
+	"src/Core/products/GeneralMatrixMatrixTriangular.h"
+	"src/Core/products/SelfadjointMatrixVector.h"
+	"src/Core/products/SelfadjointMatrixMatrix.h"
+	"src/Core/products/SelfadjointProduct.h"
+	"src/Core/products/SelfadjointRank2Update.h"
+	"src/Core/products/TriangularMatrixVector.h"
+	"src/Core/products/TriangularMatrixMatrix.h"
+	"src/Core/products/TriangularSolverMatrix.h"
+	"src/Core/products/TriangularSolverVector.h"
+	"src/Core/BandMatrix.h"
+	"src/Core/CoreIterators.h"
+	"src/Core/ConditionEstimator.h"
+	"src/Core/BooleanRedux.h"
+	"src/Core/Select.h"
+	"src/Core/VectorwiseOp.h"
+	"src/Core/Random.h"
+	"src/Core/Replicate.h"
+	"src/Core/Reverse.h"
+	"src/Core/ArrayWrapper.h"
+	"src/Core/products/GeneralMatrixMatrix_BLAS.h"
+	"src/Core/products/GeneralMatrixVector_BLAS.h"
+	"src/Core/products/GeneralMatrixMatrixTriangular_BLAS.h"
+	"src/Core/products/SelfadjointMatrixMatrix_BLAS.h"
+	"src/Core/products/SelfadjointMatrixVector_BLAS.h"
+	"src/Core/products/TriangularMatrixMatrix_BLAS.h"
+	"src/Core/products/TriangularMatrixVector_BLAS.h"
+	"src/Core/products/TriangularSolverMatrix_BLAS.h"
+	"src/Core/Assign_MKL.h"
+	"src/Core/GlobalFunctions.h"
+	"src/Core/util/ReenableStupidWarnings.h"
+
+1487687794 e:\switchdrive\astro\astroqut\include\eigen\src\core\util\disablestupidwarnings.h
+
+1487687794 e:\switchdrive\astro\astroqut\include\eigen\src\core\util\macros.h
+	<cstdlib>
+	<iostream>
+
+1487687794 e:\switchdrive\astro\astroqut\include\eigen\src\core\util\mkl_support.h
+	<mkl.h>
+	"../../misc/blas.h"
+
+1487687794 e:\switchdrive\astro\astroqut\include\eigen\src\misc\blas.h
+
+1487687794 e:\switchdrive\astro\astroqut\include\eigen\src\core\util\constants.h
+
+1487687794 e:\switchdrive\astro\astroqut\include\eigen\src\core\util\meta.h
+	<cfloat>
+	<math_constants.h>
+	<cstdint>
+
+1487687794 e:\switchdrive\astro\astroqut\include\eigen\src\core\util\forwarddeclarations.h
+
+1487687794 e:\switchdrive\astro\astroqut\include\eigen\src\core\util\staticassert.h
+
+1487687794 e:\switchdrive\astro\astroqut\include\eigen\src\core\util\xprhelper.h
+
+1487687794 e:\switchdrive\astro\astroqut\include\eigen\src\core\util\memory.h
+
+1487687794 e:\switchdrive\astro\astroqut\include\eigen\src\core\numtraits.h
+
+1487687794 e:\switchdrive\astro\astroqut\include\eigen\src\core\mathfunctions.h
+
+1487687794 e:\switchdrive\astro\astroqut\include\eigen\src\core\genericpacketmath.h
+
+1487687794 e:\switchdrive\astro\astroqut\include\eigen\src\core\mathfunctionsimpl.h
+
+1487687794 e:\switchdrive\astro\astroqut\include\eigen\src\core\arch\sse\packetmath.h
+
+1487687794 e:\switchdrive\astro\astroqut\include\eigen\src\core\arch\avx\packetmath.h
+
+1487687794 e:\switchdrive\astro\astroqut\include\eigen\src\core\arch\avx512\packetmath.h
+
+1487687794 e:\switchdrive\astro\astroqut\include\eigen\src\core\arch\avx512\mathfunctions.h
+
+1487687794 e:\switchdrive\astro\astroqut\include\eigen\src\core\arch\sse\complex.h
+
+1487687794 e:\switchdrive\astro\astroqut\include\eigen\src\core\arch\sse\mathfunctions.h
+
+1487687794 e:\switchdrive\astro\astroqut\include\eigen\src\core\arch\avx\mathfunctions.h
+
+1487687794 e:\switchdrive\astro\astroqut\include\eigen\src\core\arch\avx\complex.h
+
+1487687794 e:\switchdrive\astro\astroqut\include\eigen\src\core\arch\avx\typecasting.h
+
+1487687794 e:\switchdrive\astro\astroqut\include\eigen\src\core\arch\sse\typecasting.h
+
+1487687794 e:\switchdrive\astro\astroqut\include\eigen\src\core\arch\altivec\packetmath.h
+
+1487687794 e:\switchdrive\astro\astroqut\include\eigen\src\core\arch\altivec\mathfunctions.h
+
+1487687794 e:\switchdrive\astro\astroqut\include\eigen\src\core\arch\altivec\complex.h
+
+1487687794 e:\switchdrive\astro\astroqut\include\eigen\src\core\arch\neon\packetmath.h
+
+1487687794 e:\switchdrive\astro\astroqut\include\eigen\src\core\arch\neon\mathfunctions.h
+
+1487687794 e:\switchdrive\astro\astroqut\include\eigen\src\core\arch\neon\complex.h
+
+1487687794 e:\switchdrive\astro\astroqut\include\eigen\src\core\arch\zvector\packetmath.h
+	<stdint.h>
+
+1487687794 e:\switchdrive\astro\astroqut\include\eigen\src\core\arch\zvector\mathfunctions.h
+
+1487687794 e:\switchdrive\astro\astroqut\include\eigen\src\core\arch\zvector\complex.h
+
+1487687794 e:\switchdrive\astro\astroqut\include\eigen\src\core\arch\cuda\half.h
+
+1487687794 e:\switchdrive\astro\astroqut\include\eigen\src\core\arch\cuda\packetmathhalf.h
+
+1487687794 e:\switchdrive\astro\astroqut\include\eigen\src\core\arch\cuda\typecasting.h
+
+1487687794 e:\switchdrive\astro\astroqut\include\eigen\src\core\arch\cuda\packetmath.h
+
+1487687794 e:\switchdrive\astro\astroqut\include\eigen\src\core\arch\cuda\mathfunctions.h
+
+1487687794 e:\switchdrive\astro\astroqut\include\eigen\src\core\arch\default\settings.h
+
+1487687794 e:\switchdrive\astro\astroqut\include\eigen\src\core\functors\ternaryfunctors.h
+
+1487687794 e:\switchdrive\astro\astroqut\include\eigen\src\core\functors\binaryfunctors.h
+
+1487687794 e:\switchdrive\astro\astroqut\include\eigen\src\core\functors\unaryfunctors.h
+
+1487687794 e:\switchdrive\astro\astroqut\include\eigen\src\core\functors\nullaryfunctors.h
+
+1487687794 e:\switchdrive\astro\astroqut\include\eigen\src\core\functors\stlfunctors.h
+
+1487687794 e:\switchdrive\astro\astroqut\include\eigen\src\core\functors\assignmentfunctors.h
+
+1487687794 e:\switchdrive\astro\astroqut\include\eigen\src\core\arch\cuda\complex.h
+
+1487687794 e:\switchdrive\astro\astroqut\include\eigen\src\core\io.h
+
+1487687794 e:\switchdrive\astro\astroqut\include\eigen\src\core\densecoeffsbase.h
+
+1487687794 e:\switchdrive\astro\astroqut\include\eigen\src\core\densebase.h
+	"../plugins/BlockMethods.h"
+
+1487687794 e:\switchdrive\astro\astroqut\include\eigen\src\plugins\blockmethods.h
+
+1487687794 e:\switchdrive\astro\astroqut\include\eigen\src\core\matrixbase.h
+	"../plugins/CommonCwiseUnaryOps.h"
+	"../plugins/CommonCwiseBinaryOps.h"
+	"../plugins/MatrixCwiseUnaryOps.h"
+	"../plugins/MatrixCwiseBinaryOps.h"
+
+1487687794 e:\switchdrive\astro\astroqut\include\eigen\src\plugins\commoncwiseunaryops.h
+
+1487687794 e:\switchdrive\astro\astroqut\include\eigen\src\plugins\commoncwisebinaryops.h
+
+1487687794 e:\switchdrive\astro\astroqut\include\eigen\src\plugins\matrixcwiseunaryops.h
+
+1487687794 e:\switchdrive\astro\astroqut\include\eigen\src\plugins\matrixcwisebinaryops.h
+
+1487687794 e:\switchdrive\astro\astroqut\include\eigen\src\core\eigenbase.h
+
+1487687794 e:\switchdrive\astro\astroqut\include\eigen\src\core\product.h
+
+1487687794 e:\switchdrive\astro\astroqut\include\eigen\src\core\coreevaluators.h
+
+1487687794 e:\switchdrive\astro\astroqut\include\eigen\src\core\assignevaluator.h
+
+1487687794 e:\switchdrive\astro\astroqut\include\eigen\src\core\assign.h
+
+1487687794 e:\switchdrive\astro\astroqut\include\eigen\src\core\arraybase.h
+	"../plugins/CommonCwiseUnaryOps.h"
+	"../plugins/MatrixCwiseUnaryOps.h"
+	"../plugins/ArrayCwiseUnaryOps.h"
+	"../plugins/CommonCwiseBinaryOps.h"
+	"../plugins/MatrixCwiseBinaryOps.h"
+	"../plugins/ArrayCwiseBinaryOps.h"
+
+1487687794 e:\switchdrive\astro\astroqut\include\eigen\src\plugins\arraycwiseunaryops.h
+
+1487687794 e:\switchdrive\astro\astroqut\include\eigen\src\plugins\arraycwisebinaryops.h
+
+1487687794 e:\switchdrive\astro\astroqut\include\eigen\src\core\util\blasutil.h
+
+1487687794 e:\switchdrive\astro\astroqut\include\eigen\src\core\densestorage.h
+
+1487687794 e:\switchdrive\astro\astroqut\include\eigen\src\core\nestbyvalue.h
+
+1487687794 e:\switchdrive\astro\astroqut\include\eigen\src\core\returnbyvalue.h
+
+1487687794 e:\switchdrive\astro\astroqut\include\eigen\src\core\noalias.h
+
+1487687794 e:\switchdrive\astro\astroqut\include\eigen\src\core\plainobjectbase.h
+
+1487687794 e:\switchdrive\astro\astroqut\include\eigen\src\core\matrix.h
+
+1487687794 e:\switchdrive\astro\astroqut\include\eigen\src\core\array.h
+
+1487687794 e:\switchdrive\astro\astroqut\include\eigen\src\core\cwiseternaryop.h
+
+1487687794 e:\switchdrive\astro\astroqut\include\eigen\src\core\cwisebinaryop.h
+
+1487687794 e:\switchdrive\astro\astroqut\include\eigen\src\core\cwiseunaryop.h
+
+1487687794 e:\switchdrive\astro\astroqut\include\eigen\src\core\cwisenullaryop.h
+
+1487687794 e:\switchdrive\astro\astroqut\include\eigen\src\core\cwiseunaryview.h
+
+1487687794 e:\switchdrive\astro\astroqut\include\eigen\src\core\selfcwisebinaryop.h
+
+1487687794 e:\switchdrive\astro\astroqut\include\eigen\src\core\dot.h
+
+1487687794 e:\switchdrive\astro\astroqut\include\eigen\src\core\stablenorm.h
+
+1487687794 e:\switchdrive\astro\astroqut\include\eigen\src\core\stride.h
+
+1487687794 e:\switchdrive\astro\astroqut\include\eigen\src\core\mapbase.h
+
+1487687794 e:\switchdrive\astro\astroqut\include\eigen\src\core\map.h
+
+1487687794 e:\switchdrive\astro\astroqut\include\eigen\src\core\ref.h
+
+1487687794 e:\switchdrive\astro\astroqut\include\eigen\src\core\block.h
+
+1487687794 e:\switchdrive\astro\astroqut\include\eigen\src\core\vectorblock.h
+
+1487687794 e:\switchdrive\astro\astroqut\include\eigen\src\core\transpose.h
+
+1487687794 e:\switchdrive\astro\astroqut\include\eigen\src\core\diagonalmatrix.h
+
+1487687794 e:\switchdrive\astro\astroqut\include\eigen\src\core\diagonal.h
+
+1487687794 e:\switchdrive\astro\astroqut\include\eigen\src\core\diagonalproduct.h
+
+1487687794 e:\switchdrive\astro\astroqut\include\eigen\src\core\redux.h
+
+1487687794 e:\switchdrive\astro\astroqut\include\eigen\src\core\visitor.h
+
+1487687794 e:\switchdrive\astro\astroqut\include\eigen\src\core\fuzzy.h
+
+1487687794 e:\switchdrive\astro\astroqut\include\eigen\src\core\swap.h
+
+1487687794 e:\switchdrive\astro\astroqut\include\eigen\src\core\commainitializer.h
+
+1487687794 e:\switchdrive\astro\astroqut\include\eigen\src\core\generalproduct.h
+
+1487687794 e:\switchdrive\astro\astroqut\include\eigen\src\core\solve.h
+
+1487687794 e:\switchdrive\astro\astroqut\include\eigen\src\core\inverse.h
+
+1487687794 e:\switchdrive\astro\astroqut\include\eigen\src\core\solverbase.h
+
+1487687794 e:\switchdrive\astro\astroqut\include\eigen\src\core\permutationmatrix.h
+
+1487687794 e:\switchdrive\astro\astroqut\include\eigen\src\core\transpositions.h
+
+1487687794 e:\switchdrive\astro\astroqut\include\eigen\src\core\triangularmatrix.h
+
+1487687794 e:\switchdrive\astro\astroqut\include\eigen\src\core\selfadjointview.h
+
+1487687794 e:\switchdrive\astro\astroqut\include\eigen\src\core\products\generalblockpanelkernel.h
+
+1487687794 e:\switchdrive\astro\astroqut\include\eigen\src\core\products\parallelizer.h
+
+1487687794 e:\switchdrive\astro\astroqut\include\eigen\src\core\productevaluators.h
+
+1487687794 e:\switchdrive\astro\astroqut\include\eigen\src\core\products\generalmatrixvector.h
+
+1487687794 e:\switchdrive\astro\astroqut\include\eigen\src\core\products\generalmatrixmatrix.h
+
+1487687794 e:\switchdrive\astro\astroqut\include\eigen\src\core\solvetriangular.h
+
+1487687794 e:\switchdrive\astro\astroqut\include\eigen\src\core\products\generalmatrixmatrixtriangular.h
+
+1487687794 e:\switchdrive\astro\astroqut\include\eigen\src\core\products\selfadjointmatrixvector.h
+
+1487687794 e:\switchdrive\astro\astroqut\include\eigen\src\core\products\selfadjointmatrixmatrix.h
+
+1487687794 e:\switchdrive\astro\astroqut\include\eigen\src\core\products\selfadjointproduct.h
+
+1487687794 e:\switchdrive\astro\astroqut\include\eigen\src\core\products\selfadjointrank2update.h
+
+1487687794 e:\switchdrive\astro\astroqut\include\eigen\src\core\products\triangularmatrixvector.h
+
+1487687794 e:\switchdrive\astro\astroqut\include\eigen\src\core\products\triangularmatrixmatrix.h
+
+1487687794 e:\switchdrive\astro\astroqut\include\eigen\src\core\products\triangularsolvermatrix.h
+
+1487687794 e:\switchdrive\astro\astroqut\include\eigen\src\core\products\triangularsolvervector.h
+
+1487687794 e:\switchdrive\astro\astroqut\include\eigen\src\core\bandmatrix.h
+
+1487687794 e:\switchdrive\astro\astroqut\include\eigen\src\core\coreiterators.h
+
+1487687794 e:\switchdrive\astro\astroqut\include\eigen\src\core\conditionestimator.h
+
+1487687794 e:\switchdrive\astro\astroqut\include\eigen\src\core\booleanredux.h
+
+1487687794 e:\switchdrive\astro\astroqut\include\eigen\src\core\select.h
+
+1487687794 e:\switchdrive\astro\astroqut\include\eigen\src\core\vectorwiseop.h
+
+1487687794 e:\switchdrive\astro\astroqut\include\eigen\src\core\random.h
+
+1487687794 e:\switchdrive\astro\astroqut\include\eigen\src\core\replicate.h
+
+1487687794 e:\switchdrive\astro\astroqut\include\eigen\src\core\reverse.h
+
+1487687794 e:\switchdrive\astro\astroqut\include\eigen\src\core\arraywrapper.h
+
+1487687794 e:\switchdrive\astro\astroqut\include\eigen\src\core\products\generalmatrixmatrix_blas.h
+
+1487687794 e:\switchdrive\astro\astroqut\include\eigen\src\core\products\generalmatrixvector_blas.h
+
+1487687794 e:\switchdrive\astro\astroqut\include\eigen\src\core\products\generalmatrixmatrixtriangular_blas.h
+
+1487687794 e:\switchdrive\astro\astroqut\include\eigen\src\core\products\selfadjointmatrixmatrix_blas.h
+
+1487687794 e:\switchdrive\astro\astroqut\include\eigen\src\core\products\selfadjointmatrixvector_blas.h
+
+1487687794 e:\switchdrive\astro\astroqut\include\eigen\src\core\products\triangularmatrixmatrix_blas.h
+
+1487687794 e:\switchdrive\astro\astroqut\include\eigen\src\core\products\triangularmatrixvector_blas.h
+
+1487687794 e:\switchdrive\astro\astroqut\include\eigen\src\core\products\triangularsolvermatrix_blas.h
+
+1487687794 e:\switchdrive\astro\astroqut\include\eigen\src\core\assign_mkl.h
+
+1487687794 e:\switchdrive\astro\astroqut\include\eigen\src\core\globalfunctions.h
+
+1487687794 e:\switchdrive\astro\astroqut\include\eigen\src\core\util\reenablestupidwarnings.h
+
+1487687794 e:\switchdrive\astro\astroqut\include\eigen\lu
+	"Core"
+	"src/Core/util/DisableStupidWarnings.h"
+	"src/misc/Kernel.h"
+	"src/misc/Image.h"
+	"src/LU/FullPivLU.h"
+	"src/LU/PartialPivLU.h"
+	"src/misc/lapacke.h"
+	"src/LU/PartialPivLU_LAPACKE.h"
+	"src/LU/Determinant.h"
+	"src/LU/InverseImpl.h"
+	"src/LU/arch/Inverse_SSE.h"
+	"src/Core/util/ReenableStupidWarnings.h"
+
+1487687794 e:\switchdrive\astro\astroqut\include\eigen\src\misc\kernel.h
+
+1487687794 e:\switchdrive\astro\astroqut\include\eigen\src\misc\image.h
+
+1492347171 e:\switchdrive\astro\astroqut\include\eigen\src\lu\fullpivlu.h
+
+1487687794 e:\switchdrive\astro\astroqut\include\eigen\src\lu\partialpivlu.h
+
+1487687794 e:\switchdrive\astro\astroqut\include\eigen\src\misc\lapacke.h
+	"lapacke_config.h"
+	<stdlib.h>
+	<complex.h>
+	<complex.h>
+	"lapacke_mangling.h"
+
+1487687794 e:\switchdrive\astro\astroqut\include\eigen\src\misc\lapacke_mangling.h
+
+1487687794 e:\switchdrive\astro\astroqut\include\eigen\src\lu\partialpivlu_lapacke.h
+
+1487687794 e:\switchdrive\astro\astroqut\include\eigen\src\lu\determinant.h
+
+1487687794 e:\switchdrive\astro\astroqut\include\eigen\src\lu\inverseimpl.h
+
+1487687794 e:\switchdrive\astro\astroqut\include\eigen\src\lu\arch\inverse_sse.h
+
+1487687794 e:\switchdrive\astro\astroqut\include\eigen\cholesky
+	"Core"
+	"src/Core/util/DisableStupidWarnings.h"
+	"src/Cholesky/LLT.h"
+	"src/Cholesky/LDLT.h"
+	"src/misc/lapacke.h"
+	"src/Cholesky/LLT_LAPACKE.h"
+	"src/Core/util/ReenableStupidWarnings.h"
+
+1487687794 e:\switchdrive\astro\astroqut\include\eigen\src\cholesky\llt.h
+
+1487687794 e:\switchdrive\astro\astroqut\include\eigen\src\cholesky\ldlt.h
+
+1487687794 e:\switchdrive\astro\astroqut\include\eigen\src\cholesky\llt_lapacke.h
+
+1487687794 e:\switchdrive\astro\astroqut\include\eigen\qr
+	"Core"
+	"src/Core/util/DisableStupidWarnings.h"
+	"Cholesky"
+	"Jacobi"
+	"Householder"
+	"src/QR/HouseholderQR.h"
+	"src/QR/FullPivHouseholderQR.h"
+	"src/QR/ColPivHouseholderQR.h"
+	"src/QR/CompleteOrthogonalDecomposition.h"
+	"src/misc/lapacke.h"
+	"src/QR/HouseholderQR_LAPACKE.h"
+	"src/QR/ColPivHouseholderQR_LAPACKE.h"
+	"src/Core/util/ReenableStupidWarnings.h"
+
+1487687794 e:\switchdrive\astro\astroqut\include\eigen\jacobi
+	"Core"
+	"src/Core/util/DisableStupidWarnings.h"
+	"src/Jacobi/Jacobi.h"
+	"src/Core/util/ReenableStupidWarnings.h"
+
+1487687794 e:\switchdrive\astro\astroqut\include\eigen\src\jacobi\jacobi.h
+
+1487687794 e:\switchdrive\astro\astroqut\include\eigen\householder
+	"Core"
+	"src/Core/util/DisableStupidWarnings.h"
+	"src/Householder/Householder.h"
+	"src/Householder/HouseholderSequence.h"
+	"src/Householder/BlockHouseholder.h"
+	"src/Core/util/ReenableStupidWarnings.h"
+
+1487687794 e:\switchdrive\astro\astroqut\include\eigen\src\householder\householder.h
+
+1487687794 e:\switchdrive\astro\astroqut\include\eigen\src\householder\householdersequence.h
+
+1487687794 e:\switchdrive\astro\astroqut\include\eigen\src\householder\blockhouseholder.h
+
+1487687794 e:\switchdrive\astro\astroqut\include\eigen\src\qr\householderqr.h
+
+1487687794 e:\switchdrive\astro\astroqut\include\eigen\src\qr\fullpivhouseholderqr.h
+
+1487687794 e:\switchdrive\astro\astroqut\include\eigen\src\qr\colpivhouseholderqr.h
+
+1487687794 e:\switchdrive\astro\astroqut\include\eigen\src\qr\completeorthogonaldecomposition.h
+
+1487687794 e:\switchdrive\astro\astroqut\include\eigen\src\qr\householderqr_lapacke.h
+
+1487687794 e:\switchdrive\astro\astroqut\include\eigen\src\qr\colpivhouseholderqr_lapacke.h
+
+1487687794 e:\switchdrive\astro\astroqut\include\eigen\svd
+	"QR"
+	"Householder"
+	"Jacobi"
+	"src/Core/util/DisableStupidWarnings.h"
+	"src/misc/RealSvd2x2.h"
+	"src/SVD/UpperBidiagonalization.h"
+	"src/SVD/SVDBase.h"
+	"src/SVD/JacobiSVD.h"
+	"src/SVD/BDCSVD.h"
+	"src/misc/lapacke.h"
+	"src/SVD/JacobiSVD_LAPACKE.h"
+	"src/Core/util/ReenableStupidWarnings.h"
+
+1487687794 e:\switchdrive\astro\astroqut\include\eigen\src\misc\realsvd2x2.h
+
+1487687794 e:\switchdrive\astro\astroqut\include\eigen\src\svd\upperbidiagonalization.h
+
+1487687794 e:\switchdrive\astro\astroqut\include\eigen\src\svd\svdbase.h
+
+1487687794 e:\switchdrive\astro\astroqut\include\eigen\src\svd\jacobisvd.h
+
+1487687794 e:\switchdrive\astro\astroqut\include\eigen\src\svd\bdcsvd.h
+
+1487687794 e:\switchdrive\astro\astroqut\include\eigen\src\svd\jacobisvd_lapacke.h
+
+1487687794 e:\switchdrive\astro\astroqut\include\eigen\geometry
+	"Core"
+	"src/Core/util/DisableStupidWarnings.h"
+	"SVD"
+	"LU"
+	<limits>
+	"src/Geometry/OrthoMethods.h"
+	"src/Geometry/EulerAngles.h"
+	"src/Geometry/Homogeneous.h"
+	"src/Geometry/RotationBase.h"
+	"src/Geometry/Rotation2D.h"
+	"src/Geometry/Quaternion.h"
+	"src/Geometry/AngleAxis.h"
+	"src/Geometry/Transform.h"
+	"src/Geometry/Translation.h"
+	"src/Geometry/Scaling.h"
+	"src/Geometry/Hyperplane.h"
+	"src/Geometry/ParametrizedLine.h"
+	"src/Geometry/AlignedBox.h"
+	"src/Geometry/Umeyama.h"
+	"src/Geometry/arch/Geometry_SSE.h"
+	"src/Core/util/ReenableStupidWarnings.h"
+
+1487687794 e:\switchdrive\astro\astroqut\include\eigen\src\geometry\orthomethods.h
+
+1487687794 e:\switchdrive\astro\astroqut\include\eigen\src\geometry\eulerangles.h
+
+1487687794 e:\switchdrive\astro\astroqut\include\eigen\src\geometry\homogeneous.h
+
+1487687794 e:\switchdrive\astro\astroqut\include\eigen\src\geometry\rotationbase.h
+
+1487687794 e:\switchdrive\astro\astroqut\include\eigen\src\geometry\rotation2d.h
+
+1487687794 e:\switchdrive\astro\astroqut\include\eigen\src\geometry\quaternion.h
+
+1487687794 e:\switchdrive\astro\astroqut\include\eigen\src\geometry\angleaxis.h
+
+1487687794 e:\switchdrive\astro\astroqut\include\eigen\src\geometry\transform.h
+
+1487687794 e:\switchdrive\astro\astroqut\include\eigen\src\geometry\translation.h
+
+1487687794 e:\switchdrive\astro\astroqut\include\eigen\src\geometry\scaling.h
+
+1487687794 e:\switchdrive\astro\astroqut\include\eigen\src\geometry\hyperplane.h
+
+1487687794 e:\switchdrive\astro\astroqut\include\eigen\src\geometry\parametrizedline.h
+
+1487687794 e:\switchdrive\astro\astroqut\include\eigen\src\geometry\alignedbox.h
+
+1487687794 e:\switchdrive\astro\astroqut\include\eigen\src\geometry\umeyama.h
+
+1487687794 e:\switchdrive\astro\astroqut\include\eigen\src\geometry\arch\geometry_sse.h
+
+1487687794 e:\switchdrive\astro\astroqut\include\eigen\eigenvalues
+	"Core"
+	"src/Core/util/DisableStupidWarnings.h"
+	"Cholesky"
+	"Jacobi"
+	"Householder"
+	"LU"
+	"Geometry"
+	"src/misc/RealSvd2x2.h"
+	"src/Eigenvalues/Tridiagonalization.h"
+	"src/Eigenvalues/RealSchur.h"
+	"src/Eigenvalues/EigenSolver.h"
+	"src/Eigenvalues/SelfAdjointEigenSolver.h"
+	"src/Eigenvalues/GeneralizedSelfAdjointEigenSolver.h"
+	"src/Eigenvalues/HessenbergDecomposition.h"
+	"src/Eigenvalues/ComplexSchur.h"
+	"src/Eigenvalues/ComplexEigenSolver.h"
+	"src/Eigenvalues/RealQZ.h"
+	"src/Eigenvalues/GeneralizedEigenSolver.h"
+	"src/Eigenvalues/MatrixBaseEigenvalues.h"
+	"src/misc/lapacke.h"
+	"src/Eigenvalues/RealSchur_LAPACKE.h"
+	"src/Eigenvalues/ComplexSchur_LAPACKE.h"
+	"src/Eigenvalues/SelfAdjointEigenSolver_LAPACKE.h"
+	"src/Core/util/ReenableStupidWarnings.h"
+
+1487687794 e:\switchdrive\astro\astroqut\include\eigen\src\eigenvalues\tridiagonalization.h
+
+1487687794 e:\switchdrive\astro\astroqut\include\eigen\src\eigenvalues\realschur.h
+	"./HessenbergDecomposition.h"
+
+1487687794 e:\switchdrive\astro\astroqut\include\eigen\src\eigenvalues\hessenbergdecomposition.h
+
+1487687794 e:\switchdrive\astro\astroqut\include\eigen\src\eigenvalues\eigensolver.h
+	"./RealSchur.h"
+
+1487687794 e:\switchdrive\astro\astroqut\include\eigen\src\eigenvalues\selfadjointeigensolver.h
+	"./Tridiagonalization.h"
+
+1487687794 e:\switchdrive\astro\astroqut\include\eigen\src\eigenvalues\generalizedselfadjointeigensolver.h
+	"./Tridiagonalization.h"
+
+1487687794 e:\switchdrive\astro\astroqut\include\eigen\src\eigenvalues\complexschur.h
+	"./HessenbergDecomposition.h"
+
+1487687794 e:\switchdrive\astro\astroqut\include\eigen\src\eigenvalues\complexeigensolver.h
+	"./ComplexSchur.h"
+
+1487687794 e:\switchdrive\astro\astroqut\include\eigen\src\eigenvalues\realqz.h
+
+1487687794 e:\switchdrive\astro\astroqut\include\eigen\src\eigenvalues\generalizedeigensolver.h
+	"./RealQZ.h"
+
+1487687794 e:\switchdrive\astro\astroqut\include\eigen\src\eigenvalues\matrixbaseeigenvalues.h
+
+1487687794 e:\switchdrive\astro\astroqut\include\eigen\src\eigenvalues\realschur_lapacke.h
+
+1487687794 e:\switchdrive\astro\astroqut\include\eigen\src\eigenvalues\complexschur_lapacke.h
+
+1487687794 e:\switchdrive\astro\astroqut\include\eigen\src\eigenvalues\selfadjointeigensolver_lapacke.h
+
+1498922112 source:e:\switchdrive\astro\astroqut\src\datacontainer.cpp
+	"datacontainer.hpp"
+
+1499381647 e:\switchdrive\astro\astroqut\include\datacontainer.hpp
+	<cstdlib>
+	<cstring>
+	<exception>
+	<fstream>
+	<iostream>
+	<sstream>
+	<string>
+
+1499382313 e:\switchdrive\astro\astroqut\include\fista.hpp
+	"datacontainer.hpp"
+	"fista/parameters.hpp"
+
+1499383011 e:\switchdrive\astro\astroqut\include\fista\parameters.hpp
+	"datacontainer.hpp"
+

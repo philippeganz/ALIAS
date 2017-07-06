@@ -38,6 +38,8 @@
 					<Add option="-g" />
 					<Add option="-fopt-info-vec" />
 					<Add directory="include" />
+					<Add directory="include/fista/" />
+					<Add directory="include/fista" />
 				</Compiler>
 				<Linker>
 					<Add option="-pg -lgmon" />
@@ -54,6 +56,8 @@
 					<Add option="-O2" />
 					<Add option="-m64" />
 					<Add directory="include" />
+					<Add directory="include/fista/" />
+					<Add directory="include/fista" />
 				</Compiler>
 				<Linker>
 					<Add option="-s" />
@@ -63,7 +67,8 @@
 		</Build>
 		<Compiler>
 			<Add option="-Wall" />
-			<Add option="-std=c++1z -fopenmp -ftree-vectorize" />
+			<Add option="-std=c++14" />
+			<Add option="-fopenmp -ftree-vectorize" />
 			<Add directory="include" />
 		</Compiler>
 		<Linker>
@@ -75,7 +80,9 @@
 		<Unit filename="README.md" />
 		<Unit filename="include/const.hpp" />
 		<Unit filename="include/datacontainer.hpp" />
-		<Unit filename="src/datacontainer.cpp" />
+		<Unit filename="include/fista.cpp" />
+		<Unit filename="include/fista.hpp" />
+		<Unit filename="include/fista/parameters.hpp" />
 		<Unit filename="src/main.cpp" />
 		<Extensions>
 			<code_completion />
