@@ -1,0 +1,113 @@
+\documentclass[12pt,a4paper]{report}
+\usepackage[utf8]{inputenc}
+\usepackage[english]{babel}
+\usepackage{amsmath}
+\usepackage{amsfonts}
+\usepackage{amssymb}
+\usepackage{graphicx}
+\usepackage{lmodern}
+\usepackage{appendix}
+\usepackage{pgfplots}
+\pgfplotsset{
+    legend image with text/.style={
+        legend image code/.code={%
+            \node[anchor=center] at (0.3cm,0cm) {#1};
+        }
+    },
+}
+\usepackage{pgfplotstable}
+\pgfplotsset{compat=1.12}
+\usepgfplotslibrary{statistics}
+\usepackage{pgf,tikz}
+
+\usepackage{caption}
+\usepackage{subcaption}
+
+\usepackage{listings}
+\lstdefinestyle{matlab}						%matlab style
+{
+language=Matlab,							%
+tabsize=4,									%tabulation size
+numbers=left,								%line numbers off default
+numberstyle=\tiny,							%tiny numbers
+numbersep=5pt,								%5pt away from text
+firstnumber=1,								%begin numbering at 1
+stepnumber=1,								%increments by 1
+basicstyle=\scriptsize,						%size of code
+frame=single,								%frame style
+framerule=0.2mm,							%0.2mm frame
+rulecolor=\color{black},					%black frame
+breaklines=true,							%break lines
+breakatwhitespace=true,						%BUT only on whitespace
+keywordstyle=\color[rgb]{0,0,1}, 			%keyword color
+commentstyle=\color[rgb]{0.133,0.545,0.133},%comment color
+stringstyle=\color[rgb]{0.627,0.126,0.941},	%string color
+linewidth = \textwidth						%default linewidth
+\lstset{									%defining some more options
+morekeywords={},							%
+morekeywords=[2]{},							%
+keywordstyle=[2]\color{red},				%
+morekeywords=[3]{},							%
+keywordstyle=[3]\color{green},				%
+morekeywords=[4]{},							%
+keywordstyle=[4]\color{violet}				%
+}											%
+\renewcommand{\baselinestretch}{0.7}		%compressing text
+\usefont{T1}{pcr}{m}{n}						%new courrier font used
+}
+\setlength{\headheight}{27.5pt}				%space for header
+\usepackage[Glenn]{fncychap}				%chapter style
+\usepackage{fancyhdr}						%header package
+\pagestyle{fancy}							%applying style
+\lhead[]{}									%no left header
+
+\usepackage{hyperref} 
+\hypersetup{
+colorlinks=true,
+linkcolor= black,
+pdftitle={Scheme},
+pdfauthor={Philippe Ganz},
+pdfsubject={Machine learning}
+}
+\usepackage[all]{hypcap}
+
+\begin{document}
+
+	\begin{figure}
+	\centering
+	\begin{tikzpicture}
+		\node (lena) at (1.5,10) {\includegraphics[width=2cm]{pic/dft/lena_color.png}};
+		\node (lenaSplit) at (1.5,6.5) {$\boxed{\begin{matrix} a_{11} + ib_{11} & \cdots & a_{1n} + ib_{1_n}\\ \vdots & \ddots & \vdots\\ a_{m1} + ib_{m1} & \cdots & a_{mn} + ib_{mn} \end{matrix}}$};
+		\draw [->, thick] (lena.south) -- (lenaSplit) node[midway, fill=white]{$DFT$};
+		\node (lenaMagn) at (0.25,3) {\includegraphics[width=2cm]{pic/dft/lenaMagn.jpg}};
+		\node (lenaAngle) at (2.75,3) {\includegraphics[width=2cm]{pic/dft/lenaAngle.jpg}};
+		\draw [->, thick] (lenaSplit) -- (lenaMagn.north) node[midway,fill=white]{$|\cdot |$};
+		\draw [->, thick] (lenaSplit) -- (lenaAngle.north) node[midway,fill=white]{$\Phi$};
+		
+		\node (rand) at (7.5,10) {\includegraphics[width=2cm]{pic/dft/random.jpg}};
+		\draw [->, thick] (5.5,10) node[left]{$K$} -- (rand.west);
+		\node (randSplit) at (7.5,6.5) {$\boxed{\begin{matrix} c_{11} + id_{11} & \cdots & c_{1n} + id_{1_n}\\ \vdots & \ddots & \vdots\\ c_{m1} + id_{m1} & \cdots & c_{mn} + id_{mn} \end{matrix}}$};
+		\draw [->, thick] (rand.south) -- (randSplit) node[midway, fill=white]{$DFT$};
+		\node (rAngle) at (6.25,3) {\includegraphics[width=2cm]{pic/dft/randAngle.jpg}};
+		\node (rMagn) at (8.75,3) {\includegraphics[width=2cm]{pic/dft/randMagn.jpg}};
+		\draw [->, thick] (randSplit) -- (rMagn.north) node[midway,fill=white]{$|\cdot |$};
+		\draw [->, thick] (randSplit) -- (rAngle.north) node[midway,fill=white]{$\Phi$};
+		
+		\node (plus) at (4.5,1) {\large \textbf{+}};
+		
+		\node (sum) at (4.5,-0.5) {\includegraphics[width=2cm]{pic/dft/sumAngle.jpg}};
+		\draw [->, thick] (lenaAngle.south) -- (sum);
+		\draw [->, thick] (rAngle.south) -- (sum);
+		
+		\node (exp) at (4.5,-4) {$\boxed{\begin{matrix} r_{11}\cdot e^{i\phi'_{11}} & \cdots & r_{1n}\cdot e^{i\phi'_{1n}}\\ \vdots & \ddots & \vdots\\ r_{m1}\cdot e^{i\phi'_{m1}} & \cdots & \ r_{mn}\cdot e^{i\phi'_{mn}} \end{matrix}}$};
+		\draw [->, thick] (lenaMagn.south) -- (exp);
+		\draw [->, thick] (sum.south) -- (exp);
+		
+		\node (scr) at (4.5,-7.5) {\includegraphics[width=2cm]{pic/dft/lenaScr.jpg}};
+		\draw [->, thick] (exp.south) -- (scr.north) node[midway, fill=white]{$iDFT$};
+	\end{tikzpicture}
+	\caption{Basic idea of the algorithm}
+	\label{dftidea}
+	\end{figure}
+		
+\end{document}
