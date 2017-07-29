@@ -2,18 +2,16 @@
 <CodeBlocks_project_file>
 	<FileVersion major="1" minor="6" />
 	<Project>
-		<Option title="ASTROQUT" />
+		<Option title="AstroQUT" />
 		<Option pch_mode="2" />
 		<Option compiler="gcc" />
 		<Build>
-			<Target title="dev">
-				<Option output="bin/ASTROQUT" prefix_auto="1" extension_auto="1" />
-				<Option object_output="obj/" />
+			<Target title="Debug">
+				<Option output="bin/Debug/AstroQUT" prefix_auto="1" extension_auto="1" />
+				<Option object_output="obj/Debug/" />
 				<Option type="1" />
 				<Option compiler="gcc" />
-				<Option parameters="pics/source.png pics/sensitivity.png pics/background.png" />
 				<Compiler>
-					<Add option="-march=corei7-avx" />
 					<Add option="-Wnon-virtual-dtor" />
 					<Add option="-Wshadow" />
 					<Add option="-Winit-self" />
@@ -33,71 +31,45 @@
 					<Add option="-pedantic" />
 					<Add option="-Wextra" />
 					<Add option="-Wall" />
-					<Add option="-pg" />
-					<Add option="-m64" />
 					<Add option="-g" />
-					<Add option="-fopt-info-vec" />
-					<Add directory="include" />
-					<Add directory="include/fista/" />
-					<Add directory="include/fista" />
 				</Compiler>
-				<Linker>
-					<Add option="-pg -lgmon" />
-					<Add option="-m64" />
-				</Linker>
 			</Target>
-			<Target title="master">
-				<Option output="bin/master/ASTROQUT" prefix_auto="1" extension_auto="1" />
-				<Option object_output="obj/master/" />
+			<Target title="Release">
+				<Option output="bin/Release/AstroQUT" prefix_auto="1" extension_auto="1" />
+				<Option object_output="obj/Release/" />
 				<Option type="1" />
 				<Option compiler="gcc" />
 				<Compiler>
 					<Add option="-march=corei7-avx" />
 					<Add option="-O2" />
-					<Add option="-m64" />
-					<Add directory="include" />
-					<Add directory="include/fista/" />
-					<Add directory="include/fista" />
 				</Compiler>
 				<Linker>
 					<Add option="-s" />
-					<Add option="-m64" />
 				</Linker>
 			</Target>
 		</Build>
 		<Compiler>
-			<Add option="-Wall" />
-			<Add option="-std=c++14" />
-			<Add option="-fopenmp -ftree-vectorize" />
+			<Add option="-ftree-vectorize -fopenmp -std=c++1z" />
 			<Add directory="include" />
 		</Compiler>
 		<Linker>
 			<Add option="-fopenmp" />
+			<Add directory="include" />
 		</Linker>
-		<Unit filename=".gitignore" />
-		<Unit filename="LICENCE" />
-		<Unit filename="Makefile" />
-		<Unit filename="README.md" />
 		<Unit filename="include/const.hpp" />
 		<Unit filename="include/datacontainer.hpp" />
-		<Unit filename="include/fista.cpp" />
-		<Unit filename="include/fista.hpp" />
-		<Unit filename="include/fista/parameters.hpp" />
+		<Unit filename="include/fista/poisson.hpp" />
+		<Unit filename="include/fista/poisson/parameters.hpp" />
+		<Unit filename="include/test.hpp" />
+		<Unit filename="include/test/datacontainer.hpp" />
+		<Unit filename="src/fista/poisson.cpp" />
 		<Unit filename="src/main.cpp" />
+		<Unit filename="src/test.cpp" />
+		<Unit filename="src/test/datacontainer.cpp" />
 		<Extensions>
 			<code_completion />
 			<envvars />
 			<debugger />
-			<lib_finder disable_auto="1" />
-			<DoxyBlocks>
-				<comment_style block="0" line="0" />
-				<doxyfile_project />
-				<doxyfile_build />
-				<doxyfile_warnings warn_if_undocumented="1" />
-				<doxyfile_output />
-				<doxyfile_dot />
-				<general />
-			</DoxyBlocks>
 		</Extensions>
 	</Project>
 </CodeBlocks_project_file>

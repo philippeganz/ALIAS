@@ -1286,3 +1286,58 @@
 1499383011 e:\switchdrive\astro\astroqut\include\fista\parameters.hpp
 	"datacontainer.hpp"
 
+1501330283 source:d:\switchdrive\astro\astroqut\src\main.cpp
+	<cstdlib>
+	<iostream>
+	<string>
+	"const.hpp"
+	"datacontainer.hpp"
+	"fista/poisson.hpp"
+	"test.hpp"
+
+1499970728 d:\switchdrive\astro\astroqut\include\const.hpp
+
+1501348365 d:\switchdrive\astro\astroqut\include\datacontainer.hpp
+	<algorithm>
+	<cmath>
+	<cstdlib>
+	<cstring>
+	<exception>
+	<fstream>
+	<iostream>
+	<limits>
+	<numeric>
+	<sstream>
+	<string>
+
+1499382313 d:\switchdrive\astro\astroqut\include\fista.hpp
+	"datacontainer.hpp"
+	"fista/parameters.hpp"
+
+1499383011 d:\switchdrive\astro\astroqut\include\fista\parameters.hpp
+	"datacontainer.hpp"
+
+1501348388 source:d:\switchdrive\astro\astroqut\src\fista\poisson.cpp
+	"fista/poisson.hpp"
+
+1499970414 d:\switchdrive\astro\astroqut\include\fista\poisson.hpp
+	"datacontainer.hpp"
+	"fista/poisson/parameters.hpp"
+
+1501330321 d:\switchdrive\astro\astroqut\include\fista\poisson\parameters.hpp
+	"datacontainer.hpp"
+
+1501330413 d:\switchdrive\astro\astroqut\include\test.hpp
+	"test/datacontainer.hpp"
+
+1501330270 d:\switchdrive\astro\astroqut\include\test\datacontainer.hpp
+	<chrono>
+	<iostream>
+	<datacontainer.hpp>
+
+1501328409 source:d:\switchdrive\astro\astroqut\src\test.cpp
+	"test.hpp"
+
+1501330277 source:d:\switchdrive\astro\astroqut\src\test\datacontainer.cpp
+	"test/datacontainer.hpp"
+

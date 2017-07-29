@@ -30,3 +30,11 @@
 
 # CodeBlocks local files
 *.layout
+
+# Latex temp files
+*.aux
+*.bbl
+*.blg
+*.log
+*.synctex.gz
+*.toc
