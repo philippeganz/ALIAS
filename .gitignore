@@ -30,6 +30,7 @@
 
 # CodeBlocks local files
 *.layout
+*.depend
 
 # Latex temp files
 *.aux

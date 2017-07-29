@@ -56,6 +56,7 @@
 			<Add option="-fopenmp" />
 			<Add directory="include" />
 		</Linker>
+		<Unit filename=".gitignore" />
 		<Unit filename="include/const.hpp" />
 		<Unit filename="include/datacontainer.hpp" />
 		<Unit filename="include/fista/poisson.hpp" />
