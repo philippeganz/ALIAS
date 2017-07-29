@@ -26,9 +26,11 @@ bool dataContainer()
     bool norm_two = datacontainer::NormTwo();
     bool norm_inf = datacontainer::NormInf();
 
-    datacontainer::Time();
+    bool shrink = datacontainer::Shrink();
 
-    return transpose_square && transpose_rect && add && sub && mult_square && mult_rect && norm_one && norm_two && norm_inf;
+//    datacontainer::Time();
+
+    return transpose_square && transpose_rect && add && sub && mult_square && mult_rect && norm_one && norm_two && norm_inf && shrink;
 }
 
 } // namespace test

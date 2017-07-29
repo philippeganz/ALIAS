@@ -199,6 +199,28 @@ bool NormInf()
     return test_result;
 }
 
+bool Shrink()
+{
+    std::cout << "Shrinkage test : ";
+
+    DataContainer<int> int_expected_result(new int[9]{0,0,1,2,3,4,5,6,7}, 3, 3);
+    bool int_test = (int_expected_result == int_square_matrix.Shrink(2));
+
+    DataContainer<long> long_expected_result(new long[9]{0,0,1,2,3,4,5,6,7}, 3, 3);
+    bool long_test = (long_expected_result == long_square_matrix.Shrink(2));
+
+    DataContainer<float> float_expected_result(new float[9]{0,0,1,2,3,4,5,6,7}, 3, 3);
+    bool float_test = (float_expected_result == float_square_matrix.Shrink(2));
+
+    DataContainer<double> double_expected_result(new double[9]{0,0,1,2,3,4,5,6,7}, 3, 3);
+    bool double_test = (double_expected_result == double_square_matrix.Shrink(2));
+
+    bool test_result = int_test && long_test && float_test && double_test;
+    std::cout << (test_result ? "Success" : "Failure") << std::endl;
+
+    return test_result;
+}
+
 void Time()
 {
     DataContainer<int> int_big_matrix(2, 5000, 5000);

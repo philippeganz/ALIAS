@@ -31,6 +31,8 @@ bool NormOne();
 bool NormTwo();
 bool NormInf();
 
+bool Shrink();
+
 void Time();
 
 } // namespace datacontainer

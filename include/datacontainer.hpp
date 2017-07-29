@@ -322,7 +322,7 @@ public:
             height_ = other.Height();
             width_ = other.Width();
             raw_data_ = other.RawData();
-            other.SetRawData(nullptr);
+            other.RawData(nullptr);
         }
         return *this;
     }
@@ -649,6 +649,30 @@ public:
 			}
         }
         return DataContainer(transposed_data, width_, height_); // width <--> height
+    }
+
+    /** Shrinkage
+    *   \param thresh_factor The thresholding factor to be used on the data
+    */
+    DataContainer<T> Shrink(const double thresh_factor) const
+    {
+        T* thresholded_data = nullptr;
+
+        try
+        {
+            thresholded_data = new T[height_*width_]{};
+        }
+        catch (const std::bad_alloc& ba)
+        {
+            std::cerr << "Could not allocate memory for new array!" << std::endl;
+            throw;
+        }
+
+        for( size_t i = 0; i < height_*width_; ++i )
+        {
+            thresholded_data[i] = (T) (raw_data_[i] * std::max(1 - thresh_factor / std::abs((double)raw_data_[i]), 0.0));
+        }
+        return DataContainer(thresholded_data, height_, width_);
     }
 
     /** Print
