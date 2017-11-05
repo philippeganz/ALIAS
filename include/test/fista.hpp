@@ -15,7 +15,6 @@
 #include <random>
 
 #include "fista/poisson.hpp"
-#include "fista/poisson/parameters.hpp"
 
 namespace astroqut{
 namespace test{
