@@ -3,7 +3,7 @@
 /// \brief FISTA (Fast Iterative Shrinkage Tresholding Algorithm) solver for Poisson distributed noise.
 /// \author Philippe Ganz <philippe.ganz@gmail.com> based on the work of Hatef Monajemi <monajemi@stanford.edu>
 /// \version 0.1.0
-/// \date 2017-07-13
+/// \date 2017-07-30
 /// \copyright GPL-3.0
 ///
 
@@ -12,6 +12,9 @@
 
 #include "datacontainer.hpp"
 #include "fista/poisson/parameters.hpp"
+
+#include <iostream>
+#include <iomanip>
 
 
 namespace astroqut{
@@ -23,16 +26,13 @@ namespace poisson{
  *  \param background Background shift
  *  \param response Response data to the regression matrix
  *  \param lambda Regularization parameter
- *  \param lambda_max
- *  \param lipschitz_const
  *  \param options Parameters that defines various value for FISTA to work
  */
-DataContainer<double> solve(  const DataContainer<double>& model,
-                              const DataContainer<double>& background,
-                              const DataContainer<double>& response,
-                              const double lambda,
-                              const double lambda_max,
-                              const Parameters& options );
+DataContainer<double> solve( const DataContainer<double>& model,
+                             const DataContainer<double>& background,
+                             const DataContainer<double>& response,
+                             const double lambda,
+                             const Parameters& options );
 
 } // namespace poisson
 } // namespace fista
