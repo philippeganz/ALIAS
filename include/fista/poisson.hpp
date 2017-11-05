@@ -11,7 +11,6 @@
 #define ASTROQUT_FISTA_POISSON_HPP
 
 #include "datacontainer.hpp"
-#include "fista/poisson/parameters.hpp"
 
 #include <iostream>
 #include <iomanip>
@@ -20,6 +19,26 @@
 namespace astroqut{
 namespace fista{
 namespace poisson{
+
+struct Parameters
+{
+    /** Default constructor
+     *  Parameters with default values
+     */
+    Parameters() noexcept
+        : tol(1e-6)
+        , max_iter(2000)
+        , init_value(DataContainer<double>())
+        , log(true)
+        , log_period(10)
+    {}
+
+    double tol; //!< Member variable "tol"
+    size_t max_iter = 2000; //!< Member variable "max_iter"
+    DataContainer<double> init_value; //!< Member variable "init_value"
+    bool log; //!< Member variable "log"
+    unsigned int log_period; //!< Member variable "log_period"
+};
 
 /** Poisson distributed noise solver
  *  \param model Explicit regression matrix

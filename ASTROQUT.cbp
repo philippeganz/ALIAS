@@ -57,12 +57,13 @@
 			<Add directory="include" />
 		</Linker>
 		<Unit filename=".gitignore" />
+		<Unit filename="include/WS.hpp" />
 		<Unit filename="include/const.hpp" />
 		<Unit filename="include/datacontainer.hpp" />
 		<Unit filename="include/fista/poisson.hpp" />
-		<Unit filename="include/fista/poisson/parameters.hpp" />
 		<Unit filename="include/test.hpp" />
 		<Unit filename="include/test/container.hpp" />
+		<Unit filename="include/test/datacontainer.hpp" />
 		<Unit filename="include/test/fista.hpp" />
 		<Unit filename="src/fista/poisson.cpp" />
 		<Unit filename="src/main.cpp" />
