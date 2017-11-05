@@ -62,11 +62,13 @@
 		<Unit filename="include/fista/poisson.hpp" />
 		<Unit filename="include/fista/poisson/parameters.hpp" />
 		<Unit filename="include/test.hpp" />
-		<Unit filename="include/test/datacontainer.hpp" />
+		<Unit filename="include/test/container.hpp" />
+		<Unit filename="include/test/fista.hpp" />
 		<Unit filename="src/fista/poisson.cpp" />
 		<Unit filename="src/main.cpp" />
 		<Unit filename="src/test.cpp" />
-		<Unit filename="src/test/datacontainer.cpp" />
+		<Unit filename="src/test/container.cpp" />
+		<Unit filename="src/test/fista.cpp" />
 		<Extensions>
 			<code_completion />
 			<envvars />
