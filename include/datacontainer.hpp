@@ -4,7 +4,7 @@
 /// \details Provide matrix container with multiple matrix operations used throughout the solver.
 /// \author Philippe Ganz <philippe.ganz@gmail.com>
 /// \version 0.1.0
-/// \date 2017-07-29
+/// \date 2017-08-13
 /// \copyright GPL-3.0
 ///
 
@@ -51,6 +51,10 @@ inline typename std::enable_if<std::numeric_limits<T>::is_integer, bool>::type I
 /** Types of norm currently implemented
  */
 enum NormType {one, two, two_squared, inf};
+
+/** Types of argument tests
+ */
+enum ArgTestType {mult, add};
 
 template <class T> class DataContainer
 {
@@ -157,7 +161,7 @@ public:
             std::cerr << "Could not allocate memory for new array!" << std::endl;
             throw;
         }
-        std::memcpy(raw_data_, other.RawData(), sizeof(T)*height_*width_);
+        std::copy(other.RawData(), other.RawData() + (height_*width_), raw_data_);
     }
 
     /** Move constructor
@@ -232,8 +236,8 @@ public:
     bool IsEmpty() const noexcept
     {
         if( height_ == 0 &&
-                width_ == 0 &&
-                raw_data_ == nullptr)
+            width_ == 0 &&
+            raw_data_ == nullptr)
         {
             return true;
         }
@@ -243,14 +247,99 @@ public:
         }
     }
 
+    /** Valid instance test
+     *  \return Throws an error message if instance is not valid.
+     */
+    bool IsValid() const
+    {
+        if( height_ != 0 &&
+            width_ != 0 &&
+            raw_data_ != nullptr )
+        {
+            return true;
+        }
+        else
+        {
+            throw std::invalid_argument("Matrix dimensions must be non-zero and data shall not be empty!");
+        }
+    }
+
+    /** Argument test
+     *  \param other Other object to test
+     *  \return Throws an error message if instance is not valid.
+     */
+    template <class U> bool ArgTest(const DataContainer<U>& other, ArgTestType type) const
+    {
+        bool test_result = false;
+        switch(type)
+        {
+        case mult:
+            {
+                if( height_ != 0 && other.Height() != 0 &&
+                    width_ != 0 && other.Width() != 0 &&
+                    width_ == other.Height() &&
+                    raw_data_ != nullptr && other.RawData() != nullptr )
+                {
+                    test_result = true;
+                }
+                break;
+            }
+        case add:
+            {
+                if( height_ != 0 && height_ == other.Height() &&
+                    width_ != 0 && width_ == other.Width() &&
+                    raw_data_ != nullptr && other.RawData() != nullptr )
+                {
+                    test_result = true;
+                }
+                break;
+            }
+        default:
+            {
+                break;
+            }
+        }
+        if( test_result )
+        {
+            return true;
+        }
+        else
+        {
+            throw std::invalid_argument("Matrix dimensions must agree, be non-zero and data shall not be empty!");
+        }
+    }
+
+    /** Negativity test
+     *  \return True is a negative number is found in the array, False otherwise.
+     */
+    bool ContainsNeg() const noexcept
+    {
+        if( height_ == 0 ||
+            width_ == 0 ||
+            raw_data_ == nullptr)
+        {
+            return false;
+        }
+
+        for( size_t i = 0; i < height_*width_; ++i )
+        {
+            if( raw_data_[i] < 0 )
+            {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
     /** Comparison operator equal
      *  \param other Object to compare to
      */
     template <class U> bool operator==(const DataContainer<U>& other) const noexcept
     {
         if( ! std::is_same<T,U>::value ||
-                height_ != other.height_ ||
-                width_ != other.Width() )
+            height_ != other.height_ ||
+            width_ != other.Width() )
         {
             return false;
         }
@@ -276,38 +365,37 @@ public:
     /** Assignment operator
      *  \param other Object to assign to current object
      */
-    DataContainer<T>& operator=(const DataContainer<T>& other) = default;
-    template <class U> DataContainer<T>& operator=(const DataContainer<U>& other)
+    DataContainer<T>& operator=(const DataContainer<T>& other)
     {
         if( this != &other )
         {
-            height_ = other.Height();
-            width_ = other.Width();
-
-            try
+            // if the array size is not the same, we need to reallocate memory
+            if( height_*width_ != other.Height()*other.Width() )
             {
-                raw_data_ = new T[height_*width_];
-            }
-            catch (const std::bad_alloc& ba)
-            {
-                std::cerr << "Could not allocate memory for new array!" << std::endl;
-                throw;
-            }
-
-            // If data types are not the same, we need to cast every value to the new type
-            if( std::is_same<T,U>::value )
-            {
-                std::copy(raw_data_, raw_data_ + (height_*width_), other.RawData());
-            }
-            else
-            {
-                #pragma GCC ivdep
-                for( size_t iter = 0; iter < height_*width_; ++iter )
+                if( raw_data_ != nullptr )
                 {
-                    raw_data_[iter] = (T) other.RawData()[iter];
+                    delete[] raw_data_;
+                }
+
+                try
+                {
+                    raw_data_ = new T[other.Height()*other.Width()];
+                }
+                catch (const std::bad_alloc& ba)
+                {
+                    std::cerr << "Could not allocate memory for new array!" << std::endl;
+                    throw;
                 }
             }
 
+            height_ = other.Height();
+            width_ = other.Width();
+
+            #pragma GCC ivdep
+            for( size_t iter = 0; iter < height_*width_; ++iter )
+            {
+                raw_data_[iter] = other.RawData()[iter];
+            }
         }
         return *this;
     }
@@ -315,14 +403,15 @@ public:
     /** Move operator
      *  \param other Object to move to current object
      */
-    DataContainer<T>& operator=(DataContainer<T>&& other) noexcept
+    DataContainer<T>& operator=(DataContainer<T>&& other)
     {
-        if (this != &other)
+        if( this != &other )
         {
             height_ = other.Height();
             width_ = other.Width();
+            T* tmp  = raw_data_;
             raw_data_ = other.RawData();
-            other.RawData(nullptr);
+            other.RawData(tmp);
         }
         return *this;
     }
@@ -330,13 +419,11 @@ public:
     /** Additive operator
      *  \param other Object to add to current object
      */
-    template <class U> DataContainer<T> operator+(const DataContainer<U>& other) const
+    template <class U> DataContainer<T> operator+(const DataContainer<U>& other) const &
     {
         T* result_data = nullptr;
 
-        if( height_ != 0 && height_ == other.Height() &&
-            width_ != 0 && width_ == other.Width() &&
-            raw_data_ != nullptr && other.RawData() != nullptr )
+        if( ArgTest(other, add) )
         {
             try
             {
@@ -351,14 +438,19 @@ public:
             #pragma GCC ivdep
             for(size_t i = 0; i < height_*width_; ++i)
             {
-                result_data[i] = raw_data_[i] + (T) other.RawData()[i];
+                result_data[i] = raw_data_[i] + other.RawData()[i];
             }
         }
-        else
-        {
-            throw std::invalid_argument("Matrix dimensions must agree, be non-zero and data shall not be empty!");
-        }
         return DataContainer(result_data, height_, width_);
+    }
+
+    /** Additive operator of temporary instance
+     *  \param other Object to add to current object
+     */
+    template <class U> DataContainer<T> operator+(const DataContainer<U>& other) &&
+    {
+        *this += other; // if object is temporary, no need to allocate new memory for the result
+        return *this;
     }
 
     /** Additive operator in-place
@@ -366,20 +458,25 @@ public:
      */
     template <class U> DataContainer<T>& operator+=(const DataContainer<U>& other)
     {
-        this = this + other;
+        if( ArgTest(other, add) )
+        {
+            #pragma GCC ivdep
+            for(size_t i = 0; i < height_*width_; ++i)
+            {
+                raw_data_[i] += other.RawData()[i];
+            }
+        }
         return *this;
     }
 
     /** Subtractive operator
      *  \param other Object to subtract to current object
      */
-    template <class U> DataContainer<T> operator-(const DataContainer<U>& other) const
+    template <class U> DataContainer<T> operator-(const DataContainer<U>& other) const &
     {
         T* result_data = nullptr;
 
-        if( height_ != 0 && height_ == other.Height() &&
-            width_ != 0 && width_ == other.Width() &&
-            raw_data_ != nullptr && other.RawData() != nullptr )
+        if( ArgTest(other, add) )
         {
             try
             {
@@ -394,14 +491,19 @@ public:
             #pragma GCC ivdep
             for(size_t i = 0; i < height_*width_; ++i)
             {
-                result_data[i] = raw_data_[i] - (T) other.RawData()[i];
+                result_data[i] = raw_data_[i] - other.RawData()[i];
             }
         }
-        else
-        {
-            throw std::invalid_argument("Matrix dimensions must agree, be non-zero and data shall not be empty!");
-        }
         return DataContainer(result_data, height_, width_);
+    }
+
+    /** Subtractive operator of temporary instance
+     *  \param other Object to subtract to current object
+     */
+    template <class U> DataContainer<T> operator-(const DataContainer<U>& other) &&
+    {
+        *this -= other; // if object is temporary, no need to allocate new memory for the result
+        return *this;
     }
 
     /** Subtractive operator in-place
@@ -409,7 +511,14 @@ public:
      */
     template <class U> DataContainer<T>& operator-=(const DataContainer<U>& other)
     {
-        this = this - other;
+        if( ArgTest(other, add) )
+        {
+            #pragma GCC ivdep
+            for(size_t i = 0; i < height_*width_; ++i)
+            {
+                raw_data_[i] -= other.RawData()[i];
+            }
+        }
         return *this;
     }
 
@@ -420,10 +529,7 @@ public:
     {
         T* result_data = nullptr;
 
-        if( height_ != 0 && other.Height() != 0 &&
-            width_ != 0 && other.Width() != 0 &&
-            width_ == other.Height() &&
-            raw_data_ != nullptr && other.RawData() != nullptr)
+        if( ArgTest(other, mult) )
         {
             try
             {
@@ -442,16 +548,56 @@ public:
                 {
                     for(size_t j = 0; j < other.Width(); ++j)
                     {
-                        result_data[i*other.Width() + j] += raw_data_[i*width_ + k] * (T) other.RawData()[k*other.Width() + j];
+                        result_data[i*other.Width() + j] += raw_data_[i*width_ + k] * other.RawData()[k*other.Width() + j];
                     }
                 }
             }
         }
-        else
-        {
-            throw std::invalid_argument("Matrix dimensions must agree, be non-zero and data shall not be empty!");
-        }
         return DataContainer(result_data, height_, other.Width());
+    }
+
+    /** Multiplicative operator with single number
+     *  \param number Number to multiply the current object with
+     */
+    DataContainer<T> operator*(const T number) const &
+    {
+        T* result_data = nullptr;
+
+        if( IsValid() )
+        {
+            try
+            {
+                result_data = new T[height_*width_];
+            }
+            catch (const std::bad_alloc& ba)
+            {
+                std::cerr << "Could not allocate memory for resulting array!" << std::endl;
+                throw;
+            }
+
+            #pragma GCC ivdep
+            for(size_t i = 0; i < height_*width_; ++i)
+            {
+                result_data[i] = raw_data_[i] * number;
+            }
+        }
+        return DataContainer(result_data, height_, width_);
+    }
+
+    /** Multiplicative operator of temporary instance with single number
+     *  \param number Number to multiply the current object with
+     */
+    DataContainer<T> operator*(const T number) &&
+    {
+        if( IsValid() )
+        {
+            #pragma GCC ivdep
+            for(size_t i = 0; i < height_*width_; ++i)
+            {
+                raw_data_[i] *= number;
+            }
+        }
+        return *this;
     }
 
     /** Multiplicative operator in-place
@@ -459,20 +605,18 @@ public:
      */
     template <class U> DataContainer<T>& operator*=(const DataContainer<U>& other)
     {
-        this = this * other;
+        *this = *this * other;
         return *this;
     }
 
     /** Element-wise multiply
      *  \param other Object to multiply to current object, element-wise
      */
-    template <class U> DataContainer<T> operator->*(const DataContainer<U>& other) const
+    template <class U> DataContainer<T> operator->*(const DataContainer<U>& other) const &
     {
         T* result_data = nullptr;
 
-        if( height_ != 0 && height_ == other.Height() &&
-            width_ != 0 && width_ == other.Width() &&
-            raw_data_ != nullptr && other.RawData() != nullptr )
+        if( ArgTest(other, add) )
         {
             try
             {
@@ -487,26 +631,36 @@ public:
             #pragma GCC ivdep
             for(size_t i = 0; i < height_*width_; ++i)
             {
-                result_data[i] = raw_data_[i] * (T) other.RawData()[i];
+                result_data[i] = raw_data_[i] * other.RawData()[i];
             }
-        }
-        else
-        {
-            throw std::invalid_argument("Matrix dimensions must agree, be non-zero and data shall not be empty!");
         }
         return DataContainer(result_data, height_, width_);
     }
 
-    /** Element-wise divide
+    /** Element-wise multiply of temporary instance
+     *  \param other Object to multiply to current object, element-wise
+     */
+    template <class U> DataContainer<T> operator->*(const DataContainer<U>& other) &&
+    {
+        if( ArgTest(other, add) )
+        {
+            #pragma GCC ivdep
+            for(size_t i = 0; i < height_*width_; ++i)
+            {
+                raw_data_[i] *= other.RawData()[i];
+            }
+        }
+        return *this;
+    }
+
+    /** Element-wise divide operator
      *  \param other Object to divide from current object, element-wise
      */
-    template <class U> DataContainer<T> operator/(const DataContainer<U>& other) const
+    template <class U> DataContainer<T> operator/(const DataContainer<U>& other) const &
     {
         T* result_data = nullptr;
 
-        if( height_ != 0 && height_ == other.Height() &&
-            width_ != 0 && width_ == other.Width() &&
-            raw_data_ != nullptr && other.RawData() != nullptr )
+        if( ArgTest(other, add) )
         {
             try
             {
@@ -521,14 +675,70 @@ public:
             #pragma GCC ivdep
             for(size_t i = 0; i < height_*width_; ++i)
             {
-                result_data[i] = (T) ((double) raw_data_[i] / (double) other.RawData()[i]);
+                result_data[i] = (double) raw_data_[i] / (double) other.RawData()[i];
             }
         }
-        else
+        return DataContainer(result_data, height_, width_);
+    }
+
+    /** Element-wise divide operator of temporary instance
+     *  \param other Object to divide from current object, element-wise
+     */
+    template <class U> DataContainer<T> operator/(const DataContainer<U>& other) &&
+    {
+        if( ArgTest(other, add) )
         {
-            throw std::invalid_argument("Matrix dimensions must agree, be non-zero and data shall not be empty!");
+            #pragma GCC ivdep
+            for(size_t i = 0; i < height_*width_; ++i)
+            {
+                raw_data_[i] = (double) raw_data_[i] / (double) other.RawData()[i];
+            }
+        }
+        return *this;
+    }
+
+    /** Divide operator with single number
+     *  \param number Number to divide the current object by
+     */
+    DataContainer<T> operator/(const T number) const &
+    {
+        T* result_data = nullptr;
+
+        if( IsValid() )
+        {
+            try
+            {
+                result_data = new T[height_*width_];
+            }
+            catch (const std::bad_alloc& ba)
+            {
+                std::cerr << "Could not allocate memory for resulting array!" << std::endl;
+                throw;
+            }
+
+            #pragma GCC ivdep
+            for(size_t i = 0; i < height_*width_; ++i)
+            {
+                result_data[i] = (double)raw_data_[i] / (double)number;
+            }
         }
         return DataContainer(result_data, height_, width_);
+    }
+
+    /** Divide operator with single number of temporary instance
+     *  \param number Number to divide the current object by
+     */
+    DataContainer<T> operator/(const T number) &&
+    {
+        if( IsValid() )
+        {
+            #pragma GCC ivdep
+            for(size_t i = 0; i < height_*width_; ++i)
+            {
+                raw_data_[i] = (double)raw_data_[i] / (double)number;
+            }
+        }
+        return *this;
     }
 
     /** Inner product
@@ -536,14 +746,14 @@ public:
      */
     template <class U> T Inner(const DataContainer<U>& other) const noexcept
     {
-        return (T) std::inner_product(  raw_data_,
-                                        raw_data_ + (height_*width_),
-                                        other.RawData(),
-                                        (T) 0);
+        return  std::inner_product( raw_data_,
+                                    raw_data_ + (height_*width_),
+                                    other.RawData(),
+                                    (T) 0 );
     }
 
     /** Log
-     *  Applies the log function to all elements
+     *  Applies the log function to all positive elements
      */
     DataContainer<T> Log() const
     {
@@ -562,14 +772,15 @@ public:
         #pragma GCC ivdep
         for(size_t i = 0; i < height_*width_; ++i)
         {
-            result_data[i] = (T) std::log(raw_data_[i]);
+            // real part of log of negative numbers is 0
+            result_data[i] = ((raw_data_[i] >= 0) ? std::log(raw_data_[i]) : 0);
         }
 
         return DataContainer(result_data, height_, width_);
     }
 
     /** Norm
-     *  Returns the norm of the vector, not implemented yet for matrices.
+     *  Returns the norm of the vector, not yet implemented for matrices.
      */
     T Norm(const NormType l_norm) const noexcept
     {
@@ -580,21 +791,21 @@ public:
             return std::accumulate(raw_data_,
                                    raw_data_ + (height_*width_),
                                    (T) 0,
-                                   [](T acc, T next){return acc + abs(next);});
+                                   [](const T acc, const T next){return acc + std::abs(next);});
         }
         case two:
         {
-            return (T) std::sqrt(std::inner_product(raw_data_,
-                                                    raw_data_ + (height_*width_),
-                                                    raw_data_,
-                                                    (T) 0));
+            return std::sqrt(std::inner_product(raw_data_,
+                                                raw_data_ + (height_*width_),
+                                                raw_data_,
+                                                (T) 0 ));
         }
         case two_squared:
         {
-            return (T) std::inner_product(  raw_data_,
-                                            raw_data_ + (height_*width_),
-                                            raw_data_,
-                                            (T) 0);
+            return std::inner_product(  raw_data_,
+                                        raw_data_ + (height_*width_),
+                                        raw_data_,
+                                        (T) 0 );
         }
         case inf:
         {
@@ -602,13 +813,13 @@ public:
         }
         default:
         {
-            return (T) 0;
+            return 0;
         }
         }
     }
 
     /** Sum
-     *  Returns the sum of the vector, not implemented yet for matrices.
+     *  Returns the sum of the vector, not yet implemented for matrices.
      */
     T Sum() const noexcept
     {
@@ -654,25 +865,12 @@ public:
     /** Shrinkage
     *   \param thresh_factor The thresholding factor to be used on the data
     */
-    DataContainer<T> Shrink(const double thresh_factor) const
+    void Shrink(const T thresh_factor) const
     {
-        T* thresholded_data = nullptr;
-
-        try
-        {
-            thresholded_data = new T[height_*width_]{};
-        }
-        catch (const std::bad_alloc& ba)
-        {
-            std::cerr << "Could not allocate memory for new array!" << std::endl;
-            throw;
-        }
-
         for( size_t i = 0; i < height_*width_; ++i )
         {
-            thresholded_data[i] = (T) (raw_data_[i] * std::max(1 - thresh_factor / std::abs((double)raw_data_[i]), 0.0));
+            raw_data_[i] *= std::max(1 - thresh_factor / std::abs((float)raw_data_[i]), (T) 0.0);
         }
-        return DataContainer(thresholded_data, height_, width_);
     }
 
     /** Print
