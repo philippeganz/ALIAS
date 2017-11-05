@@ -1,6 +1,6 @@
-CC := mpic++
-CFLAGS := -std=c++1z -O2 -fopenmp -pedantic -Wall
-DFLAGS := -MM -std=c++1z
+CC := g++
+CFLAGS := -std=c++14 -O2 -fopenmp -pedantic -Wall
+DFLAGS := -MM -std=c++14
 
 PROJECTNAME := ASTROQUT
 
@@ -32,4 +32,4 @@ $(OBJECTDIR)/%.o: %.cpp
 .PHONY: clean
 
 clean:
-rm -rf $(OBJECTDIR) $(PROJECTNAME)
+	rm -rf $(OBJECTDIR) $(PROJECTNAME)

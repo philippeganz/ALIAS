@@ -27,3 +27,15 @@
 *.exe
 *.out
 *.app
+
+# CodeBlocks local files
+*.layout
+*.depend
+
+# Latex temp files
+*.aux
+*.bbl
+*.blg
+*.log
+*.synctex.gz
+*.toc
