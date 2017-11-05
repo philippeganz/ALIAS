@@ -10,4 +10,8 @@
 #ifndef ASTROQUT_CONST_HPP
 #define ASTROQUT_CONST_HPP
 
+namespace astroqut{
+
+} // namespace astroqut
+
 #endif // ASTROQUT_CONST_HPP
