@@ -10,12 +10,14 @@
 #ifndef ASTROQUT_TEST_HPP
 #define ASTROQUT_TEST_HPP
 
-#include "test/datacontainer.hpp"
+#include "test/container.hpp"
+#include "test/fista.hpp"
 
 namespace astroqut{
 namespace test{
 
-bool dataContainer();
+bool DataContainer();
+bool FISTA();
 
 } // namespace test
 } // namespace astroqut
