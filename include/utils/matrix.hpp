@@ -41,6 +41,26 @@ public:
         : data_(nullptr)
     {}
 
+    /** Empty constructor
+     *  Create a container with default-initialized data
+     *  \param height Height of the data
+     *  \param width Width of the data
+     */
+    Matrix( const size_t height, const size_t width)
+        : LinearOp<T>(height, width)
+        , data_(nullptr)
+    {
+        try
+        {
+            data_ = new T[this->length_];
+        }
+        catch (const std::bad_alloc& ba)
+        {
+            std::cerr << "Could not allocate memory for new array!" << std::endl;
+            throw;
+        }
+    }
+
     /** Full member constructor
      *  \param data 2D array containing the pixels
      *  \param height Height of the data
@@ -57,43 +77,22 @@ public:
      *  \param width Width of the data
      */
     Matrix( const T number, const size_t height, const size_t width)
-        : LinearOp<T>(height, width)
-        , data_(nullptr)
+        : Matrix(height, width)
     {
-        try
-        {
-            data_ = new T[this->length_];
-        }
-        catch (const std::bad_alloc& ba)
-        {
-            std::cerr << "Could not allocate memory for new array!" << std::endl;
-            throw;
-        }
         std::fill( data_, data_ + (this->length_), number );
     }
 
-/*
- TODO
-    /** File constructor
-     *  \param file_path Path to the data file
-     *  \param height Height of the data
-     *  \param width Width of the data
-     */
+
+// TODO
+//    /** File constructor
+//     *  \param file_path Path to the data file
+//     *  \param height Height of the data
+//     *  \param width Width of the data
+//     */
 /*
     Matrix(std::string& file_path, const size_t height, const size_t width)
-        : height_(height)
-        , width_(width)
-        , data_(nullptr)
+        : Matrix(height, width)
     {
-        try
-        {
-            data_ = new T[height_*width_];
-        }
-        catch (const std::bad_alloc& ba)
-        {
-            std::cerr << "Could not allocate memory for new array!" << std::endl;
-            throw;
-        }
         std::ifstream file;
         file.exceptions( std::ifstream::failbit | std::ifstream::badbit );
         try
@@ -123,27 +122,16 @@ public:
      *  \param other Object to copy from
      */
     Matrix(const Matrix<T>& other)
-        : LinearOp<T>(other.height_, other.width_)
-        , data_(nullptr)
+        : Matrix(other.height_, other.width_)
     {
-        try
-        {
-            data_ = new T[this->length_];
-        }
-        catch (const std::bad_alloc& ba)
-        {
-            std::cerr << "Could not allocate memory for new array!" << std::endl;
-            throw;
-        }
-        std::copy(other.Data(), other.Data() + (this->length_), data_);
+        std::copy(other.data_, other.data_ + (this->length_), data_);
     }
 
     /** Move constructor
      *  \param other Object to move from
      */
     Matrix(Matrix<T>&& other) noexcept
-        : LinearOp<T>(other.height_, other.width_)
-        , data_(other.Data())
+        : Matrix(other.data_, other.height_, other.width_)
     {
         other.Data(nullptr);
     }
@@ -234,7 +222,7 @@ public:
      *  \param other Other object to test
      *  \return Throws an error message if instance is not valid.
      */
-    template <class U> bool ArgTest(const Matrix<U>& other, ArgTestType type) const
+    bool ArgTest(const Matrix& other, ArgTestType type) const
     {
         bool test_result = false;
         switch(type)
@@ -277,22 +265,21 @@ public:
      *  \param other Object to compare to
      *  \return True if both object are the same element-wise, False else
      */
-    template <class U> bool operator==(const Matrix<U>& other) const noexcept
+    bool operator==(const Matrix& other) const noexcept
     {
-        if( ! std::is_same<T,U>::value ||
-            this->height_ != other.height_ ||
+        if( this->height_ != other.height_ ||
             this->width_ != other.width_ )
         {
             return false;
         }
 
-        if( data_ == other.Data() )
+        if( data_ == other.data_ )
         {
             return true;
         }
         else
         {
-            return std::equal(data_, data_+(this->length_), other.Data());
+            return std::equal(data_, data_+(this->length_), other.data_);
         }
     }
 
@@ -300,7 +287,7 @@ public:
      *  \param other Object to compare to
      *  \return False if both object are the same element-wise, True else
      */
-    template <class U> bool operator!=(const Matrix<U>& other) const noexcept
+    bool operator!=(const Matrix& other) const noexcept
     {
         return !(*this == other);
     }
@@ -336,7 +323,7 @@ public:
             this->width_ = other.width_;
             this->length_ = other.length_;
 
-            std::copy(other.Data(), other.Data() + other.length_, data_);
+            std::copy(other.data_, other.data_ + other.length_, data_);
         }
         return *this;
     }
@@ -361,147 +348,152 @@ public:
      *  \param other Object to add to current object
      *  \return A new instance containing the result
      */
-    template <class U> Matrix operator+(const Matrix<U>& other) const &
+    Matrix operator+(const Matrix& other) const &
     {
-        T* result_data = nullptr;
-
-        if( ArgTest(other, add) )
+        try
         {
-            try
-            {
-                result_data = new T[this->length_];
-            }
-            catch (const std::bad_alloc& ba)
-            {
-                std::cerr << "Could not allocate memory for resulting array!" << std::endl;
-                throw;
-            }
-
-            #pragma GCC ivdep
-            for(size_t i = 0; i < this->length_; ++i)
-            {
-                result_data[i] = data_[i] + other.Data()[i];
-            }
+            ArgTest(other, add);
         }
-        return Matrix(result_data, this->height_, this->width_);
+        catch (const std::exception& e)
+        {
+            throw e;
+        }
+
+        Matrix result(other.height_, other.width_);
+
+        #pragma GCC ivdep
+        for(size_t i = 0; i < this->length_; ++i)
+        {
+            result.data_[i] = data_[i] + other.data_[i];
+        }
+
+        return result;
     }
 
     /** Additive operator of temporary instance
      *  \param other Object to add to current object
      *  \return Current object overwritten with the result
      */
-    template <class U> Matrix operator+(const Matrix<U>& other) &&
+    Matrix operator+(const Matrix& other) &&
     {
         *this += other; // if object is temporary, no need to allocate new memory for the result
         return *this;
     }
 
     /** Additive operator in-place
-     *  \param other Object to add to current object
+     *  \param other Object to add from current object
      *  \return A reference to this
      */
-    template <class U> Matrix<T>& operator+=(const Matrix<U>& other)
+    Matrix& operator+=(const Matrix& other)
     {
-        if( ArgTest(other, add) )
+        try
         {
-            #pragma GCC ivdep
-            for(size_t i = 0; i < this->length_; ++i)
-            {
-                data_[i] += other.Data()[i];
-            }
+            ArgTest(other, add);
         }
+        catch (const std::exception& e)
+        {
+            throw e;
+        }
+
+        #pragma GCC ivdep
+        for(size_t i = 0; i < this->length_; ++i)
+        {
+            data_[i] += other.data_[i];
+        }
+
         return *this;
     }
 
     /** Subtractive operator
-     *  \param other Object to subtract to current object
+     *  \param other Object to subtract from current object
      *  \return A new instance containing the result
      */
-    template <class U> Matrix operator-(const Matrix<U>& other) const &
+    Matrix operator-(const Matrix& other) const &
     {
-        T* result_data = nullptr;
-
-        if( ArgTest(other, add) )
+        try
         {
-            try
-            {
-                result_data = new T[this->length_];
-            }
-            catch (const std::bad_alloc& ba)
-            {
-                std::cerr << "Could not allocate memory for resulting array!" << std::endl;
-                throw;
-            }
-
-            #pragma GCC ivdep
-            for(size_t i = 0; i < this->length_; ++i)
-            {
-                result_data[i] = data_[i] - other.Data()[i];
-            }
+            ArgTest(other, add);
         }
-        return Matrix(result_data, this->height_, this->width_);
+        catch (const std::exception& e)
+        {
+            throw e;
+        }
+
+        Matrix result(other.height_, other.width_);
+
+        #pragma GCC ivdep
+        for(size_t i = 0; i < this->length_; ++i)
+        {
+            result.data_[i] = data_[i] - other.data_[i];
+        }
+
+        return result;
     }
 
     /** Subtractive operator of temporary instance
-     *  \param other Object to subtract to current object
+     *  \param other Object to subtract from current object
      *  \return Current object overwritten with the result
      */
-    template <class U> Matrix operator-(const Matrix<U>& other) &&
+    Matrix operator-(const Matrix& other) &&
     {
         *this -= other; // if object is temporary, no need to allocate new memory for the result
         return *this;
     }
 
     /** Subtractive operator in-place
-     *  \param other Object to subtract to current object
+     *  \param other Object to subtract current object to
      *  \return A reference to this
      */
-    template <class U> Matrix<T>& operator-=(const Matrix<U>& other)
+    Matrix& operator-=(const Matrix& other)
     {
-        if( ArgTest(other, add) )
+        try
         {
-            #pragma GCC ivdep
-            for(size_t i = 0; i < this->length_; ++i)
-            {
-                data_[i] -= other.Data()[i];
-            }
+            ArgTest(other, add);
         }
+        catch (const std::exception& e)
+        {
+            throw e;
+        }
+
+        #pragma GCC ivdep
+        for(size_t i = 0; i < this->length_; ++i)
+        {
+            data_[i] -= other.data_[i];
+        }
+
         return *this;
     }
 
     /** Multiplicative operator
-     *  \param other Object to multiply to current object
+     *  \param other Object to multiply current object to
      *  \return A new instance containing the result
      */
-    template <class U> Matrix operator*(const Matrix<U>& other) const
+    Matrix operator*(const Matrix& other) const override final
     {
-        T* result_data = nullptr;
-
-        if( ArgTest(other, mult) )
+        try
         {
-            try
-            {
-                result_data = new T[this->height_*other.width_] {}; // init to zero
-            }
-            catch (const std::bad_alloc& ba)
-            {
-                std::cerr << "Could not allocate memory for resulting array!" << std::endl;
-                throw;
-            }
+            ArgTest(other, mult);
+        }
+        catch (const std::exception& e)
+        {
+            throw e;
+        }
 
-            #pragma omp parallel for
-            for(size_t i = 0; i < this->height_; ++i)
+        Matrix result(this->height_, other.width_);
+
+        #pragma omp parallel for
+        for(size_t i = 0; i < this->height_; ++i)
+        {
+            for(size_t k = 0; k < this->width_; ++k)
             {
-                for(size_t k = 0; k < this->width_; ++k)
+                for(size_t j = 0; j < other.width_; ++j)
                 {
-                    for(size_t j = 0; j < other.width_; ++j)
-                    {
-                        result_data[i*other.width_ + j] += data_[i*this->width_ + k] * other.Data()[k*other.width_ + j];
-                    }
+                    result.data_[i*other.width_ + j] += data_[i*this->width_ + k] * other.data_[k*other.width_ + j];
                 }
             }
         }
-        return Matrix(result_data, this->height_, other.width_);
+
+        return result;
     }
 
     /** Multiplicative operator with single number
@@ -510,27 +502,24 @@ public:
      */
     Matrix operator*(const T number) const &
     {
-        T* result_data = nullptr;
-
-        if( IsValid() )
+        try
         {
-            try
-            {
-                result_data = new T[this->length_];
-            }
-            catch (const std::bad_alloc& ba)
-            {
-                std::cerr << "Could not allocate memory for resulting array!" << std::endl;
-                throw;
-            }
-
-            #pragma GCC ivdep
-            for(size_t i = 0; i < this->length_; ++i)
-            {
-                result_data[i] = data_[i] * number;
-            }
+            IsValid();
         }
-        return Matrix(result_data, this->height_, this->width_);
+        catch (const std::exception& e)
+        {
+            throw e;
+        }
+
+        Matrix result(this->height_, this->width_);
+
+        #pragma GCC ivdep
+        for(size_t i = 0; i < this->length_; ++i)
+        {
+            result.data_[i] = data_[i] * number;
+        }
+
+        return result;
     }
 
     /** Multiplicative operator of temporary instance with single number
@@ -539,14 +528,21 @@ public:
      */
     Matrix operator*(const T number) &&
     {
-        if( IsValid() )
+        try
         {
-            #pragma GCC ivdep
-            for(size_t i = 0; i < this->length_; ++i)
-            {
-                data_[i] *= number;
-            }
+            IsValid();
         }
+        catch (const std::exception& e)
+        {
+            throw e;
+        }
+
+        #pragma GCC ivdep
+        for(size_t i = 0; i < this->length_; ++i)
+        {
+            data_[i] *= number;
+        }
+
         return *this;
     }
 
@@ -554,7 +550,7 @@ public:
      *  \param other Object to multiply to current object
      *  \return A reference to this
      */
-    template <class U> Matrix<T>& operator*=(const Matrix<U>& other)
+    Matrix<T>& operator*=(const Matrix& other)
     {
         *this = *this * other;
         return *this;
@@ -564,45 +560,49 @@ public:
      *  \param other Object to multiply to current object, element-wise
      *  \return A new instance containing the result
      */
-    template <class U> Matrix operator->*(const Matrix<U>& other) const &
+    Matrix operator->*(const Matrix& other) const &
     {
-        T* result_data = nullptr;
-
-        if( ArgTest(other, add) )
+        try
         {
-            try
-            {
-                result_data = new T[this->length_];
-            }
-            catch (const std::bad_alloc& ba)
-            {
-                std::cerr << "Could not allocate memory for resulting array!" << std::endl;
-                throw;
-            }
-
-            #pragma GCC ivdep
-            for(size_t i = 0; i < this->length_; ++i)
-            {
-                result_data[i] = data_[i] * other.Data()[i];
-            }
+            ArgTest(other, add);
         }
-        return Matrix(result_data, this->height_, this->width_);
+        catch (const std::exception& e)
+        {
+            throw e;
+        }
+
+        Matrix result(this->height_, this->width_);
+
+        #pragma GCC ivdep
+        for(size_t i = 0; i < this->length_; ++i)
+        {
+            result.data_[i] = data_[i] * other.data_[i];
+        }
+
+        return result;
     }
 
     /** Element-wise multiply of temporary instance
      *  \param other Object to multiply to current object, element-wise
      *  \return A reference to this
      */
-    template <class U> Matrix operator->*(const Matrix<U>& other) &&
+    Matrix operator->*(const Matrix& other) &&
     {
-        if( ArgTest(other, add) )
+        try
         {
-            #pragma GCC ivdep
-            for(size_t i = 0; i < this->length_; ++i)
-            {
-                data_[i] *= other.Data()[i];
-            }
+            ArgTest(other, add);
         }
+        catch (const std::exception& e)
+        {
+            throw e;
+        }
+
+        #pragma GCC ivdep
+        for(size_t i = 0; i < this->length_; ++i)
+        {
+            data_[i] *= other.data_[i];
+        }
+
         return *this;
     }
 
@@ -610,45 +610,49 @@ public:
      *  \param other Object to divide from current object, element-wise
      *  \return A new instance containing the result
      */
-    template <class U> Matrix operator/(const Matrix<U>& other) const &
+    Matrix operator/(const Matrix& other) const &
     {
-        T* result_data = nullptr;
-
-        if( ArgTest(other, add) )
+        try
         {
-            try
-            {
-                result_data = new T[this->length_];
-            }
-            catch (const std::bad_alloc& ba)
-            {
-                std::cerr << "Could not allocate memory for resulting array!" << std::endl;
-                throw;
-            }
-
-            #pragma GCC ivdep
-            for(size_t i = 0; i < this->length_; ++i)
-            {
-                result_data[i] = (double) data_[i] / (double) other.Data()[i];
-            }
+            ArgTest(other, add);
         }
-        return Matrix(result_data, this->height_, this->width_);
+        catch (const std::exception& e)
+        {
+            throw e;
+        }
+
+        Matrix result(this->height_, this->width_);
+
+        #pragma GCC ivdep
+        for(size_t i = 0; i < this->length_; ++i)
+        {
+            result.data_[i] = (double) data_[i] / (double) other.data_[i];
+        }
+
+        return result;
     }
 
     /** Element-wise divide operator of temporary instance
      *  \param other Object to divide from current object, element-wise
      *  \return A reference to this
      */
-    template <class U> Matrix operator/(const Matrix<U>& other) &&
+    Matrix operator/(const Matrix& other) &&
     {
-        if( ArgTest(other, add) )
+        try
         {
-            #pragma GCC ivdep
-            for(size_t i = 0; i < this->length_; ++i)
-            {
-                data_[i] = (double) data_[i] / (double) other.Data()[i];
-            }
+            ArgTest(other, add);
         }
+        catch (const std::exception& e)
+        {
+            throw e;
+        }
+
+        #pragma GCC ivdep
+        for(size_t i = 0; i < this->length_; ++i)
+        {
+            data_[i] = (double) data_[i] / (double) other.data_[i];
+        }
+
         return *this;
     }
 
@@ -658,27 +662,24 @@ public:
      */
     Matrix operator/(const T number) const &
     {
-        T* result_data = nullptr;
-
-        if( IsValid() )
+        try
         {
-            try
-            {
-                result_data = new T[this->length_];
-            }
-            catch (const std::bad_alloc& ba)
-            {
-                std::cerr << "Could not allocate memory for resulting array!" << std::endl;
-                throw;
-            }
-
-            #pragma GCC ivdep
-            for(size_t i = 0; i < this->length_; ++i)
-            {
-                result_data[i] = (double)data_[i] / (double)number;
-            }
+            IsValid();
         }
-        return Matrix(result_data, this->height_, this->width_);
+        catch (const std::exception& e)
+        {
+            throw e;
+        }
+
+        Matrix result(this->height_, this->width_);
+
+        #pragma GCC ivdep
+        for(size_t i = 0; i < this->length_; ++i)
+        {
+            result.data_[i] = (double)data_[i] / (double)number;
+        }
+
+        return result;
     }
 
     /** Divide operator with single number of temporary instance
@@ -687,14 +688,21 @@ public:
      */
     Matrix operator/(const T number) &&
     {
-        if( IsValid() )
+        try
         {
-            #pragma GCC ivdep
-            for(size_t i = 0; i < this->length_; ++i)
-            {
-                data_[i] = (double)data_[i] / (double)number;
-            }
+            IsValid();
         }
+        catch (const std::exception& e)
+        {
+            throw e;
+        }
+
+        #pragma GCC ivdep
+        for(size_t i = 0; i < this->length_; ++i)
+        {
+            data_[i] = (double)data_[i] / (double)number;
+        }
+
         return *this;
     }
 
@@ -703,23 +711,24 @@ public:
     */
     Matrix Transpose() const &
     {
-        T* transposed_data = nullptr;
-
         try
         {
-            transposed_data = new T[this->length_]{};
+            IsValid();
         }
-        catch (const std::bad_alloc& ba)
+        catch (const std::exception& e)
         {
-            std::cerr << "Could not allocate memory for new array!" << std::endl;
-            throw;
+            throw e;
         }
 
-        if( this->height_ == 1 || this->width_ == 1 ) // vector
+        Matrix result(this->width_, this->height_); // width <--> height
+
+        // vector
+        if( this->height_ == 1 || this->width_ == 1 )
         {
-            std::copy(data_, data_ + (this->length_), transposed_data);
+            std::copy(data_, data_ + (this->length_), result.data_);
         }
-        else // matrix
+        // matrix
+        else
         {
             #pragma omp parallel for
             for ( size_t i = 0; i < this->height_; ++i )
@@ -727,11 +736,11 @@ public:
 			    #pragma GCC ivdep
 				for ( size_t j = 0 ; j < this->width_; ++j )
 				{
-					transposed_data[ j * this->height_ + i ] = data_[ i * this->width_ + j ];
+					result.data_[ j * this->height_ + i ] = data_[ i * this->width_ + j ];
 				}
 			}
         }
-        return Matrix(transposed_data, this->width_, this->height_); // width <--> height
+        return result;
     }
 
     /** Transpose in-place
@@ -739,6 +748,15 @@ public:
     */
     Matrix Transpose() &&
     {
+        try
+        {
+            IsValid();
+        }
+        catch (const std::exception& e)
+        {
+            throw e;
+        }
+
         // vector
         if( this->height_ == 1 || this->width_ == 1 )
         {
@@ -766,26 +784,25 @@ public:
      */
     Matrix Log() const &
     {
-        T* result_data = nullptr;
-
         try
         {
-            result_data = new T[this->length_];
+            IsValid();
         }
-        catch (const std::bad_alloc& ba)
+        catch (const std::exception& e)
         {
-            std::cerr << "Could not allocate memory for resulting array!" << std::endl;
-            throw;
+            throw e;
         }
+
+        Matrix result(this->height_, this->width_);
 
         #pragma GCC ivdep
         for(size_t i = 0; i < this->length_; ++i)
         {
             // real part of log of negative numbers is 0
-            result_data[i] = ((data_[i] >= 0) ? std::log(data_[i]) : 0);
+            result.data_[i] = ((data_[i] >= 0) ? std::log(data_[i]) : 0);
         }
 
-        return Matrix(result_data, this->height_, this->width_);
+        return result;
     }
 
     /** Log operator in-place
@@ -794,6 +811,15 @@ public:
      */
     Matrix Log() &&
     {
+        try
+        {
+            IsValid();
+        }
+        catch (const std::exception& e)
+        {
+            throw e;
+        }
+
         #pragma GCC ivdep
         for(size_t i = 0; i < this->length_; ++i)
         {
@@ -811,24 +837,24 @@ public:
     */
     Matrix Shrink(const T thresh_factor) const &
     {
-        T* result_data = nullptr;
-
         try
         {
-            result_data = new T[this->length_];
+            IsValid();
         }
-        catch (const std::bad_alloc& ba)
+        catch (const std::exception& e)
         {
-            std::cerr << "Could not allocate memory for resulting array!" << std::endl;
-            throw;
+            throw e;
         }
+
+        Matrix result(this->height_, this->width_);
 
         #pragma GCC ivdep
         for( size_t i = 0; i < this->length_; ++i )
         {
-            result_data[i] = data_[i] * std::max(1 - thresh_factor / std::abs((double)data_[i]), 0.0);
+            result.data_[i] = data_[i] * std::max(1 - thresh_factor / std::abs((double)data_[i]), 0.0);
         }
-        return Matrix(result_data, this->height_, this->width_);
+
+        return result;
     }
 
     /** Shrinkage in-place
@@ -838,6 +864,15 @@ public:
     */
     Matrix Shrink(const T thresh_factor) &&
     {
+        try
+        {
+            IsValid();
+        }
+        catch (const std::exception& e)
+        {
+            throw e;
+        }
+
         #pragma GCC ivdep
         for( size_t i = 0; i < this->length_; ++i )
         {
@@ -850,11 +885,20 @@ public:
      *  \param other Object to divide from current object, element-wise
      *  \return The result of type T
      */
-    template <class U> T Inner(const Matrix<U>& other) const
+    T Inner(const Matrix& other) const
     {
+        try
+        {
+            ArgTest(other, add);
+        }
+        catch (const std::exception& e)
+        {
+            throw e;
+        }
+
         return  std::inner_product( data_,
                                     data_ + (this->length_),
-                                    other.Data(),
+                                    other.data_,
                                     (T) 0 );
     }
 
@@ -862,8 +906,17 @@ public:
      *  Norm of all elements considered as a one dimensional vector
      * \return The result of type T
      */
-    T Norm(const NormType l_norm) const noexcept
+    T Norm(const NormType l_norm) const
     {
+        try
+        {
+            IsValid();
+        }
+        catch (const std::exception& e)
+        {
+            throw e;
+        }
+
         switch(l_norm)
         {
         case one:
@@ -899,16 +952,34 @@ public:
      *  Sum of all elements, considered as a one dimensional vector
      *  \return The result of type T
      */
-    T Sum() const noexcept
+    T Sum() const
     {
+        try
+        {
+            IsValid();
+        }
+        catch (const std::exception& e)
+        {
+            throw e;
+        }
+
         return std::accumulate(data_, data_ + this->length_, (T) 0);
     }
 
     /** Print
     *   Prints the data to the console
     */
-    void Print() const noexcept
+    void Print() const
     {
+        try
+        {
+            IsValid();
+        }
+        catch (const std::exception& e)
+        {
+            throw e;
+        }
+
         std::cout << std::endl;
         std::cout << std::string(this->width_*10+2, '-');
         for( size_t i = 0; i < this->height_; ++i )
