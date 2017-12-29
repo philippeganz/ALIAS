@@ -51,7 +51,7 @@
 			</Target>
 		</Build>
 		<Compiler>
-			<Add option="-ftree-vectorize -fopenmp -std=c++1z" />
+			<Add option="-ftree-vectorize -fopenmp -std=c++17" />
 			<Add directory="include" />
 		</Compiler>
 		<Linker>
@@ -65,6 +65,7 @@
 		<Unit filename="include/test.hpp" />
 		<Unit filename="include/test/fista.hpp" />
 		<Unit filename="include/test/matrix.hpp" />
+		<Unit filename="include/test/operator.hpp" />
 		<Unit filename="include/utils/functions.hpp" />
 		<Unit filename="include/utils/linearop.hpp" />
 		<Unit filename="include/utils/matrix.hpp" />
@@ -76,6 +77,7 @@
 		<Unit filename="src/test.cpp" />
 		<Unit filename="src/test/fista.cpp" />
 		<Unit filename="src/test/matrix.cpp" />
+		<Unit filename="src/test/operator.cpp" />
 		<Extensions>
 			<code_completion />
 			<envvars />
