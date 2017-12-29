@@ -24,6 +24,10 @@ enum NormType {one, two, two_squared, inf};
  */
 enum ArgTestType {mult, add};
 
+/** Forward declaration of the Matrix class
+ */
+template <class T> class Matrix;
+
 template <class T>
 class LinearOp
 {
@@ -96,6 +100,12 @@ public:
     {
         return length_;
     }
+
+    /** Multiplicative operator
+     *  \param other Matrix to apply current linear operator to
+     *  \return A new Matrix containing the result
+     */
+    virtual Matrix<T> operator*(const Matrix<T>& other) const = 0;
 
 };
 } // namespace astroqut
