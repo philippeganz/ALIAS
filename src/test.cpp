@@ -2,8 +2,8 @@
 /// \file src/test.cpp
 /// \brief Implementation of the test suites.
 /// \author Philippe Ganz <philippe.ganz@gmail.com>
-/// \version 0.1.0
-/// \date 2017-07-30
+/// \version 0.2.0
+/// \date 2017-12-28
 /// \copyright GPL-3.0
 ///
 
@@ -12,23 +12,25 @@
 namespace astroqut{
 namespace test{
 
-bool DataContainer()
+bool Matrix()
 {
-    bool transpose_square = container::TransposeSquare();
-    bool transpose_rect = container::TransposeRect();
+    bool transpose_square = matrix::TransposeSquare();
+    bool transpose_rect = matrix::TransposeRect();
 
-    bool add = container::Add();
-    bool sub = container::Sub();
-    bool mult_square = container::MultSquare();
-    bool mult_rect = container::MultRect();
+    bool add = matrix::Add();
+    bool sub = matrix::Sub();
+    bool mult_square = matrix::MultSquare();
+    bool mult_rect = matrix::MultRect();
 
-    bool norm_one = container::NormOne();
-    bool norm_two = container::NormTwo();
-    bool norm_inf = container::NormInf();
+    bool norm_one = matrix::NormOne();
+    bool norm_two = matrix::NormTwo();
+    bool norm_inf = matrix::NormInf();
 
-//    container::Time();
+    bool shrink = matrix::Shrink();
 
-    return transpose_square && transpose_rect && add && sub && mult_square && mult_rect && norm_one && norm_two && norm_inf;
+//    matrix::Time();
+
+    return transpose_square && transpose_rect && add && sub && mult_square && mult_rect && norm_one && norm_two && norm_inf && shrink;
 }
 
 bool FISTA()

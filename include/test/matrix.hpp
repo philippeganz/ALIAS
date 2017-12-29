@@ -1,23 +1,24 @@
 ///
-/// \file include/test/container.hpp
-/// \brief Test suite to validate the DataContainer class.
+/// \file include/test/matrix.hpp
+/// \brief Test suite to validate the Matrix class.
 /// \author Philippe Ganz <philippe.ganz@gmail.com>
-/// \version 0.1.0
-/// \date 2017-07-30
+/// \version 0.2.0
+/// \date 2017-12-28
 /// \copyright GPL-3.0
 ///
 
-#ifndef ASTROQUT_TEST_CONTAINER_HPP
-#define ASTROQUT_TEST_CONTAINER_HPP
+#ifndef ASTROQUT_TEST_MATRIX_HPP
+#define ASTROQUT_TEST_MATRIX_HPP
+
+#include "utils/functions.hpp"
+#include "utils/matrix.hpp"
 
 #include <chrono>
 #include <iostream>
 
-#include "datacontainer.hpp"
-
 namespace astroqut{
 namespace test{
-namespace container{
+namespace matrix{
 
 bool TransposeSquare();
 bool TransposeRect();
@@ -31,10 +32,12 @@ bool NormOne();
 bool NormTwo();
 bool NormInf();
 
+bool Shrink();
+
 void Time();
 
-} // namespace container
+} // namespace matrix
 } // namespace test
 } // namespace astroqut
 
-#endif // ASTROQUT_TEST_CONTAINER_HPP
+#endif // ASTROQUT_TEST_MATRIX_HPP

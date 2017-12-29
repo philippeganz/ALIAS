@@ -1,7 +1,7 @@
 ///
-/// \file include/utils/container.hpp
+/// \file include/utils/linearop.hpp
 /// \brief LinearOp class header
-/// \details Provide generic container interface.
+/// \details Provide generic linear operator interface.
 /// \author Philippe Ganz <philippe.ganz@gmail.com>
 /// \version 0.2.0
 /// \date 2017-12-29

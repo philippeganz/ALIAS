@@ -1,48 +1,51 @@
 ///
-/// \file src/fista.cpp
+/// \file src/fista/poisson.cpp
 /// \brief FISTA implementation.
-/// \author Philippe Ganz <philippe.ganz@gmail.com>
-/// \version 0.1.0
-/// \date 2017-08-13
+/// \author Hatef Monajemi <monajemi@stanford.edu> 2012-2014
+/// \author Philippe Ganz <philippe.ganz@gmail.com> 2017
+/// \version 0.2.0
+/// \date 2017-12-28
 /// \copyright GPL-3.0
 ///
 
 #include "fista/poisson.hpp"
 
+#include <type_traits>
+
 namespace astroqut{
 namespace fista{
 namespace poisson{
 
-inline double Func( const DataContainer<double>& Axu,
-                    const DataContainer<double>& b )
+inline double Func( const Matrix<double>& Axu,
+                    const Matrix<double>& b )
 {
     // sum(A*x+u - b.*log(A*x+u))
     return (Axu - (b ->* (Axu.Log()))).Sum();
 }
 
-inline DataContainer<double> FuncGrad( const DataContainer<double>& Axu,
-                                       const DataContainer<double>& At,
-                                       const DataContainer<double>& b )
+inline Matrix<double> FuncGrad(const Matrix<double>& Axu,
+                               const Matrix<double>& At,
+                               const Matrix<double>& b )
 {
     // A' * ((A*x+u - b) ./ (A*x+u))
     return At * ((Axu - b) / Axu);
 }
 
-inline double FLasso( const DataContainer<double>& Axu,
-                      const DataContainer<double>& x_woi,
-                      const DataContainer<double>& b,
+inline double FLasso( const Matrix<double>& Axu,
+                      const Matrix<double>& x_woi,
+                      const Matrix<double>& b,
                       const double lambda )
 {
     // sum(A*x+u - b.*log(A*x+u)) + lambda * norm(x[-0],1)
     return Func(Axu, b) + lambda*x_woi.Norm(one);
 }
 
-inline double FLassoApprox( const DataContainer<double>& Ayu,
-                            const DataContainer<double>& At,
-                            const DataContainer<double>& x,
-                            const DataContainer<double>& x_woi,
-                            const DataContainer<double>& y,
-                            const DataContainer<double>& b,
+inline double FLassoApprox( const Matrix<double>& Ayu,
+                            const Matrix<double>& At,
+                            const Matrix<double>& x,
+                            const Matrix<double>& x_woi,
+                            const Matrix<double>& y,
+                            const Matrix<double>& b,
                             double lambda,
                             double L )
 {
@@ -50,11 +53,11 @@ inline double FLassoApprox( const DataContainer<double>& Ayu,
     return Func(Ayu, b) + (x-y).Inner(FuncGrad(Ayu, At, b)) + 0.5*L*(x-y).Norm(two_squared) + lambda*x_woi.Norm(one);
 }
 
-DataContainer<double> solve( const DataContainer<double>& A,
-                             const DataContainer<double>& u,
-                             const DataContainer<double>& b,
-                             const double lambda,
-                             const Parameters& options )
+Matrix<double> Solve(const Matrix<double>& A,
+                     const Matrix<double>& u,
+                     const Matrix<double>& b,
+                     const double lambda,
+                     const Parameters& options )
 {
     std::cout << std::defaultfloat;
     std::cout << std::string(37, '*') << " FISTA " << std::string(36, '*') << std::endl;
@@ -68,26 +71,26 @@ DataContainer<double> solve( const DataContainer<double>& A,
     std::cout << std::scientific;
 
     // x and y variables
-    DataContainer<double> x(options.init_value);
+    Matrix<double> x(options.init_value);
     if( x.IsEmpty() )
     {
         x.Height(A.Width());
         x.Width(1);
-        x.RawData(new double[A.Width()]{});
+        x.Data(new double[A.Width()]{});
     }
-    DataContainer<double> x_next(x);
-    DataContainer<double> x_next_woi(x_next.RawData()+1, x_next.Height()-1, 1); // points to second element of x_next;
-    DataContainer<double> y(x);
+    Matrix<double> x_next(x);
+    Matrix<double> x_next_woi(x_next.Data()+1, x_next.Height()-1, 1); // points to second element of x_next;
+    Matrix<double> y(x);
 
     // intermediate results
-    DataContainer<double> Axu = A*x+u;
-    DataContainer<double> Ax_nextu;
-    DataContainer<double> Ayu = Axu;
-    DataContainer<double> At = A.Transpose();
+    Matrix<double> Axu = A*x+u;
+    Matrix<double> Ax_nextu;
+    Matrix<double> Ayu = Axu;
+    Matrix<double> At = A.Transpose();
     double f_lasso_next = 0.0;
     double f_lasso_previous[10]{};
     f_lasso_previous[0] = std::abs(FLasso(Axu, x_next_woi, b, lambda));
-    DataContainer<double> grad_current = FuncGrad(Axu, At, b);
+    Matrix<double> grad_current = FuncGrad(Axu, At, b);
 
     // FISTA variables
     double tol = std::numeric_limits<double>::infinity();
@@ -107,8 +110,8 @@ DataContainer<double> solve( const DataContainer<double>& A,
         {
             L_bar = std::pow(eta, ik) * Lf;
             x_next = y - (grad_current/L_bar);
-            x_next_woi.RawData(x_next.RawData()+1); // points to second element of new x_next
-            x_next_woi.Shrink(lambda/L_bar);
+            x_next_woi.Data(x_next.Data()+1); // points to second element of new x_next
+            std::move(x_next_woi).Shrink(lambda/L_bar); //cast to an rvalue to allow in-place shrinkage
             Ax_nextu = (A*x_next)+u;
             if( Ax_nextu.ContainsNeg() ) // skip function evaluation if we have negative values
             {
@@ -151,7 +154,7 @@ DataContainer<double> solve( const DataContainer<double>& A,
 
     std::cout << std::setw(5) << k << " | " << std::setprecision(4) << std::abs(tol) << " | " << std::setw(12) << f_lasso_next << " | " << Lf << " | " << lambda << std::endl << std::endl;
 
-    x_next_woi.RawData(nullptr); // release pointer
+    x_next_woi.Data(nullptr); // release pointer
 
     return x;
 }
