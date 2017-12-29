@@ -11,9 +11,9 @@
 #ifndef ASTROQUT_UTILS_OPERATOR_HPP
 #define ASTROQUT_UTILS_OPERATOR_HPP
 
-#include "utils/container.hpp"
+#include "utils/matrix.hpp"
 
-#include "functional"
+#include <functional>
 
 namespace astroqut
 {
@@ -22,7 +22,7 @@ template<class T>
 class Operator : public LinearOp<T>
 {
 private:
-    std::function<Matrix(Matrix)> fun_;
+    std::function<Matrix<T> (Matrix<T>&, Matrix<T>&)> fun_;
 
 public:
     /** Default constructor
@@ -48,7 +48,7 @@ public:
      *  \param height Height of the operator
      *  \param width Width of the operator
      */
-    Matrix(std::function<Matrix(Matrix)> const fun, const size_t height, const size_t width) noexcept
+    Operator(std::function<Matrix<T> (Matrix<T>&, Matrix<T>&)> fun, const size_t height, const size_t width) noexcept
         : LinearOp<T>(height, width)
         , fun_(fun)
     {}
@@ -56,17 +56,37 @@ public:
     /** Access fun_
      * \return The current value of fun_
      */
-    std::function<Matrix(Matrix)> Fun() const noexcept
+    std::function<Matrix<T> (Matrix<T>&, Matrix<T>&)> Fun() const noexcept
     {
-        return fun_
+        return fun_;
     }
     /** Set fun_
      * \param val New value to set
      */
-    void Fun(std::function<Matrix(Matrix)> val) noexcept
+    void Fun(std::function<Matrix<T> (Matrix<T>&, Matrix<T>&)> fun) noexcept
     {
-        fun_ = val;
+        fun_ = fun;
     }
+
+//    Matrix<T> operator*(const Matrix<T>& other) const override final
+//    {
+//        Matrix<T> result()
+//
+//        if( ArgTest(other, mult) )
+//        {
+//            try
+//            {
+//                result_data = new T[this->height_*other.width_] {}; // init to zero
+//            }
+//            catch (const std::bad_alloc& ba)
+//            {
+//                std::cerr << "Could not allocate memory for resulting array!" << std::endl;
+//                throw;
+//            }
+//
+//        }
+//        return fun_(other, result_data);
+//    }
 };
 } // namespace astroqut
 
