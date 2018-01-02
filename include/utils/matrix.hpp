@@ -2,9 +2,9 @@
 /// \file include/utils/matrix.hpp
 /// \brief Matrix class header
 /// \details Provide matrix container with multiple matrix operations used in the whole project.
-/// \author Philippe Ganz <philippe.ganz@gmail.com>
+/// \author Philippe Ganz <philippe.ganz@gmail.com> 2017-2018
 /// \version 0.2.0
-/// \date 2017-12-29
+/// \date 2018-01-02
 /// \copyright GPL-3.0
 ///
 
@@ -82,41 +82,40 @@ public:
         std::fill( data_, data_ + (this->length_), number );
     }
 
-
 // TODO
 //    /** File constructor
 //     *  \param file_path Path to the data file
 //     *  \param height Height of the data
 //     *  \param width Width of the data
 //     */
-/*
-    Matrix(std::string& file_path, const size_t height, const size_t width)
-        : Matrix(height, width)
-    {
-        std::ifstream file;
-        file.exceptions( std::ifstream::failbit | std::ifstream::badbit );
-        try
-        {
-            file.open(file_path, std::ifstream::in);
-        }
-        catch (const std::ifstream::failure& e)
-        {
-            std::cerr << "Could not open " << file_path << "! Please verify that the file exists." << std::endl;
-            throw;
-        }
-        std::string line;
-        T number;
-        for( size_t i = 0; getline(file, line); ++i )
-        {
-            std::stringstream line_stream(line);
-            for( size_t j = 0; line_stream >> number; ++j )
-            {
-                data_[i*width_ + j] = number;
-            }
-        }
-        file.close();
-    }
-*/
+//
+//    Matrix(std::string& file_path, const size_t height, const size_t width)
+//        : Matrix(height, width)
+//    {
+//        std::ifstream file;
+//        file.exceptions( std::ifstream::failbit | std::ifstream::badbit );
+//        try
+//        {
+//            file.open(file_path, std::ifstream::in);
+//        }
+//        catch (const std::ifstream::failure& e)
+//        {
+//            std::cerr << "Could not open " << file_path << "! Please verify that the file exists." << std::endl;
+//            throw;
+//        }
+//        std::string line;
+//        T number;
+//        for( size_t i = 0; getline(file, line); ++i )
+//        {
+//            std::stringstream line_stream(line);
+//            for( size_t j = 0; line_stream >> number; ++j )
+//            {
+//                data_[i*width_ + j] = number;
+//            }
+//        }
+//        file.close();
+//    }
+
 
     /** Copy constructor
      *  \param other Object to copy from
@@ -336,9 +335,9 @@ public:
     {
         if( this != &other )
         {
-            std::swap(this->height_, other.height_);
-            std::swap(this->width_, other.width_);
-            std::swap(this->length_, other.length_);
+            this->height_ = other.height_;
+            this->width_ = other.width_;
+            this->length_ = other.length_;
             std::swap(data_, other.data_);
         }
         return *this;
@@ -390,9 +389,9 @@ public:
         {
             ArgTest(other, add);
         }
-        catch (const std::exception& e)
+        catch (const std::exception&)
         {
-            throw e;
+            throw;
         }
 
         #pragma GCC ivdep
@@ -450,9 +449,9 @@ public:
         {
             ArgTest(other, add);
         }
-        catch (const std::exception& e)
+        catch (const std::exception&)
         {
-            throw e;
+            throw;
         }
 
         #pragma GCC ivdep
@@ -479,7 +478,7 @@ public:
             throw e;
         }
 
-        Matrix result(this->height_, other.width_);
+        Matrix result((T) 0, this->height_, other.width_); // initialize to zero
 
         #pragma omp parallel for
         for(size_t i = 0; i < this->height_; ++i)
@@ -715,9 +714,9 @@ public:
         {
             IsValid();
         }
-        catch (const std::exception& e)
+        catch (const std::exception&)
         {
-            throw e;
+            throw;
         }
 
         Matrix result(this->width_, this->height_); // width <--> height
@@ -752,9 +751,9 @@ public:
         {
             IsValid();
         }
-        catch (const std::exception& e)
+        catch (const std::exception&)
         {
-            throw e;
+            throw;
         }
 
         // vector
@@ -788,9 +787,9 @@ public:
         {
             IsValid();
         }
-        catch (const std::exception& e)
+        catch (const std::exception&)
         {
-            throw e;
+            throw;
         }
 
         Matrix result(this->height_, this->width_);
@@ -815,9 +814,9 @@ public:
         {
             IsValid();
         }
-        catch (const std::exception& e)
+        catch (const std::exception&)
         {
-            throw e;
+            throw;
         }
 
         #pragma GCC ivdep
@@ -841,9 +840,9 @@ public:
         {
             IsValid();
         }
-        catch (const std::exception& e)
+        catch (const std::exception&)
         {
-            throw e;
+            throw;
         }
 
         Matrix result(this->height_, this->width_);
@@ -868,9 +867,9 @@ public:
         {
             IsValid();
         }
-        catch (const std::exception& e)
+        catch (const std::exception&)
         {
-            throw e;
+            throw;
         }
 
         #pragma GCC ivdep
@@ -891,9 +890,9 @@ public:
         {
             ArgTest(other, add);
         }
-        catch (const std::exception& e)
+        catch (const std::exception&)
         {
-            throw e;
+            throw;
         }
 
         return  std::inner_product( data_,
@@ -912,9 +911,9 @@ public:
         {
             IsValid();
         }
-        catch (const std::exception& e)
+        catch (const std::exception&)
         {
-            throw e;
+            throw;
         }
 
         switch(l_norm)
@@ -958,9 +957,9 @@ public:
         {
             IsValid();
         }
-        catch (const std::exception& e)
+        catch (const std::exception&)
         {
-            throw e;
+            throw;
         }
 
         return std::accumulate(data_, data_ + this->length_, (T) 0);
@@ -975,24 +974,20 @@ public:
         {
             IsValid();
         }
-        catch (const std::exception& e)
+        catch (const std::exception&)
         {
-            throw e;
+            throw;
         }
 
         std::cout << std::endl;
-        std::cout << std::string(this->width_*10+2, '-');
         for( size_t i = 0; i < this->height_; ++i )
         {
-            std::cout << std::endl << '|';
+            std::cout << std::endl;
             for( size_t j = 0; j < this->width_; ++j )
             {
                 std::cout << std::setw(10) << data_[i*this->width_ + j] << " ";
             }
-            std::cout << '|';
         }
-        std::cout << std::endl;
-        std::cout << std::string(this->width_*10+2, '-');
         std::cout << std::endl;
     }
 
