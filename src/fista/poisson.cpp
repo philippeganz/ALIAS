@@ -2,15 +2,13 @@
 /// \file src/fista/poisson.cpp
 /// \brief FISTA implementation.
 /// \author Hatef Monajemi <monajemi@stanford.edu> 2012-2014
-/// \author Philippe Ganz <philippe.ganz@gmail.com> 2017
+/// \author Philippe Ganz <philippe.ganz@gmail.com> 2017-2018
 /// \version 0.2.0
-/// \date 2017-12-28
+/// \date 2018-01-04
 /// \copyright GPL-3.0
 ///
 
 #include "fista/poisson.hpp"
-
-#include <type_traits>
 
 namespace astroqut{
 namespace fista{
@@ -24,7 +22,7 @@ inline double Func( const Matrix<double>& Axu,
 }
 
 inline Matrix<double> FuncGrad(const Matrix<double>& Axu,
-                               const Matrix<double>& At,
+                               const Operator<double>& At,
                                const Matrix<double>& b )
 {
     // A' * ((A*x+u - b) ./ (A*x+u))
@@ -41,7 +39,7 @@ inline double FLasso( const Matrix<double>& Axu,
 }
 
 inline double FLassoApprox( const Matrix<double>& Ayu,
-                            const Matrix<double>& At,
+                            const Operator<double>& At,
                             const Matrix<double>& x,
                             const Matrix<double>& x_woi,
                             const Matrix<double>& y,
@@ -53,7 +51,7 @@ inline double FLassoApprox( const Matrix<double>& Ayu,
     return Func(Ayu, b) + (x-y).Inner(FuncGrad(Ayu, At, b)) + 0.5*L*(x-y).Norm(two_squared) + lambda*x_woi.Norm(one);
 }
 
-Matrix<double> Solve(const Matrix<double>& A,
+Matrix<double> Solve(const Operator<double>& A,
                      const Matrix<double>& u,
                      const Matrix<double>& b,
                      const double lambda,
@@ -86,7 +84,7 @@ Matrix<double> Solve(const Matrix<double>& A,
     Matrix<double> Axu = A*x+u;
     Matrix<double> Ax_nextu;
     Matrix<double> Ayu = Axu;
-    Matrix<double> At = A.Transpose();
+    Operator<double> &At = A.Clone()->Transpose();
     double f_lasso_next = 0.0;
     double f_lasso_previous[10]{};
     f_lasso_previous[0] = std::abs(FLasso(Axu, x_next_woi, b, lambda));

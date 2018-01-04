@@ -2,9 +2,9 @@
 /// \file include/fista/poisson.hpp
 /// \brief FISTA (Fast Iterative Shrinkage Tresholding Algorithm) solver for Poisson distributed noise.
 /// \author Hatef Monajemi <monajemi@stanford.edu> 2012-2014
-/// \author Philippe Ganz <philippe.ganz@gmail.com> 2017
+/// \author Philippe Ganz <philippe.ganz@gmail.com> 2017-2018
 /// \version 0.2.0
-/// \date 2017-12-28
+/// \date 2018-01-04
 /// \copyright GPL-3.0
 ///
 
@@ -12,11 +12,13 @@
 #define ASTROQUT_FISTA_POISSON_HPP
 
 #include "utils/matrix.hpp"
+#include "utils/operator/matmult.hpp"
+#include "utils/operator/convolution.hpp"
 
 #include <iostream>
 #include <iomanip>
 #include <limits>
-
+#include <numeric>
 
 namespace astroqut{
 namespace fista{
@@ -43,15 +45,15 @@ struct Parameters
 };
 
 /** Poisson distributed noise solver
- *  \param model Explicit regression matrix
- *  \param background Background shift
- *  \param response Response data to the regression matrix
+ *  \param A Explicit regression matrix
+ *  \param u Background shift
+ *  \param b Response data to the regression matrix
  *  \param lambda Regularization parameter
  *  \param options Parameters that defines various value for FISTA to work
  */
-Matrix<double> Solve( const Matrix<double>& model,
-                      const Matrix<double>& background,
-                      const Matrix<double>& response,
+Matrix<double> Solve( const Operator<double>& A,
+                      const Matrix<double>& u,
+                      const Matrix<double>& b,
                       const double lambda,
                       const Parameters& options );
 
