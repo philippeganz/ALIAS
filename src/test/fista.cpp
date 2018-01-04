@@ -17,7 +17,7 @@ bool SmallExample1()
 {
     std::cout << "FISTA test with small data : " << std::endl << std::endl;
 
-    astroqut::Matrix<double> A(new double[12]{1.0,2.0,3.0,4.0,5.0,6.0,7.0,8.0,9.0,10.0,11.0,12.0}, 3, 4);
+    astroqut::MatMult<double> A(Matrix(new double[12]{1.0,2.0,3.0,4.0,5.0,6.0,7.0,8.0,9.0,10.0,11.0,12.0}, 3, 4), 3, 4);
     astroqut::Matrix<double> u(new double[3]{3.0,2.0,1.0}, 3, 1);
     astroqut::Matrix<double> b(new double[3]{1.0,1.0,2.0}, 3, 1);
     astroqut::fista::poisson::Parameters options;
@@ -45,7 +45,7 @@ bool SmallExample2()
 {
     std::cout << "FISTA test with small data : " << std::endl << std::endl;
 
-    astroqut::Matrix<double> A(new double[12]{1.0,2.0,3.0,4.0,5.0,6.0,7.0,8.0,9.0,10.0,11.0,12.0}, 3, 4);
+    astroqut::MatMult<double> A(Matrix(new double[12]{1.0,2.0,3.0,4.0,5.0,6.0,7.0,8.0,9.0,10.0,11.0,12.0}, 3, 4), 3, 4);
     astroqut::Matrix<double> u(new double[3]{3.0,2.0,1.0}, 3, 1);
     astroqut::Matrix<double> b(new double[3]{1.0,1.0,2.0}, 3, 1);
     astroqut::fista::poisson::Parameters options;
@@ -73,7 +73,7 @@ bool SmallExample3()
 {
     std::cout << "FISTA test with small data : " << std::endl << std::endl;
 
-    astroqut::Matrix<double> A(new double[12]{1.0,2.0,3.0,4.0,5.0,6.0,7.0,8.0,9.0,10.0,11.0,12.0}, 3, 4);
+    astroqut::MatMult<double> A(Matrix(new double[12]{1.0,2.0,3.0,4.0,5.0,6.0,7.0,8.0,9.0,10.0,11.0,12.0}, 3, 4), 3, 4);
     astroqut::Matrix<double> u(new double[3]{3.0,2.0,1.0}, 3, 1);
     astroqut::Matrix<double> b(new double[3]{1.0,1.0,2.0}, 3, 1);
     astroqut::fista::poisson::Parameters options;
@@ -102,18 +102,21 @@ void Time()
     std::cout << "FISTA test with big data : " << std::endl << std::endl;
 
     std::default_random_engine generator;
+    generator.seed(123456789);
     std::normal_distribution<double> distribution(100.0,10.0);
     size_t test_height = 1024*1024;
     size_t test_width = 1024;
 
     double * A_data = new double[test_height*test_width];
+    #pragma omp parallel for
     for( size_t i = 0; i < test_height*test_width; ++i )
     {
         A_data[i] = distribution(generator);
     }
-    astroqut::Matrix<double> A(A_data, test_height, test_width);
+    astroqut::MatMult<double> A(astroqut::Matrix<double>(A_data, test_height, test_width), test_height, test_width);
 
     double * u_data = new double[test_height];
+    #pragma omp parallel for
     for( size_t i = 0; i < test_height; ++i )
     {
         u_data[i] = distribution(generator);
@@ -121,6 +124,7 @@ void Time()
     astroqut::Matrix<double> u(u_data, test_height, 1);
 
     double * b_data = new double[test_height];
+    #pragma omp parallel for
     for( size_t i = 0; i < test_height; ++i )
     {
         b_data[i] = distribution(generator);
