@@ -1,10 +1,10 @@
 ///
 /// \file include/utils/linearop.hpp
 /// \brief LinearOp class header
-/// \details Provide generic linear operator interface.
-/// \author Philippe Ganz <philippe.ganz@gmail.com>
+/// \details Provide generic linear operator base class.
+/// \author Philippe Ganz <philippe.ganz@gmail.com> 2017-2018
 /// \version 0.2.0
-/// \date 2017-12-29
+/// \date 2018-01-04
 /// \copyright GPL-3.0
 ///
 
@@ -12,13 +12,10 @@
 #define ASTROQUT_UTILS_LINEAROP_HPP
 
 #include <cstddef>
+#include <stdexcept>
 
 namespace astroqut
 {
-
-/** Types of norm currently implemented
- */
-enum NormType {one, two, two_squared, inf};
 
 /** Types of argument tests
  */
@@ -51,7 +48,7 @@ public:
      *  \param height Height of the data
      *  \param width Width of the data
      */
-    LinearOp(const size_t height, const size_t width) noexcept
+    LinearOp(size_t height, size_t width) noexcept
         : height_(height)
         , width_(width)
         , length_(height*width)
@@ -71,7 +68,7 @@ public:
     /** Set height_
      * \param val New value to set
      */
-    void Height(const size_t val) noexcept
+    void Height(size_t val) noexcept
     {
         height_ = val;
         length_ = height_*width_;
@@ -87,7 +84,7 @@ public:
     /** Set width_
      * \param val New value to set
      */
-    void Width(const size_t val) noexcept
+    void Width(size_t val) noexcept
     {
         width_ = val;
         length_ = height_*width_;
@@ -101,11 +98,53 @@ public:
         return length_;
     }
 
-    /** Multiplicative operator
-     *  \param other Matrix to apply current linear operator to
-     *  \return A new Matrix containing the result
+    /** Valid instance test
+     *  \return Throws an error message if instance is not valid.
      */
-    virtual Matrix<T> operator*(const Matrix<T>& other) const = 0;
+    virtual bool IsValid() const = 0;
+
+    /** Argument test
+     *  \param other Other object to test
+     *  \return Throws an error message if instance is not valid.
+     */
+    bool ArgTest(const LinearOp& other, ArgTestType type) const
+    {
+        bool test_result = false;
+        switch(type)
+        {
+        case mult:
+            {
+                if( IsValid() && other.IsValid() &&
+                    this->width_ == other.height_ )
+                {
+                    test_result = true;
+                }
+                break;
+            }
+        case add:
+            {
+                if( IsValid() && other.IsValid() &&
+                    this->height_ == other.height_ &&
+                    this->width_ == other.width_ )
+                {
+                    test_result = true;
+                }
+                break;
+            }
+        default:
+            {
+                break;
+            }
+        }
+        if( test_result )
+        {
+            return true;
+        }
+        else
+        {
+            throw std::invalid_argument("Matrix dimensions must agree, be non-zero and data shall not be empty!");
+        }
+    }
 
 };
 } // namespace astroqut
