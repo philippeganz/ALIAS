@@ -4,7 +4,7 @@
 /// \details Provide matrix container with multiple matrix operations used in the whole project.
 /// \author Philippe Ganz <philippe.ganz@gmail.com> 2017-2018
 /// \version 0.2.0
-/// \date 2018-01-02
+/// \date 2018-01-04
 /// \copyright GPL-3.0
 ///
 
@@ -12,19 +12,20 @@
 #define ASTROQUT_UTILS_MATRIX_HPP
 
 #include "utils/linearop.hpp"
+#include "utils/matrix/functions.hpp"
 
-#include <algorithm>
-#include <cmath>
-#include <exception>
 //#include <fstream>
 #include <iomanip>
 #include <iostream>
-#include <numeric>
 //#include <sstream>
 #include <string>
 
 namespace astroqut
 {
+
+/** Types of norm currently implemented
+ */
+enum NormType {one, two, two_squared, inf};
 
 template <class T>
 class Matrix : public LinearOp<T>
@@ -79,7 +80,13 @@ public:
     Matrix( const T number, const size_t height, const size_t width)
         : Matrix(height, width)
     {
-        std::fill( data_, data_ + (this->length_), number );
+        // TODO std::fill not yet parallelized : change as soon as available
+        // std::fill( data_, data_ + (this->length_), number );
+        #pragma omp parallel for
+        for(size_t i = 0; i < this->length_; ++i)
+        {
+            data_[i] = number;
+        }
     }
 
 // TODO
@@ -123,7 +130,7 @@ public:
     Matrix(const Matrix<T>& other)
         : Matrix(other.height_, other.width_)
     {
-        std::copy(other.data_, other.data_ + (this->length_), data_);
+        *this = other;
     }
 
     /** Move constructor
@@ -133,6 +140,14 @@ public:
         : Matrix(other.data_, other.height_, other.width_)
     {
         other.Data(nullptr);
+    }
+
+    /** Clone function
+     *  \return A copy of the current instance
+     */
+    Matrix* Clone() const
+    {
+        return new Matrix(*this);
     }
 
     /** Default destructor */
@@ -180,7 +195,7 @@ public:
     /** Valid instance test
      *  \return Throws an error message if instance is not valid.
      */
-    bool IsValid() const
+    bool IsValid() const override final
     {
         if( this->height_ != 0 &&
             this->width_ != 0 &&
@@ -217,49 +232,6 @@ public:
         return false;
     }
 
-    /** Argument test
-     *  \param other Other object to test
-     *  \return Throws an error message if instance is not valid.
-     */
-    bool ArgTest(const Matrix& other, ArgTestType type) const
-    {
-        bool test_result = false;
-        switch(type)
-        {
-        case mult:
-            {
-                if( IsValid() && other.IsValid() &&
-                    this->width_ == other.height_ )
-                {
-                    test_result = true;
-                }
-                break;
-            }
-        case add:
-            {
-                if( IsValid() && other.IsValid() &&
-                    this->height_ == other.height_ &&
-                    this->width_ == other.width_ )
-                {
-                    test_result = true;
-                }
-                break;
-            }
-        default:
-            {
-                break;
-            }
-        }
-        if( test_result )
-        {
-            return true;
-        }
-        else
-        {
-            throw std::invalid_argument("Matrix dimensions must agree, be non-zero and data shall not be empty!");
-        }
-    }
-
     /** Comparison operator equal
      *  \param other Object to compare to
      *  \return True if both object are the same element-wise, False else
@@ -278,7 +250,33 @@ public:
         }
         else
         {
-            return std::equal(data_, data_+(this->length_), other.data_);
+            // quick check for first value
+            if( !IsEqual(data_[0], other.data_[0]) )
+            {
+                return false;
+            }
+
+            // if first values are the same, check for the rest in parallel
+            bool are_they_equal = true;
+            #pragma omp parallel
+            {
+                #pragma omp for
+                for(size_t i = 0; i < this->length_; ++i)
+                {
+                    if( !IsEqual(data_[i], other.data_[i]) )
+                    {
+                        #pragma omp critical
+                        {
+                            are_they_equal = false;
+                        }
+                        #pragma omp cancel for
+                    }
+                }
+            }
+            return are_they_equal;
+
+            // TODO std::equal not yet parallelized : change as soon as available
+            // std::equal(data_, data_+(this->length_), other.data_);
         }
     }
 
@@ -299,8 +297,9 @@ public:
     {
         if( this != &other )
         {
-            // if the array size is not the same, we need to reallocate memory
-            if( this->length_ != other.length_ )
+            // we need to allocate memory if data_ has not yet been allocated
+            // or reallocate if the array size is not the same
+            if( data_ == nullptr || this->length_ != other.length_ )
             {
                 if( data_ != nullptr )
                 {
@@ -322,7 +321,14 @@ public:
             this->width_ = other.width_;
             this->length_ = other.length_;
 
-            std::copy(other.data_, other.data_ + other.length_, data_);
+            #pragma omp parallel for simd
+            for(size_t i = 0; i < other.length_; ++i)
+            {
+                data_[i] = other.data_[i];
+            }
+
+            // TODO std::copy not yet parallelized : change as soon as available
+            // std::copy(other.data_, other.data_ + other.length_, data_);
         }
         return *this;
     }
@@ -351,7 +357,7 @@ public:
     {
         try
         {
-            ArgTest(other, add);
+            this->ArgTest(other, add);
         }
         catch (const std::exception& e)
         {
@@ -360,7 +366,7 @@ public:
 
         Matrix result(other.height_, other.width_);
 
-        #pragma GCC ivdep
+        #pragma omp parallel for simd
         for(size_t i = 0; i < this->length_; ++i)
         {
             result.data_[i] = data_[i] + other.data_[i];
@@ -387,14 +393,14 @@ public:
     {
         try
         {
-            ArgTest(other, add);
+            this->ArgTest(other, add);
         }
         catch (const std::exception&)
         {
             throw;
         }
 
-        #pragma GCC ivdep
+        #pragma omp parallel for simd
         for(size_t i = 0; i < this->length_; ++i)
         {
             data_[i] += other.data_[i];
@@ -411,7 +417,7 @@ public:
     {
         try
         {
-            ArgTest(other, add);
+            this->ArgTest(other, add);
         }
         catch (const std::exception& e)
         {
@@ -420,7 +426,7 @@ public:
 
         Matrix result(other.height_, other.width_);
 
-        #pragma GCC ivdep
+        #pragma omp parallel for simd
         for(size_t i = 0; i < this->length_; ++i)
         {
             result.data_[i] = data_[i] - other.data_[i];
@@ -447,14 +453,14 @@ public:
     {
         try
         {
-            ArgTest(other, add);
+            this->ArgTest(other, add);
         }
         catch (const std::exception&)
         {
             throw;
         }
 
-        #pragma GCC ivdep
+        #pragma omp parallel for simd
         for(size_t i = 0; i < this->length_; ++i)
         {
             data_[i] -= other.data_[i];
@@ -467,32 +473,51 @@ public:
      *  \param other Object to multiply current object to
      *  \return A new instance containing the result
      */
-    Matrix operator*(const Matrix& other) const override final
+    Matrix operator*(const Matrix& other) const
     {
         try
         {
-            ArgTest(other, mult);
+            this->ArgTest(other, mult);
         }
-        catch (const std::exception& e)
+        catch (const std::exception&)
         {
-            throw e;
+            throw;
         }
 
-        Matrix result((T) 0, this->height_, other.width_); // initialize to zero
-
-        #pragma omp parallel for
-        for(size_t i = 0; i < this->height_; ++i)
+        // other is a vector
+        if( other.height_ == 1 || other.width_ == 1 )
         {
-            for(size_t k = 0; k < this->width_; ++k)
+            // this is a vector
+            if( this->height_ == 1 || this->width_ == 1 )
             {
-                for(size_t j = 0; j < other.width_; ++j)
-                {
-                    result.data_[i*other.width_ + j] += data_[i*this->width_ + k] * other.data_[k*other.width_ + j];
-                }
+                return Matrix(Inner(other), 1, 1);
+            }
+            // this is a matrix
+            else
+            {
+                Matrix result((T) 0, this->height_, 1); // init to zero
+                MatrixVectorMult(*this, other, result);
+                return result;
             }
         }
-
-        return result;
+        // other is a matrix
+        else
+        {
+            // this is a vector
+            if( this->height_ == 1 || this->width_ == 1 )
+            {
+                Matrix result((T) 0, 1, other.width_); // init to zero
+                VectorMatrixMult(*this, other, result);
+                return result;
+            }
+            // this is a matrix
+            else
+            {
+                Matrix result((T) 0, this->height_, other.width_); // init to zero
+                MatrixMatrixMult(*this, other, result);
+                return result;
+            }
+        }
     }
 
     /** Multiplicative operator with single number
@@ -512,7 +537,7 @@ public:
 
         Matrix result(this->height_, this->width_);
 
-        #pragma GCC ivdep
+        #pragma omp parallel for simd
         for(size_t i = 0; i < this->length_; ++i)
         {
             result.data_[i] = data_[i] * number;
@@ -536,7 +561,7 @@ public:
             throw e;
         }
 
-        #pragma GCC ivdep
+        #pragma omp parallel for simd
         for(size_t i = 0; i < this->length_; ++i)
         {
             data_[i] *= number;
@@ -549,7 +574,7 @@ public:
      *  \param other Object to multiply to current object
      *  \return A reference to this
      */
-    Matrix<T>& operator*=(const Matrix& other)
+    Matrix& operator*=(const Matrix& other)
     {
         *this = *this * other;
         return *this;
@@ -563,7 +588,7 @@ public:
     {
         try
         {
-            ArgTest(other, add);
+            this->ArgTest(other, add);
         }
         catch (const std::exception& e)
         {
@@ -572,7 +597,7 @@ public:
 
         Matrix result(this->height_, this->width_);
 
-        #pragma GCC ivdep
+        #pragma omp parallel for simd
         for(size_t i = 0; i < this->length_; ++i)
         {
             result.data_[i] = data_[i] * other.data_[i];
@@ -589,14 +614,14 @@ public:
     {
         try
         {
-            ArgTest(other, add);
+            this->ArgTest(other, add);
         }
         catch (const std::exception& e)
         {
             throw e;
         }
 
-        #pragma GCC ivdep
+        #pragma omp parallel for simd
         for(size_t i = 0; i < this->length_; ++i)
         {
             data_[i] *= other.data_[i];
@@ -613,7 +638,7 @@ public:
     {
         try
         {
-            ArgTest(other, add);
+            this->ArgTest(other, add);
         }
         catch (const std::exception& e)
         {
@@ -622,7 +647,7 @@ public:
 
         Matrix result(this->height_, this->width_);
 
-        #pragma GCC ivdep
+        #pragma omp parallel for simd
         for(size_t i = 0; i < this->length_; ++i)
         {
             result.data_[i] = (double) data_[i] / (double) other.data_[i];
@@ -639,14 +664,14 @@ public:
     {
         try
         {
-            ArgTest(other, add);
+            this->ArgTest(other, add);
         }
         catch (const std::exception& e)
         {
             throw e;
         }
 
-        #pragma GCC ivdep
+        #pragma omp parallel for simd
         for(size_t i = 0; i < this->length_; ++i)
         {
             data_[i] = (double) data_[i] / (double) other.data_[i];
@@ -672,7 +697,7 @@ public:
 
         Matrix result(this->height_, this->width_);
 
-        #pragma GCC ivdep
+        #pragma omp parallel for simd
         for(size_t i = 0; i < this->length_; ++i)
         {
             result.data_[i] = (double)data_[i] / (double)number;
@@ -696,7 +721,7 @@ public:
             throw e;
         }
 
-        #pragma GCC ivdep
+        #pragma omp parallel for simd
         for(size_t i = 0; i < this->length_; ++i)
         {
             data_[i] = (double)data_[i] / (double)number;
@@ -732,7 +757,7 @@ public:
             #pragma omp parallel for
             for ( size_t i = 0; i < this->height_; ++i )
 			{
-			    #pragma GCC ivdep
+			    #pragma omp simd
 				for ( size_t j = 0 ; j < this->width_; ++j )
 				{
 					result.data_[ j * this->height_ + i ] = data_[ i * this->width_ + j ];
@@ -745,7 +770,7 @@ public:
     /** Transpose in-place
     *   \return A reference to this
     */
-    Matrix Transpose() &&
+    Matrix& Transpose() &&
     {
         try
         {
@@ -764,15 +789,40 @@ public:
         // matrix
         else
         {
-            #pragma omp parallel for
-            for ( size_t i = 0; i < this->height_; ++i )
-			{
-			    #pragma GCC ivdep
-				for ( size_t j = i+1 ; j < this->width_; ++j )
-				{
-					std::swap(data_[i * this->width_ + j], data_[j * this->width_ + i]);
-				}
-			}
+            // square matrix, simple swap
+            if( this->height_ == this->width_ )
+            {
+
+                #pragma omp parallel for
+                for ( size_t i = 0; i < this->height_; ++i )
+                {
+                    #pragma omp simd
+                    for ( size_t j = i+1 ; j < this->width_; ++j )
+                    {
+                        std::swap(data_[i * this->width_ + j], data_[j * this->width_ + i]);
+                    }
+                }
+                std::swap(this->height_, this->width_); // width <--> height
+            }
+
+            // rect matrix, cyclic permutations
+            // TODO in-place algorithm
+            // for now, simple copy to new array
+            else
+            {
+                Matrix result(this->width_, this->height_); // width <--> height
+
+                #pragma omp parallel for
+                for ( size_t i = 0; i < this->height_; ++i )
+                {
+                    #pragma omp simd
+                    for ( size_t j = 0 ; j < this->width_; ++j )
+                    {
+                        result.data_[ j * this->height_ + i ] = data_[ i * this->width_ + j ];
+                    }
+                }
+                *this = std::move(result);
+            }
         }
         return *this;
     }
@@ -794,7 +844,7 @@ public:
 
         Matrix result(this->height_, this->width_);
 
-        #pragma GCC ivdep
+        #pragma omp parallel for
         for(size_t i = 0; i < this->length_; ++i)
         {
             // real part of log of negative numbers is 0
@@ -819,7 +869,7 @@ public:
             throw;
         }
 
-        #pragma GCC ivdep
+        #pragma omp parallel for
         for(size_t i = 0; i < this->length_; ++i)
         {
             // real part of log of negative numbers is 0
@@ -847,7 +897,7 @@ public:
 
         Matrix result(this->height_, this->width_);
 
-        #pragma GCC ivdep
+        #pragma omp parallel for
         for( size_t i = 0; i < this->length_; ++i )
         {
             result.data_[i] = data_[i] * std::max(1 - thresh_factor / std::abs((double)data_[i]), 0.0);
@@ -872,7 +922,7 @@ public:
             throw;
         }
 
-        #pragma GCC ivdep
+        #pragma omp parallel for
         for( size_t i = 0; i < this->length_; ++i )
         {
             data_[i] *= (T) std::max(1 - thresh_factor / std::abs((double)data_[i]), 0.0);
@@ -888,17 +938,24 @@ public:
     {
         try
         {
-            ArgTest(other, add);
+            this->ArgTest(other, add);
         }
         catch (const std::exception&)
         {
             throw;
         }
 
-        return  std::inner_product( data_,
-                                    data_ + (this->length_),
-                                    other.data_,
-                                    (T) 0 );
+        T result = 0;
+        #pragma omp parallel for reduction(+:result)
+        for(size_t i = 0; i < this->length_; ++i)
+        {
+            result += this->data_[i] * other.data_[i];
+        }
+
+        return result;
+
+        // TODO std::inner_product not yet parallelized : change as soon as available
+        // std::inner_product( first.Data(), first.Data() + first.Length(), other.Data(), (T) 0 );
     }
 
     /** Norm
@@ -920,10 +977,16 @@ public:
         {
         case one:
         {
-            return std::accumulate(data_,
-                                   data_ + (this->length_),
-                                   (T) 0,
-                                   [](const T acc, const T next){return acc + std::abs(next);});
+            T result = 0;
+            #pragma omp parallel for reduction(+:result)
+            for(size_t i = 0; i < this->length_; ++i)
+            {
+                result += std::abs(data_[i]);
+            }
+            return result;
+
+            // TODO std::accumulate not yet parallelized : change as soon as available
+            // std::accumulate(data_, data_ + (this->length_), (T) 0, [](const T acc, const T next){return acc + std::abs(next);});
         }
         case two:
         {
@@ -931,14 +994,23 @@ public:
         }
         case two_squared:
         {
-            return std::inner_product(  data_,
-                                        data_ + (this->length_),
-                                        data_,
-                                        (T) 0 );
+            return Inner(*this);
         }
         case inf:
         {
-            return *std::max_element(data_, data_ + (this->length_));
+            T result = 0;
+            #pragma omp parallel for reduction(max:result)
+            for(size_t i = 0; i < this->length_; ++i)
+            {
+                if( data_[i] > result )
+                {
+                    result = data_[i];
+                }
+            }
+            return result;
+
+            // TODO std::max_element not yet parallelized : change as soon as available
+            // *std::max_element(data_, data_ + (this->length_));
         }
         default:
         {
@@ -962,7 +1034,16 @@ public:
             throw;
         }
 
-        return std::accumulate(data_, data_ + this->length_, (T) 0);
+        T result = 0;
+        #pragma omp parallel for reduction(+:result)
+        for(size_t i = 0; i < this->length_; ++i)
+        {
+            result += data_[i];
+        }
+        return result;
+
+        // TODO std::accumulate not yet parallelized : change as soon as available
+        // std::accumulate(data_, data_ + this->length_, (T) 0);
     }
 
     /** Print
