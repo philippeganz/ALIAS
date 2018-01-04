@@ -33,28 +33,41 @@
 					<Add option="-Wall" />
 					<Add option="-g" />
 					<Add directory="include/utils" />
+					<Add directory="include/utils/operator" />
 				</Compiler>
 			</Target>
-			<Target title="Release">
-				<Option output="bin/Release/AstroQUT" prefix_auto="1" extension_auto="1" />
-				<Option object_output="obj/Release/" />
+			<Target title="ReleaseO2">
+				<Option output="bin/ReleaseO2/AstroQUT" prefix_auto="1" extension_auto="1" />
+				<Option object_output="obj/ReleaseO2/" />
 				<Option type="1" />
 				<Option compiler="gcc" />
 				<Compiler>
 					<Add option="-march=corei7-avx" />
 					<Add option="-O2" />
 					<Add directory="include/utils" />
+					<Add directory="include/utils/operator" />
 				</Compiler>
-				<Linker>
-					<Add option="-s" />
-				</Linker>
+			</Target>
+			<Target title="ReleaseO3">
+				<Option output="bin/ReleaseO3/AstroQUT" prefix_auto="1" extension_auto="1" />
+				<Option object_output="obj/ReleaseO3/" />
+				<Option type="1" />
+				<Option compiler="gcc" />
+				<Compiler>
+					<Add option="-march=corei7-avx" />
+					<Add option="-O3" />
+					<Add directory="include/utils" />
+					<Add directory="include/utils/operator" />
+				</Compiler>
 			</Target>
 		</Build>
 		<Compiler>
-			<Add option="-ftree-vectorize -fopenmp -std=c++17" />
+			<Add option="-m64" />
+			<Add option="-fopenmp -std=c++17" />
 			<Add directory="include" />
 		</Compiler>
 		<Linker>
+			<Add option="-m64" />
 			<Add option="-fopenmp" />
 			<Add directory="include" />
 		</Linker>
@@ -66,10 +79,12 @@
 		<Unit filename="include/test/fista.hpp" />
 		<Unit filename="include/test/matrix.hpp" />
 		<Unit filename="include/test/operator.hpp" />
-		<Unit filename="include/utils/functions.hpp" />
 		<Unit filename="include/utils/linearop.hpp" />
 		<Unit filename="include/utils/matrix.hpp" />
+		<Unit filename="include/utils/matrix/functions.hpp" />
 		<Unit filename="include/utils/operator.hpp" />
+		<Unit filename="include/utils/operator/convolution.hpp" />
+		<Unit filename="include/utils/operator/matmult.hpp" />
 		<Unit filename="include/utils/operators.hpp" />
 		<Unit filename="src/WS.cpp" />
 		<Unit filename="src/fista/poisson.cpp" />
