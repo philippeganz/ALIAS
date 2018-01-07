@@ -16,7 +16,6 @@
 
 //#include <fstream>
 #include <iomanip>
-#include <iostream>
 //#include <sstream>
 #include <string>
 
@@ -40,22 +39,29 @@ public:
      */
     Matrix() noexcept
         : data_(nullptr)
-    {}
+    {
+#ifdef DEBUG
+        std::cout << "Matrix : Default constructor called" << std::endl;
+#endif // DEBUG
+    }
 
     /** Empty constructor
      *  Create a container with default-initialized data
      *  \param height Height of the data
      *  \param width Width of the data
      */
-    Matrix( const size_t height, const size_t width)
+    Matrix( size_t height, size_t width)
         : LinearOp<T>(height, width)
         , data_(nullptr)
     {
+#ifdef DEBUG
+        std::cout << "Matrix : Empty constructor called" << std::endl;
+#endif // DEBUG
         try
         {
             data_ = new T[this->length_];
         }
-        catch (const std::bad_alloc& ba)
+        catch (const std::bad_alloc&)
         {
             std::cerr << "Could not allocate memory for new array!" << std::endl;
             throw;
@@ -67,22 +73,29 @@ public:
      *  \param height Height of the data
      *  \param width Width of the data
      */
-    Matrix( T* const data, const size_t height, const size_t width) noexcept
+    Matrix( T* const data, size_t height, size_t width) noexcept
         : LinearOp<T>(height, width)
         , data_(data)
-    {}
+    {
+#ifdef DEBUG
+        std::cout << "Matrix : Full member constructor called" << std::endl;
+#endif // DEBUG
+    }
 
     /** Constant number constructor
      *  \param number Number to fill data with
      *  \param height Height of the data
      *  \param width Width of the data
      */
-    Matrix( const T number, const size_t height, const size_t width)
+    Matrix( T number, size_t height, size_t width)
         : Matrix(height, width)
     {
+#ifdef DEBUG
+        std::cout << "Matrix : Constant number constructor called" << std::endl;
+#endif // DEBUG
         // TODO std::fill not yet parallelized : change as soon as available
         // std::fill( data_, data_ + (this->length_), number );
-        #pragma omp parallel for
+        #pragma omp parallel for simd
         for(size_t i = 0; i < this->length_; ++i)
         {
             data_[i] = number;
@@ -96,7 +109,7 @@ public:
 //     *  \param width Width of the data
 //     */
 //
-//    Matrix(std::string& file_path, const size_t height, const size_t width)
+//    Matrix(std::string& file_path, size_t height, size_t width)
 //        : Matrix(height, width)
 //    {
 //        std::ifstream file;
@@ -105,7 +118,7 @@ public:
 //        {
 //            file.open(file_path, std::ifstream::in);
 //        }
-//        catch (const std::ifstream::failure& e)
+//        catch (const std::ifstream::failure&)
 //        {
 //            std::cerr << "Could not open " << file_path << "! Please verify that the file exists." << std::endl;
 //            throw;
@@ -130,6 +143,9 @@ public:
     Matrix(const Matrix<T>& other)
         : Matrix(other.height_, other.width_)
     {
+#ifdef DEBUG
+        std::cout << "Matrix : Copy constructor called" << std::endl;
+#endif // DEBUG
         *this = other;
     }
 
@@ -139,20 +155,26 @@ public:
     Matrix(Matrix<T>&& other) noexcept
         : Matrix(other.data_, other.height_, other.width_)
     {
+#ifdef DEBUG
+        std::cout << "Matrix : Move constructor called" << std::endl;
+#endif // DEBUG
         other.Data(nullptr);
     }
 
     /** Clone function
      *  \return A copy of the current instance
      */
-    Matrix* Clone() const
+    Matrix Clone() const
     {
-        return new Matrix(*this);
+        return Matrix(*this);
     }
 
     /** Default destructor */
     virtual ~Matrix()
     {
+#ifdef DEBUG
+        std::cout << "Matrix : Destructor called" << std::endl;
+#endif // DEBUG
         if( data_ != nullptr )
         {
             delete[] data_;
@@ -275,8 +297,8 @@ public:
             }
             return are_they_equal;
 
-            // TODO std::equal not yet parallelized : change as soon as available
-            // std::equal(data_, data_+(this->length_), other.data_);
+//            TODO std::equal not yet parallelized : change as soon as available
+//            std::equal(data_, data_+(this->length_), other.data_);
         }
     }
 
@@ -295,41 +317,43 @@ public:
      */
     Matrix& operator=(const Matrix& other)
     {
-        if( this != &other )
+#ifdef DEBUG
+        std::cout << "Matrix : Copy assignment operator called" << std::endl;
+#endif // DEBUG
+
+        // we need to allocate memory if data_ has not yet been allocated
+        // or reallocate if the array size is not the same
+        if( data_ == nullptr || this->length_ != other.length_ )
         {
-            // we need to allocate memory if data_ has not yet been allocated
-            // or reallocate if the array size is not the same
-            if( data_ == nullptr || this->length_ != other.length_ )
+            if( data_ != nullptr )
             {
-                if( data_ != nullptr )
-                {
-                    delete[] data_;
-                }
-
-                try
-                {
-                    data_ = new T[other.length_];
-                }
-                catch (const std::bad_alloc& ba)
-                {
-                    std::cerr << "Could not allocate memory for new array!" << std::endl;
-                    throw;
-                }
+                delete[] data_;
             }
 
-            this->height_ = other.height_;
-            this->width_ = other.width_;
-            this->length_ = other.length_;
-
-            #pragma omp parallel for simd
-            for(size_t i = 0; i < other.length_; ++i)
+            try
             {
-                data_[i] = other.data_[i];
+                data_ = new T[other.length_];
             }
-
-            // TODO std::copy not yet parallelized : change as soon as available
-            // std::copy(other.data_, other.data_ + other.length_, data_);
+            catch (const std::bad_alloc&)
+            {
+                std::cerr << "Could not allocate memory for new array!" << std::endl;
+                throw;
+            }
         }
+
+        this->height_ = other.height_;
+        this->width_ = other.width_;
+        this->length_ = other.length_;
+
+        #pragma omp parallel for simd
+        for(size_t i = 0; i < other.length_; ++i)
+        {
+            data_[i] = other.data_[i];
+        }
+
+        // TODO std::copy not yet parallelized : change as soon as available
+        // std::copy(other.data_, other.data_ + other.length_, data_);
+
         return *this;
     }
 
@@ -339,49 +363,15 @@ public:
      */
     Matrix& operator=(Matrix&& other) noexcept
     {
-        if( this != &other )
-        {
-            this->height_ = other.height_;
-            this->width_ = other.width_;
-            this->length_ = other.length_;
-            std::swap(data_, other.data_);
-        }
-        return *this;
-    }
+#ifdef DEBUG
+        std::cout << "Matrix : Move assignment operator called" << std::endl;
+#endif // DEBUG
 
-    /** Additive operator
-     *  \param other Object to add to current object
-     *  \return A new instance containing the result
-     */
-    Matrix operator+(const Matrix& other) const &
-    {
-        try
-        {
-            this->ArgTest(other, add);
-        }
-        catch (const std::exception& e)
-        {
-            throw e;
-        }
+        this->height_ = other.height_;
+        this->width_ = other.width_;
+        this->length_ = other.length_;
+        std::swap(data_, other.data_);
 
-        Matrix result(other.height_, other.width_);
-
-        #pragma omp parallel for simd
-        for(size_t i = 0; i < this->length_; ++i)
-        {
-            result.data_[i] = data_[i] + other.data_[i];
-        }
-
-        return result;
-    }
-
-    /** Additive operator of temporary instance
-     *  \param other Object to add to current object
-     *  \return Current object overwritten with the result
-     */
-    Matrix operator+(const Matrix& other) &&
-    {
-        *this += other; // if object is temporary, no need to allocate new memory for the result
         return *this;
     }
 
@@ -403,45 +393,9 @@ public:
         #pragma omp parallel for simd
         for(size_t i = 0; i < this->length_; ++i)
         {
-            data_[i] += other.data_[i];
+            this->data_[i] += other.data_[i];
         }
 
-        return *this;
-    }
-
-    /** Subtractive operator
-     *  \param other Object to subtract from current object
-     *  \return A new instance containing the result
-     */
-    Matrix operator-(const Matrix& other) const &
-    {
-        try
-        {
-            this->ArgTest(other, add);
-        }
-        catch (const std::exception& e)
-        {
-            throw e;
-        }
-
-        Matrix result(other.height_, other.width_);
-
-        #pragma omp parallel for simd
-        for(size_t i = 0; i < this->length_; ++i)
-        {
-            result.data_[i] = data_[i] - other.data_[i];
-        }
-
-        return result;
-    }
-
-    /** Subtractive operator of temporary instance
-     *  \param other Object to subtract from current object
-     *  \return Current object overwritten with the result
-     */
-    Matrix operator-(const Matrix& other) &&
-    {
-        *this -= other; // if object is temporary, no need to allocate new memory for the result
         return *this;
     }
 
@@ -463,108 +417,7 @@ public:
         #pragma omp parallel for simd
         for(size_t i = 0; i < this->length_; ++i)
         {
-            data_[i] -= other.data_[i];
-        }
-
-        return *this;
-    }
-
-    /** Multiplicative operator
-     *  \param other Object to multiply current object to
-     *  \return A new instance containing the result
-     */
-    Matrix operator*(const Matrix& other) const
-    {
-        try
-        {
-            this->ArgTest(other, mult);
-        }
-        catch (const std::exception&)
-        {
-            throw;
-        }
-
-        // other is a vector
-        if( other.height_ == 1 || other.width_ == 1 )
-        {
-            // this is a vector
-            if( this->height_ == 1 || this->width_ == 1 )
-            {
-                return Matrix(Inner(other), 1, 1);
-            }
-            // this is a matrix
-            else
-            {
-                Matrix result((T) 0, this->height_, 1); // init to zero
-                MatrixVectorMult(*this, other, result);
-                return result;
-            }
-        }
-        // other is a matrix
-        else
-        {
-            // this is a vector
-            if( this->height_ == 1 || this->width_ == 1 )
-            {
-                Matrix result((T) 0, 1, other.width_); // init to zero
-                VectorMatrixMult(*this, other, result);
-                return result;
-            }
-            // this is a matrix
-            else
-            {
-                Matrix result((T) 0, this->height_, other.width_); // init to zero
-                MatrixMatrixMult(*this, other, result);
-                return result;
-            }
-        }
-    }
-
-    /** Multiplicative operator with single number
-     *  \param number Number to multiply the current object with
-     *  \return A new instance containing the result
-     */
-    Matrix operator*(const T number) const &
-    {
-        try
-        {
-            IsValid();
-        }
-        catch (const std::exception& e)
-        {
-            throw e;
-        }
-
-        Matrix result(this->height_, this->width_);
-
-        #pragma omp parallel for simd
-        for(size_t i = 0; i < this->length_; ++i)
-        {
-            result.data_[i] = data_[i] * number;
-        }
-
-        return result;
-    }
-
-    /** Multiplicative operator of temporary instance with single number
-     *  \param number Number to multiply the current object with
-     *  \return A reference to this
-     */
-    Matrix operator*(const T number) &&
-    {
-        try
-        {
-            IsValid();
-        }
-        catch (const std::exception& e)
-        {
-            throw e;
-        }
-
-        #pragma omp parallel for simd
-        for(size_t i = 0; i < this->length_; ++i)
-        {
-            data_[i] *= number;
+            this->data_[i] -= other.data_[i];
         }
 
         return *this;
@@ -580,45 +433,93 @@ public:
         return *this;
     }
 
-    /** Element-wise multiply
-     *  \param other Object to multiply to current object, element-wise
+    /** Multiplicative operator
+     *  \param other Object to multiply current object with
      *  \return A new instance containing the result
      */
-    Matrix operator->*(const Matrix& other) const &
+    Matrix operator*(const Matrix& other) const
     {
         try
         {
-            this->ArgTest(other, add);
+            this->ArgTest(other, mult);
         }
-        catch (const std::exception& e)
+        catch (const std::exception&)
         {
-            throw e;
+            throw;
         }
 
-        Matrix result(this->height_, this->width_);
+        Matrix result((T) 0, this->height_, other.width_); // init to zero
 
-        #pragma omp parallel for simd
-        for(size_t i = 0; i < this->length_; ++i)
+        // other is a vector
+        if( other.height_ == 1 || other.width_ == 1 )
         {
-            result.data_[i] = data_[i] * other.data_[i];
+            // this is a vector
+            if( this->height_ == 1 || this->width_ == 1 )
+            {
+                std::cerr << "Vector times a vector is a single number, consider using the Inner function instead" << std::endl;
+                result.data_[0] = Inner(other);
+            }
+            // this is a matrix
+            else
+            {
+                MatrixVectorMult(*this, other, result);
+            }
+        }
+        // other is a matrix
+        else
+        {
+            // this is a vector
+            if( this->height_ == 1 || this->width_ == 1 )
+            {
+                VectorMatrixMult(*this, other, result);
+            }
+            // this is a matrix
+            else
+            {
+                MatrixMatrixMult(*this, other, result);
+            }
         }
 
         return result;
     }
 
-    /** Element-wise multiply of temporary instance
+    /** Multiplicative operator with single number in-place
+     *  \param number Number to multiply current object with
+     *  \return A reference to this
+     */
+    Matrix& operator*=(T number)
+    {
+        try
+        {
+            IsValid();
+        }
+        catch (const std::exception&)
+        {
+            throw;
+        }
+
+        #pragma omp parallel for simd
+        for(size_t i = 0; i < this->length_; ++i)
+        {
+            data_[i] *= number;
+        }
+
+        return *this;
+    }
+
+    /** Element-wise multiply in-place
      *  \param other Object to multiply to current object, element-wise
      *  \return A reference to this
      */
-    Matrix operator->*(const Matrix& other) &&
+    Matrix& operator&=(const Matrix& other)
     {
         try
         {
             this->ArgTest(other, add);
         }
-        catch (const std::exception& e)
+        catch (const std::exception&)
         {
-            throw e;
+            throw;
         }
 
         #pragma omp parallel for simd
@@ -630,101 +531,49 @@ public:
         return *this;
     }
 
-    /** Element-wise divide operator
-     *  \param other Object to divide from current object, element-wise
-     *  \return A new instance containing the result
-     */
-    Matrix operator/(const Matrix& other) const &
-    {
-        try
-        {
-            this->ArgTest(other, add);
-        }
-        catch (const std::exception& e)
-        {
-            throw e;
-        }
-
-        Matrix result(this->height_, this->width_);
-
-        #pragma omp parallel for simd
-        for(size_t i = 0; i < this->length_; ++i)
-        {
-            result.data_[i] = (double) data_[i] / (double) other.data_[i];
-        }
-
-        return result;
-    }
-
-    /** Element-wise divide operator of temporary instance
-     *  \param other Object to divide from current object, element-wise
+    /** Divide operator with single number in-place
+     *  \param number Number to divide the current object with
      *  \return A reference to this
      */
-    Matrix operator/(const Matrix& other) &&
+    Matrix& operator/=(T number)
     {
         try
         {
-            this->ArgTest(other, add);
+            IsValid();
         }
-        catch (const std::exception& e)
+        catch (const std::exception&)
         {
-            throw e;
+            throw;
         }
 
         #pragma omp parallel for simd
         for(size_t i = 0; i < this->length_; ++i)
         {
-            data_[i] = (double) data_[i] / (double) other.data_[i];
+            data_[i] /= number;
         }
 
         return *this;
     }
 
-    /** Divide operator with single number
-     *  \param number Number to divide the current object by
-     *  \return A new instance containing the result
-     */
-    Matrix operator/(const T number) const &
-    {
-        try
-        {
-            IsValid();
-        }
-        catch (const std::exception& e)
-        {
-            throw e;
-        }
-
-        Matrix result(this->height_, this->width_);
-
-        #pragma omp parallel for simd
-        for(size_t i = 0; i < this->length_; ++i)
-        {
-            result.data_[i] = (double)data_[i] / (double)number;
-        }
-
-        return result;
-    }
-
-    /** Divide operator with single number of temporary instance
-     *  \param number Number to divide the current object by
+    /** Element-wise divide operator in-place
+     *  \param other Object to divide from current object, element-wise
      *  \return A reference to this
      */
-    Matrix operator/(const T number) &&
+    Matrix& operator/=(const Matrix& other)
     {
         try
         {
-            IsValid();
+            this->ArgTest(other, add);
         }
-        catch (const std::exception& e)
+        catch (const std::exception&)
         {
-            throw e;
+            throw;
         }
 
         #pragma omp parallel for simd
         for(size_t i = 0; i < this->length_; ++i)
         {
-            data_[i] = (double)data_[i] / (double)number;
+            data_[i] /= other.data_[i];
         }
 
         return *this;
@@ -770,7 +619,7 @@ public:
     /** Transpose in-place
     *   \return A reference to this
     */
-    Matrix& Transpose() &&
+    Matrix&& Transpose() &&
     {
         try
         {
@@ -824,41 +673,14 @@ public:
                 *this = std::move(result);
             }
         }
-        return *this;
-    }
-
-    /** Log operator
-     *  Applies the log function to all positive elements, replace by zero otherwise
-     *  \return A new instance containing the result
-     */
-    Matrix Log() const &
-    {
-        try
-        {
-            IsValid();
-        }
-        catch (const std::exception&)
-        {
-            throw;
-        }
-
-        Matrix result(this->height_, this->width_);
-
-        #pragma omp parallel for
-        for(size_t i = 0; i < this->length_; ++i)
-        {
-            // real part of log of negative numbers is 0
-            result.data_[i] = ((data_[i] >= 0) ? std::log(data_[i]) : 0);
-        }
-
-        return result;
+        return std::move(*this);
     }
 
     /** Log operator in-place
      *  Applies the log function to all positive elements, replace by zero otherwise
      *  \return Current object overwritten with the result
      */
-    Matrix Log() &&
+    Matrix&& Log() &&
     {
         try
         {
@@ -876,42 +698,24 @@ public:
             data_[i] = ((data_[i] >= 0) ? std::log(data_[i]) : 0);
         }
 
-        return *this;
+        return std::move(*this);
     }
 
-    /** Shrinkage
-    *   Apply the shrinkage algorithm and returns a new instance if constant
-    *   \param thresh_factor The threshold factor to be used on the data
-    *   \return A new instance containing the result
-    */
-    Matrix Shrink(const T thresh_factor) const &
+    /** Log operator
+     *  Applies the log function to all positive elements, replace by zero otherwise
+     *  \return A new instance containing the result
+     */
+    Matrix Log() const &
     {
-        try
-        {
-            IsValid();
-        }
-        catch (const std::exception&)
-        {
-            throw;
-        }
-
-        Matrix result(this->height_, this->width_);
-
-        #pragma omp parallel for
-        for( size_t i = 0; i < this->length_; ++i )
-        {
-            result.data_[i] = data_[i] * std::max(1 - thresh_factor / std::abs((double)data_[i]), 0.0);
-        }
-
-        return result;
+        return Matrix(*this).Log();
     }
 
     /** Shrinkage in-place
-    *   Apply the shrinkage algorithm to the current instance
-    *   \param thresh_factor The threshold factor to be used on the data
-    *   \return A reference to this
-    */
-    Matrix Shrink(const T thresh_factor) &&
+     *   Apply the shrinkage algorithm
+     *   \param thresh_factor The threshold factor to be used on the data
+     *   \return A reference to this
+     */
+    Matrix&& Shrink(double thresh_factor) &&
     {
         try
         {
@@ -925,9 +729,20 @@ public:
         #pragma omp parallel for
         for( size_t i = 0; i < this->length_; ++i )
         {
-            data_[i] *= (T) std::max(1 - thresh_factor / std::abs((double)data_[i]), 0.0);
+            data_[i] *= std::max(1 - thresh_factor / std::abs((double)data_[i]), 0.0);
         }
-        return *this;
+
+        return std::move(*this);
+    }
+
+    /** Shrinkage
+     *   Apply the shrinkage algorithm
+     *   \param thresh_factor The threshold factor to be used on the data
+     *   \return A new instance containing the result
+     */
+    Matrix Shrink(double thresh_factor) const &
+    {
+        return Matrix(*this).Shrink(thresh_factor);
     }
 
     /** Inner product
@@ -1072,7 +887,7 @@ public:
         std::cout << std::endl;
     }
 
-    void PrintRefQual() &
+    void PrintRefQual() const &
     {
         std::cout << "I'm an lvalue !" << std::endl;
     }
@@ -1081,6 +896,194 @@ public:
         std::cout << "I'm an rvalue !" << std::endl;
     }
 };
+
+/** Additive operator, both Matrix are lvalues
+ *  \param first Matrix, lvalue ref
+ *  \param second Matrix to add to current object, lvalue ref
+ *  \return A new instance containing the result
+ */
+template<class T>
+Matrix<T> operator+(const Matrix<T>& first, const Matrix<T>& second)
+{
+    Matrix<T> result(second);
+    return result += first;
+}
+
+/** Additive operator, first Matrix is an rvalue
+ *  \param first Matrix, rvalue ref
+ *  \param second Matrix to add to current object, lvalue ref
+ *  \return A reference to second
+ */
+template<class T>
+Matrix<T>&& operator+(Matrix<T>&& first, const Matrix<T>& second)
+{
+    return std::move(first += second); // if first is temporary, no need to allocate new memory for the result
+}
+
+/** Additive operator, second Matrix is an rvalue
+ *  \param first Matrix, lvalue ref
+ *  \param second Matrix to add to current object, rvalue ref
+ *  \return A reference to second
+ */
+template<class T>
+Matrix<T>&& operator+(const Matrix<T>& first, Matrix<T>&& second)
+{
+    return std::move(second += first); // if second is temporary, no need to allocate new memory for the result
+}
+
+/** Subtractive operator, both Matrix are lvalues
+ *  \param first Matrix, lvalue ref
+ *  \param second Matrix to subtract from current object, lvalue ref
+ *  \return A new instance containing the result
+ */
+template<class T>
+Matrix<T> operator-(const Matrix<T>& first, const Matrix<T>& second)
+{
+    Matrix<T> result(first);
+    return result -= second;
+}
+
+/** Subtractive operator, first Matrix is an rvalue, second an lvalue
+ *  \param first Matrix, rvalue ref
+ *  \param second Matrix to subtract from current object, lvalue ref
+ *  \return A reference to first
+ */
+template<class T>
+Matrix<T>&& operator-(Matrix<T>&& first, const Matrix<T>& second)
+{
+    return std::move(first -= second); // if first is temporary, no need to allocate new memory for the result
+}
+
+/** Subtractive operator, first Matrix is an lvalue, second an rvalue
+ *  \param first Matrix, lvalue ref
+ *  \param second Matrix to subtract from current object, rvalue ref
+ *  \return A reference to second
+ */
+template<class T>
+Matrix<T>&& operator-(const Matrix<T>& first, Matrix<T>&& second)
+{
+    // Need to implement it fully again since `-` is not commutative
+    try
+    {
+        first.ArgTest(second, add);
+    }
+    catch (const std::exception&)
+    {
+        throw;
+    }
+
+    #pragma omp parallel for simd
+    for(size_t i = 0; i < first.Length(); ++i)
+    {
+        second.Data()[i] = first.Data()[i] - second.Data()[i];
+    }
+
+    return std::move(second); // if second is temporary, no need to allocate new memory for the result
+}
+
+/** Multiplicative operator element-wise
+ *  \param first Matrix, lvalue ref
+ *  \param second Matrix to multiply the current object with
+ *  \return A new instance containing the result
+ */
+template <class T>
+Matrix<T> operator&(const Matrix<T>& first, const Matrix<T>& second)
+{
+    Matrix<T> result(first);
+    return result &= second;
+}
+
+/** Multiplicative operator element-wise of temporary instance
+ *  \param first Matrix, rvalue ref
+ *  \param second Matrix to multiply the current object with, lvalue ref
+ *  \return A reference to first
+ */
+template <class T>
+Matrix<T>&& operator&(Matrix<T>&& first, const Matrix<T>& second)
+{
+    return std::move(first &= second);
+}
+
+/** Multiplicative operator element-wise of temporary instance
+ *  \param first Matrix, lvalue ref
+ *  \param second Matrix to multiply the current object with, rvalue ref
+ *  \return A reference to second
+ */
+template <class T>
+Matrix<T>&& operator&(const Matrix<T>& first, Matrix<T>&& second)
+{
+    return std::move(second &= first);
+}
+
+/** Multiplicative operator with single number
+ *  \param mat Matrix, lvalue ref
+ *  \param number Number to multiply the current object with
+ *  \return A new instance containing the result
+ */
+template<class T>
+Matrix<T> operator*(const Matrix<T>& mat, T number)
+{
+    Matrix<T> result(mat);
+    return result *= number;
+}
+
+/** Multiplicative operator with single number of temporary instance
+ *  \param mat Matrix, rvalue ref
+ *  \param number Number to multiply the current object with
+ *  \return A reference to this
+ */
+template<class T>
+Matrix<T>&& operator*(Matrix<T>&& mat, T number)
+{
+    return std::move(mat *= number);
+}
+
+/** Divide operator with single number
+ *  \param mat Matrix, lvalue ref
+ *  \param number Number to divide the current object with
+ *  \return A new instance containing the result
+ */
+template <class T>
+Matrix<T> operator/(const Matrix<T>& mat, T number)
+{
+    Matrix<T> result(mat);
+    return result /= number;
+}
+
+/** Divide operator with single number of temporary instance
+ *  \param mat Matrix, rvalue ref
+ *  \param number Number to divide the current object with
+ *  \return A reference to mat
+ */
+template <class T>
+Matrix<T>&& operator/(const Matrix<T>&& first, T number)
+{
+    return std::move(first /= number);
+}
+
+/** Divide operator element-wise
+ *  \param first Matrix, lvalue ref
+ *  \param second Matrix to divide the current object with
+ *  \return A new instance containing the result
+ */
+template <class T>
+Matrix<T> operator/(const Matrix<T>& first, const Matrix<T>& second)
+{
+    Matrix<T> result(first);
+    return result /= second;
+}
+
+/** Divide operator element-wise of temporary instance
+ *  \param first Matrix, rvalue ref
+ *  \param second Matrix to divide the current object with
+ *  \return A reference to first
+ */
+template <class T>
+Matrix<T>&& operator/(Matrix<T>&& first, const Matrix<T>& second)
+{
+    return std::move(first /= second);
+}
+
 } // namespace astroqut
 
 #endif // ASTROQUT_UTILS_MATRIX_HPP
