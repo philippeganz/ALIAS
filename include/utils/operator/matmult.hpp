@@ -25,16 +25,24 @@ public:
      */
     MatMult()
         : Operator<T>(0, 0)
-    {}
+    {
+#ifdef DEBUG
+        std::cout << "MatMult : Default constructor called" << std::endl;
+#endif // DEBUG
+    }
 
     /** Full member constructor
      *  \param data Array containing data used by the operator
      *  \param height Height of the operator
      *  \param width Width of the operator
      */
-    MatMult(const Matrix<T>& data, size_t height, size_t width) noexcept
-        : Operator<T>(data, height, width, false)
-    {}
+    MatMult(Matrix<T>&& data, size_t height, size_t width) noexcept
+        : Operator<T>(std::forward<Matrix<T>>(data), height, width, false)
+    {
+#ifdef DEBUG
+        std::cout << "MatMult : Full member constructor called" << std::endl;
+#endif // DEBUG
+    }
 
     /** Clone function
      *  \return A copy of the current instance
@@ -47,7 +55,11 @@ public:
     /** Default destructor
      */
     virtual ~MatMult()
-    {}
+    {
+#ifdef DEBUG
+        std::cout << "MatMult : Default destructor called" << std::endl;
+#endif // DEBUG
+    }
 
     /** Valid instance test
      *  \return Throws an error message if instance is not valid.
@@ -56,7 +68,7 @@ public:
     {
         if( this->height_ != 0 &&
             this->width_ != 0 &&
-            !this->Data().IsEmpty() )
+            !this->data_.IsEmpty() )
         {
             return true;
         }
@@ -77,7 +89,7 @@ public:
             throw;
         }
 
-        return this->Data() * other;
+        return std::move(this->data_ * other);
     }
 
     /** Transpose in-place
@@ -87,7 +99,7 @@ public:
     {
         std::swap(this->height_, this->width_);
         this->transposed_ = !this->transposed_;
-        this->data_ = this->data_.Transpose();
+        this->data_ = std::move(this->data_.Transpose());
         return *this;
     }
 };

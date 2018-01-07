@@ -11,7 +11,10 @@
 #ifndef ASTROQUT_UTILS_LINEAROP_HPP
 #define ASTROQUT_UTILS_LINEAROP_HPP
 
+#include "const.hpp"
+
 #include <cstddef>
+#include <iostream>
 #include <stdexcept>
 
 namespace astroqut
@@ -42,7 +45,11 @@ public:
         : height_(0)
         , width_(0)
         , length_(0)
-    {}
+    {
+#ifdef DEBUG
+        std::cout << "LinearOp : Default constructor called" << std::endl;
+#endif // DEBUG
+    }
 
     /** Full member constructor
      *  \param height Height of the data
@@ -52,11 +59,20 @@ public:
         : height_(height)
         , width_(width)
         , length_(height*width)
-    {}
+    {
+#ifdef DEBUG
+        std::cout << "LinearOp : Full member constructor called" << std::endl;
+#endif // DEBUG
+    }
 
     /** Default destructor
      */
-    virtual ~LinearOp() = default;
+    virtual ~LinearOp()
+    {
+#ifdef DEBUG
+        std::cout << "LinearOp : Default destructor called" << std::endl;
+#endif // DEBUG
+    }
 
     /** Access height_
      * \return The current value of height_

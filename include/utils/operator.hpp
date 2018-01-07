@@ -14,6 +14,7 @@
 #include "utils/matrix.hpp"
 
 #include <functional>
+#include <utility>
 
 namespace astroqut
 {
@@ -31,7 +32,11 @@ public:
     Operator()
         : data_()
         , transposed_(false)
-    {}
+    {
+#ifdef DEBUG
+        std::cout << "Operator : Default constructor called" << std::endl;
+#endif // DEBUG
+    }
 
     /** Copy constructor
      *  \param other Object to copy from
@@ -40,7 +45,24 @@ public:
         : LinearOp<T>(other.height_, other.width_)
         , data_(other.data_)
         , transposed_(other.transposed_)
-    {}
+    {
+#ifdef DEBUG
+        std::cout << "Operator : Copy constructor called" << std::endl;
+#endif // DEBUG
+    }
+
+    /** Move constructor
+     *  \param other Object to copy from
+     */
+    Operator(Operator&& other)
+        : LinearOp<T>(other.height_, other.width_)
+        , data_(std::move(other.data_))
+        , transposed_(other.transposed_)
+    {
+#ifdef DEBUG
+        std::cout << "Operator : Move constructor called" << std::endl;
+#endif // DEBUG
+    }
 
     /** Empty constructor
      *  \param height Height of the operator
@@ -50,7 +72,11 @@ public:
         : LinearOp<T>(height, width)
         , data_(nullptr, 0, 0)
         , transposed_(false)
-    {}
+    {
+#ifdef DEBUG
+        std::cout << "Operator : Empty constructor called" << std::endl;
+#endif // DEBUG
+    }
 
     /** Full member constructor
      *  \param data Array containing data used by the operator
@@ -58,11 +84,15 @@ public:
      *  \param width Width of the operator
      *  \param transposed If the operator is transposed
      */
-    Operator(const Matrix<T>& data, size_t height, size_t width, bool transposed) noexcept
+    Operator(Matrix<T>&& data, size_t height, size_t width, bool transposed) noexcept
         : LinearOp<T>(height, width)
-        , data_(data)
+        , data_(std::forward<Matrix<T>>(data))
         , transposed_(transposed)
-    {}
+    {
+#ifdef DEBUG
+        std::cout << "Operator : Full member constructor called" << std::endl;
+#endif // DEBUG
+    }
 
     /** Clone function
      *  \return A copy of the current instance
@@ -75,12 +105,16 @@ public:
     /** Default destructor
      */
     virtual ~Operator()
-    {}
+    {
+#ifdef DEBUG
+        std::cout << "Operator : Default destructor called" << std::endl;
+#endif // DEBUG
+    }
 
     /** Access data_
      * \return The current value of data_
      */
-    Matrix<T> Data() const noexcept
+    Matrix<T>& Data() const noexcept
     {
         return data_;
     }
@@ -143,7 +177,7 @@ public:
         return !(*this == other);
     }
 
-    /** Assignment operator
+    /** Copy assignment operator
      *  \param other Object to assign to current object
      *  \return A reference to this
      */
@@ -160,7 +194,7 @@ public:
         return *this;
     }
 
-    /** Move operator
+    /** Move assignment operator
      *  \param other Object to move to current object
      *  \return A reference to this
      */
@@ -181,7 +215,7 @@ public:
     {
         std::cerr << "Do not use the Operator class directly, please use one of its derived classes." << std::endl;
 
-        return Matrix(other);
+        return std::move(Matrix(other));
     }
 
     /** Transpose in-place
