@@ -27,16 +27,16 @@ bool TransposeSquare()
     std::cout << "Transpose test with square matrices: ";
 
     const Matrix<int> int_expected_result(new int[9]{1,4,7,2,5,8,3,6,9}, 3, 3);
-    bool int_test = (int_expected_result == Matrix(int_square_matrix).Transpose());
+    bool int_test = (int_expected_result == Matrix<int>(int_square_matrix).Transpose());
 
     const Matrix<long> long_expected_result(new long[9]{1,4,7,2,5,8,3,6,9}, 3, 3);
-    bool long_test = (long_expected_result == Matrix(long_square_matrix).Transpose());
+    bool long_test = (long_expected_result == Matrix<long>(long_square_matrix).Transpose());
 
     const Matrix<float> float_expected_result(new float[9]{1,4,7,2,5,8,3,6,9}, 3, 3);
-    bool float_test = (float_expected_result == Matrix(float_square_matrix).Transpose());
+    bool float_test = (float_expected_result == Matrix<float>(float_square_matrix).Transpose());
 
     const Matrix<double> double_expected_result(new double[9]{1,4,7,2,5,8,3,6,9}, 3, 3);
-    bool double_test = (double_expected_result == Matrix(double_square_matrix).Transpose());
+    bool double_test = (double_expected_result == Matrix<double>(double_square_matrix).Transpose());
 
     bool test_result = int_test && long_test && float_test && double_test;
     std::cout << (test_result ? "Success" : "Failure") << std::endl;
@@ -49,16 +49,16 @@ bool TransposeRect()
     std::cout << "Transpose test with rect matrices: ";
 
     const Matrix<int> int_expected_result(new int[10]{1,6,2,7,3,8,4,9,5,10}, 5, 2);
-    bool int_test = (int_expected_result == Matrix(int_rect_matrix).Transpose());
+    bool int_test = (int_expected_result == Matrix<int>(int_rect_matrix).Transpose());
 
     const Matrix<long> long_expected_result(new long[10]{1,6,2,7,3,8,4,9,5,10}, 5, 2);
-    bool long_test = (long_expected_result == Matrix(long_rect_matrix).Transpose());
+    bool long_test = (long_expected_result == Matrix<long>(long_rect_matrix).Transpose());
 
     const Matrix<float> float_expected_result(new float[10]{1,6,2,7,3,8,4,9,5,10}, 5, 2);
-    bool float_test = (float_expected_result == Matrix(float_rect_matrix).Transpose());
+    bool float_test = (float_expected_result == Matrix<float>(float_rect_matrix).Transpose());
 
     const Matrix<double> double_expected_result(new double[10]{1,6,2,7,3,8,4,9,5,10}, 5, 2);
-    bool double_test = (double_expected_result == Matrix(double_rect_matrix).Transpose());
+    bool double_test = (double_expected_result == Matrix<double>(double_rect_matrix).Transpose());
 
     bool test_result = int_test && long_test && float_test && double_test;
     std::cout << (test_result ? "Success" : "Failure") << std::endl;
@@ -251,6 +251,21 @@ bool NormInf()
     return test_result;
 }
 
+bool Sum()
+{
+    std::cout << "Norm inf test : ";
+
+    bool int_test = IsEqual(int_square_matrix.Sum(), 45);
+    bool long_test = IsEqual(long_square_matrix.Sum(), 45L);
+    bool float_test = IsEqual(float_square_matrix.Sum(), 45.0f);
+    bool double_test = IsEqual(double_square_matrix.Sum(), 45.0);
+
+    bool test_result = int_test && long_test && float_test && double_test;
+    std::cout << (test_result ? "Success" : "Failure") << std::endl;
+
+    return test_result;
+}
+
 bool Shrink()
 {
     std::cout << "Shrinkage test : ";
@@ -273,97 +288,134 @@ bool Shrink()
     return test_result;
 }
 
-void Time()
+template <class T>
+void MMTest(size_t length)
 {
-    const Matrix<int> int_big_matrix(2, 5000, 5000);
+    std::cout << std::endl;
+    std::cout << "Matrix-Matrix multiplication performance test" << std::endl;
+    std::cout << "---------------------------------------------" << std::endl;
+
     std::chrono::time_point<std::chrono::high_resolution_clock> start, end;
-    start = std::chrono::high_resolution_clock::now();
-    int_big_matrix * int_big_matrix;
-    end = std::chrono::high_resolution_clock::now();
-    std::chrono::duration<double> elapsed_time = end-start;
-    std::cout << "Time for 5'000 x 5'000 integer matrix multiplication : " << elapsed_time.count() << " seconds" << std::endl;
+    std::chrono::duration<double> elapsed_time;
+    double result_times[2];
+    Matrix<T> big_matrix((T)2, length, length);
 
-    start = std::chrono::high_resolution_clock::now();
-    Matrix(int_big_matrix).Transpose();
-    end = std::chrono::high_resolution_clock::now();
-    elapsed_time = end-start;
-    std::cout << "Time for 5'000 x 5'000 integer matrix transpose : " << elapsed_time.count() << " seconds" << std::endl;
+    for(int i = 0; i < 2; ++i)
+    {
+        settings::default_MMType = static_cast<MMMultType>(i);
+        start = std::chrono::high_resolution_clock::now();
+        big_matrix * big_matrix;
+        end = std::chrono::high_resolution_clock::now();
+        elapsed_time = end-start;
+        result_times[i] = elapsed_time.count();
+        std::cout << "Time for " << length << " x " << length << " with method ";
+        std::cout << settings::MMMultTypeName[i] << " : " << result_times[i]*1000 << " milliseconds" << std::endl;
+    }
 
-    const Matrix<int> int_big_vector(2, 5000, 1);
-    start = std::chrono::high_resolution_clock::now();
-    int_big_matrix * int_big_vector;
-    end = std::chrono::high_resolution_clock::now();
-    elapsed_time = end-start;
-    std::cout << "Time for 5'000 x 5'000 integer matrix-vector multiplication : " << elapsed_time.count() << " seconds" << std::endl;
-
-
-    const Matrix<long> long_big_matrix(2L, 5000, 5000);
-    start = std::chrono::high_resolution_clock::now();
-    long_big_matrix * long_big_matrix;
-    end = std::chrono::high_resolution_clock::now();
-    elapsed_time = end-start;
-    std::cout << "Time for 5'000 x 5'000 long matrix multiplication : " << elapsed_time.count() << " seconds" << std::endl;
-
-    start = std::chrono::high_resolution_clock::now();
-    Matrix(long_big_matrix).Transpose();
-    end = std::chrono::high_resolution_clock::now();
-    elapsed_time = end-start;
-    std::cout << "Time for 5'000 x 5'000 long matrix transpose : " << elapsed_time.count() << " seconds" << std::endl;
-
-    const Matrix<long> long_big_vector(2L, 5000, 1);
-    start = std::chrono::high_resolution_clock::now();
-    long_big_matrix * long_big_vector;
-    end = std::chrono::high_resolution_clock::now();
-    elapsed_time = end-start;
-    std::cout << "Time for 5'000 x 5'000 long matrix-vector multiplication : " << elapsed_time.count() << " seconds" << std::endl;
-
-
-    const Matrix<float> float_big_matrix(2.0f, 5000, 5000);
-    start = std::chrono::high_resolution_clock::now();
-    float_big_matrix * float_big_matrix;
-    end = std::chrono::high_resolution_clock::now();
-    elapsed_time = end-start;
-    std::cout << "Time for 5'000 x 5'000 float matrix multiplication : " << elapsed_time.count() << " seconds" << std::endl;
-
-    start = std::chrono::high_resolution_clock::now();
-    Matrix(float_big_matrix).Transpose();
-    end = std::chrono::high_resolution_clock::now();
-    elapsed_time = end-start;
-    std::cout << "Time for 5'000 x 5'000 float matrix transpose : " << elapsed_time.count() << " seconds" << std::endl;
-
-    const Matrix<float> float_big_vector(2.0f, 5000, 1);
-    start = std::chrono::high_resolution_clock::now();
-    float_big_matrix * float_big_vector;
-    end = std::chrono::high_resolution_clock::now();
-    elapsed_time = end-start;
-    std::cout << "Time for 5'000 x 5'000 float matrix-vector multiplication : " << elapsed_time.count() << " seconds" << std::endl;
-
-
-    const Matrix<double> double_big_matrix(2.0, 5000, 5000);
-    start = std::chrono::high_resolution_clock::now();
-    double_big_matrix * double_big_matrix;
-    end = std::chrono::high_resolution_clock::now();
-    elapsed_time = end-start;
-    std::cout << "Time for 5'000 x 5'000 double matrix multiplication : " << elapsed_time.count() << " seconds" << std::endl;
-
-    start = std::chrono::high_resolution_clock::now();
-    Matrix(double_big_matrix).Transpose();
-    end = std::chrono::high_resolution_clock::now();
-    elapsed_time = end-start;
-    std::cout << "Time for 5'000 x 5'000 double matrix transpose : " << elapsed_time.count() << " seconds" << std::endl;
-
-    const Matrix<double> double_big_vector(2.0, 5000, 1);
-    start = std::chrono::high_resolution_clock::now();
-    double_big_matrix * double_big_vector;
-    end = std::chrono::high_resolution_clock::now();
-    elapsed_time = end-start;
-    std::cout << "Time for 5'000 x 5'000 double matrix-vector multiplication : " << elapsed_time.count() << " seconds" << std::endl;
+    std::cout << "---------------------------------------------" << std::endl;
+    int best = std::distance(result_times, std::min_element(result_times, result_times+2));
+    std::cout << "Best performance achieved by " << settings::MMMultTypeName[best] << " with ";
+    std::cout << result_times[best]*1000 << " milliseconds" << std::endl << std::endl;
 }
 
-void Optimizations()
+template <class T>
+void MVTest(size_t length)
+{
+    std::cout << std::endl;
+    std::cout << "Matrix-Vector multiplication performance test" << std::endl;
+    std::cout << "---------------------------------------------" << std::endl;
+
+    std::chrono::time_point<std::chrono::high_resolution_clock> start, end;
+    std::chrono::duration<double> elapsed_time;
+    double result_times[3];
+    Matrix<T> big_matrix((T)2, length, length);
+    Matrix<T> big_vector((T)2, length, 1);
+
+    for(int i = 0; i < 3; ++i)
+    {
+        settings::default_MVType = static_cast<MVMultType>(i);
+        start = std::chrono::high_resolution_clock::now();
+        big_matrix * big_vector;
+        end = std::chrono::high_resolution_clock::now();
+        elapsed_time = end-start;
+        result_times[i] = elapsed_time.count();
+        std::cout << "Time for " << length << " x " << length << " matrix-vector multiplication with method ";
+        std::cout << settings::MVMultTypeName[i] << " : " << result_times[i]*1000 << " milliseconds" << std::endl;
+    }
+
+    std::cout << "---------------------------------------------" << std::endl;
+    int best = std::distance(result_times, std::min_element(result_times, result_times+3));
+    std::cout << "Best performance achieved by " << settings::MVMultTypeName[best] << " with ";
+    std::cout << result_times[best]*1000 << " milliseconds" << std::endl << std::endl;
+}
+
+template <class T>
+void VMTest(size_t length)
+{
+    std::cout << std::endl;
+    std::cout << "Vector-Matrix multiplication performance test" << std::endl;
+    std::cout << "---------------------------------------------" << std::endl;
+
+    std::chrono::time_point<std::chrono::high_resolution_clock> start, end;
+    std::chrono::duration<double> elapsed_time;
+    double result_times[2];
+    Matrix<T> big_matrix((T)2, length, length);
+    Matrix<T> big_vector((T)2, 1, length);
+
+    for(int i = 0; i < 2; ++i)
+    {
+        settings::default_VMType = static_cast<VMMultType>(i);
+        start = std::chrono::high_resolution_clock::now();
+        big_vector * big_matrix;
+        end = std::chrono::high_resolution_clock::now();
+        elapsed_time = end-start;
+        result_times[i] = elapsed_time.count();
+        std::cout << "Time for " << length << " x " << length << " vector-matrix multiplication with method ";
+        std::cout << settings::VMMultTypeName[i] << " : " << result_times[i]*1000 << " milliseconds" << std::endl;
+    }
+
+    std::cout << "---------------------------------------------" << std::endl;
+    int best = std::distance(result_times, std::min_element(result_times, result_times+2));
+    std::cout << "Best performance achieved by " << settings::VMMultTypeName[best] << " with ";
+    std::cout << result_times[best]*1000 << " milliseconds" << std::endl << std::endl;
+}
+
+void Time(size_t length, TimeTestType type)
+{
+    switch(type)
+    {
+    case integer:
+        {
+            MMTest<int>(length);
+            MVTest<int>(16*length);
+            VMTest<int>(16*length);
+        }
+    case long_integer:
+        {
+            MMTest<long>(length);
+            MVTest<long>(16*length);
+            VMTest<long>(16*length);
+        }
+    case floating:
+        {
+            MMTest<float>(length);
+            MVTest<float>(16*length);
+            VMTest<float>(16*length);
+        }
+    case double_floating:
+        {
+            MMTest<double>(length);
+            MVTest<double>(16*length);
+            VMTest<double>(16*length);
+        }
+    default:
+        {}
+    }
+}
+
+void Optimizations(size_t length)
 {
     double number = 3.141592;
-    size_t length = 3000000000;
     double *test_array = new double[length]{};
     std::chrono::time_point<std::chrono::high_resolution_clock> start, end;
 
@@ -441,6 +493,8 @@ void Optimizations()
     end = std::chrono::high_resolution_clock::now();
     elapsed_time = end-start;
     std::cout << "Time for omp taskloop simd to assign " << length << " doubles : " << elapsed_time.count() << " seconds" << std::endl;
+
+    delete[] test_array;
 }
 
 } // namespace matrix

@@ -11,6 +11,7 @@
 #define ASTROQUT_TEST_MATRIX_HPP
 
 #include "utils/matrix.hpp"
+#include "settings.hpp"
 
 #include <chrono>
 #include <iostream>
@@ -34,11 +35,14 @@ bool NormOne();
 bool NormTwo();
 bool NormInf();
 
+bool Sum();
+
 bool Shrink();
 
-void Time();
+enum TimeTestType{integer, long_integer, floating, double_floating};
+void Time(size_t length, TimeTestType type);
 
-void Optimizations();
+void Optimizations(size_t length);
 
 } // namespace matrix
 } // namespace test
