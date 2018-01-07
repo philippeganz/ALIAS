@@ -18,7 +18,7 @@ inline double Func( const Matrix<double>& Axu,
                     const Matrix<double>& b )
 {
     // sum(A*x+u - b.*log(A*x+u))
-    return (Axu - (b ->* (Axu.Log()))).Sum();
+    return (Axu - (b & (Axu.Log()))).Sum();
 }
 
 inline Matrix<double> FuncGrad(const Matrix<double>& Axu,
