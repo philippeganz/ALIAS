@@ -97,17 +97,17 @@ bool SmallExample3()
     return fista_test;
 }
 
-void Time()
+void Time(size_t length)
 {
     std::cout << "FISTA test with big data : " << std::endl << std::endl;
 
     std::default_random_engine generator;
     generator.seed(123456789);
     std::normal_distribution<double> distribution(100.0,10.0);
-    size_t test_height = 1024*1024;
-    size_t test_width = 1024;
+    size_t test_height = length*length;
+    size_t test_width = length;
 
-    double * A_data = new double[test_height*test_width];
+    double * A_data = new double[test_height*test_width]; // destroyed when A is destroyed
     #pragma omp parallel for
     for( size_t i = 0; i < test_height*test_width; ++i )
     {
@@ -115,7 +115,7 @@ void Time()
     }
     astroqut::MatMult<double> A(astroqut::Matrix<double>(A_data, test_height, test_width), test_height, test_width);
 
-    double * u_data = new double[test_height];
+    double * u_data = new double[test_height]; // destroyed when u is destroyed
     #pragma omp parallel for
     for( size_t i = 0; i < test_height; ++i )
     {
@@ -123,7 +123,7 @@ void Time()
     }
     astroqut::Matrix<double> u(u_data, test_height, 1);
 
-    double * b_data = new double[test_height];
+    double * b_data = new double[test_height]; // destroyed when b is destroyed
     #pragma omp parallel for
     for( size_t i = 0; i < test_height; ++i )
     {
@@ -144,13 +144,6 @@ void Time()
     std::cout << std::endl << std::endl << "Time for FISTA solver with " << test_height;
     std::cout << "x" << test_width << " double matrix : " << std::defaultfloat << elapsed_time.count();
     std::cout << " seconds" << std::endl << std::endl;
-
-//    options.max_iter = 1;
-//    start = std::chrono::high_resolution_clock::now();
-//    astroqut::fista::poisson::solve(A, u, b, 1, options);
-//    end = std::chrono::high_resolution_clock::now();
-//    elapsed_time = end-start;
-//    std::cout << "Time for the first iteration : " << std::defaultfloat << elapsed_time.count() << " seconds" << std::endl << std::endl;
 }
 
 } // namespace matrix

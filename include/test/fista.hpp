@@ -10,11 +10,12 @@
 #ifndef ASTROQUT_TEST_FISTA_HPP
 #define ASTROQUT_TEST_FISTA_HPP
 
+#include "fista/poisson.hpp"
+#include "settings.hpp"
+
 #include <chrono>
 #include <iostream>
 #include <random>
-
-#include "fista/poisson.hpp"
 
 namespace astroqut{
 namespace test{
@@ -24,7 +25,7 @@ bool SmallExample1();
 bool SmallExample2();
 bool SmallExample3();
 
-void Time();
+void Time(size_t length);
 
 } // namespace fista
 } // namespace test
