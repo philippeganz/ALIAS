@@ -28,13 +28,15 @@ bool Matrix()
     bool norm_two = matrix::NormTwo();
     bool norm_inf = matrix::NormInf();
 
+    bool sum = matrix::Sum();
+
     bool shrink = matrix::Shrink();
 
-//    matrix::Time();
+    matrix::Time(2048, matrix::double_floating);
 
-//    matrix::Optimizations();
+    matrix::Optimizations(1000000000);
 
-    return transpose_square && transpose_rect && add && sub && mult_square && mult_rect && vect_mat && mat_vect && norm_one && norm_two && norm_inf && shrink;
+    return transpose_square && transpose_rect && add && sub && mult_square && mult_rect && vect_mat && mat_vect && norm_one && norm_two && norm_inf && sum && shrink;
 }
 
 bool FISTA()
@@ -43,7 +45,7 @@ bool FISTA()
     bool fista_small2 = fista::SmallExample2();
     bool fista_small3 = fista::SmallExample3();
 
-//    fista::Time();
+    fista::Time(1024);
 
     return fista_small1 && fista_small2 && fista_small3;
 }
