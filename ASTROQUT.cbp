@@ -32,8 +32,6 @@
 					<Add option="-Wextra" />
 					<Add option="-Wall" />
 					<Add option="-g" />
-					<Add directory="include/utils" />
-					<Add directory="include/utils/operator" />
 				</Compiler>
 			</Target>
 			<Target title="ReleaseO2">
@@ -42,10 +40,7 @@
 				<Option type="1" />
 				<Option compiler="gcc" />
 				<Compiler>
-					<Add option="-march=corei7-avx" />
 					<Add option="-O2" />
-					<Add directory="include/utils" />
-					<Add directory="include/utils/operator" />
 				</Compiler>
 			</Target>
 			<Target title="ReleaseO3">
@@ -54,17 +49,16 @@
 				<Option type="1" />
 				<Option compiler="gcc" />
 				<Compiler>
-					<Add option="-march=corei7-avx" />
 					<Add option="-O3" />
-					<Add directory="include/utils" />
-					<Add directory="include/utils/operator" />
+					<Add option="-g" />
 				</Compiler>
 			</Target>
 		</Build>
 		<Compiler>
 			<Add option="-m64" />
-			<Add option="-fopenmp -std=c++17" />
+			<Add option="-fopenmp -std=c++17 -march=native -mavx2" />
 			<Add directory="include" />
+			<Add directory="extern_include/eigen-eigen-5a0156e40feb" />
 		</Compiler>
 		<Linker>
 			<Add option="-m64" />
@@ -75,6 +69,7 @@
 		<Unit filename="include/WS.hpp" />
 		<Unit filename="include/const.hpp" />
 		<Unit filename="include/fista/poisson.hpp" />
+		<Unit filename="include/settings.hpp" />
 		<Unit filename="include/test.hpp" />
 		<Unit filename="include/test/fista.hpp" />
 		<Unit filename="include/test/matrix.hpp" />
