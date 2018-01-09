@@ -110,7 +110,7 @@ inline void MatrixVectorMult(const Matrix<T>& mat, const Matrix<T>& vect, const 
             #pragma omp parallel for
             for(size_t i = 0; i < mat.Height(); ++i)
             {
-                Eigen::Map<Eigen::Matrix<T, 1, Eigen::Dynamic, Eigen::RowMajor>> eigenMat(mat.Data() + i*mat.Height(), mat.Width());
+                Eigen::Map<Eigen::Matrix<T, 1, Eigen::Dynamic, Eigen::RowMajor>> eigenMat(mat.Data() + i*mat.Width(), mat.Width());
                 result.Data()[i] = eigenMat.dot(eigenVect);
             }
 
