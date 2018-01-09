@@ -57,14 +57,17 @@ public:
 #ifdef DEBUG
         std::cout << "Matrix : Empty constructor called" << std::endl;
 #endif // DEBUG
-        try
+        if(this->length_ != 0)
         {
-            data_ = new T[this->length_];
-        }
-        catch (const std::bad_alloc&)
-        {
-            std::cerr << "Could not allocate memory for new array!" << std::endl;
-            throw;
+            try
+            {
+                data_ = new T[this->length_];
+            }
+            catch (const std::bad_alloc&)
+            {
+                std::cerr << "Could not allocate memory for new array!" << std::endl;
+                throw;
+            }
         }
     }
 
@@ -321,38 +324,46 @@ public:
         std::cout << "Matrix : Copy assignment operator called" << std::endl;
 #endif // DEBUG
 
-        // we need to allocate memory if data_ has not yet been allocated
-        // or reallocate if the array size is not the same
-        if( data_ == nullptr || this->length_ != other.length_ )
+        // we need to deallocate data_ if the array size is not the same
+        if( this->length_ != other.length_ )
         {
             if( data_ != nullptr )
             {
                 delete[] data_;
+                data_ = nullptr;
             }
-
-            try
+            // and we need to reallocate if there is something to store
+            if( other.data_ != nullptr )
             {
-                data_ = new T[other.length_];
-            }
-            catch (const std::bad_alloc&)
-            {
-                std::cerr << "Could not allocate memory for new array!" << std::endl;
-                throw;
+                try
+                {
+                    data_ = new T[other.length_];
+                }
+                catch (const std::bad_alloc&)
+                {
+                    std::cerr << "Could not allocate memory for new array!" << std::endl;
+                    throw;
+                }
             }
         }
 
+        // copy data if need be
+        if( data_ != nullptr && data_ != other.data_ )
+        {
+            #pragma omp parallel for simd
+            for(size_t i = 0; i < other.length_; ++i)
+            {
+                data_[i] = other.data_[i];
+            }
+
+            // TODO std::copy not yet parallelized : change as soon as available
+            // std::copy(other.data_, other.data_ + other.length_, data_);
+        }
+
+        // finally, update the size values
         this->height_ = other.height_;
         this->width_ = other.width_;
         this->length_ = other.length_;
-
-        #pragma omp parallel for simd
-        for(size_t i = 0; i < other.length_; ++i)
-        {
-            data_[i] = other.data_[i];
-        }
-
-        // TODO std::copy not yet parallelized : change as soon as available
-        // std::copy(other.data_, other.data_ + other.length_, data_);
 
         return *this;
     }
