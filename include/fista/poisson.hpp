@@ -32,7 +32,6 @@ struct Parameters
     Parameters() noexcept
         : tol(1e-6)
         , max_iter(2000)
-        , init_value{}
         , log(true)
         , log_period(10)
     {}

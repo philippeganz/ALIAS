@@ -14,6 +14,10 @@ namespace test{
 
 bool Matrix()
 {
+    matrix::Time(2048, matrix::double_floating);
+
+    matrix::Optimizations(1000000000);
+
     bool transpose_square = matrix::TransposeSquare();
     bool transpose_rect = matrix::TransposeRect();
 
@@ -31,10 +35,6 @@ bool Matrix()
     bool sum = matrix::Sum();
 
     bool shrink = matrix::Shrink();
-
-    matrix::Time(2048, matrix::double_floating);
-
-    matrix::Optimizations(1000000000);
 
     return transpose_square && transpose_rect && add && sub && mult_square && mult_rect && vect_mat && mat_vect && norm_one && norm_two && norm_inf && sum && shrink;
 }

@@ -22,7 +22,6 @@ bool SmallExample1()
     astroqut::Matrix<double> b(new double[3]{1.0,1.0,2.0}, 3, 1);
     astroqut::fista::poisson::Parameters options;
     options.tol = 1e-4;
-    options.init_value = astroqut::Matrix(new double[4]{}, 4, 1);
     options.log_period = 50;
 
     astroqut::Matrix<double> expected_result(new double[4]{0.939214191176937, 0.0, 0.0, -0.650697826008454}, 4, 1);

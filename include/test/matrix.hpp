@@ -21,6 +21,11 @@ namespace astroqut{
 namespace test{
 namespace matrix{
 
+enum TimeTestType{integer, long_integer, floating, double_floating};
+void Time(size_t length, TimeTestType type);
+
+void Optimizations(size_t length);
+
 bool TransposeSquare();
 bool TransposeRect();
 
@@ -38,11 +43,6 @@ bool NormInf();
 bool Sum();
 
 bool Shrink();
-
-enum TimeTestType{integer, long_integer, floating, double_floating};
-void Time(size_t length, TimeTestType type);
-
-void Optimizations(size_t length);
 
 } // namespace matrix
 } // namespace test

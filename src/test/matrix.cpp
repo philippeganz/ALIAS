@@ -13,6 +13,219 @@ namespace astroqut{
 namespace test{
 namespace matrix{
 
+
+template <class T>
+void MMTest(size_t length)
+{
+    std::cout << std::endl;
+    std::cout << "Matrix-Matrix multiplication performance test" << std::endl;
+    std::cout << "---------------------------------------------" << std::endl;
+
+    std::chrono::time_point<std::chrono::high_resolution_clock> start, end;
+    std::chrono::duration<double> elapsed_time;
+    double result_times[2];
+    Matrix<T> big_matrix((T)2, length, length);
+
+    for(int i = 0; i < 2; ++i)
+    {
+        settings::default_MMType = static_cast<MMMultType>(i);
+        start = std::chrono::high_resolution_clock::now();
+        big_matrix * big_matrix;
+        end = std::chrono::high_resolution_clock::now();
+        elapsed_time = end-start;
+        result_times[i] = elapsed_time.count();
+        std::cout << "Time for " << length << " x " << length << " with method ";
+        std::cout << settings::MMMultTypeName[i] << " : " << result_times[i]*1000 << " milliseconds" << std::endl;
+    }
+
+    std::cout << "---------------------------------------------" << std::endl;
+    int best = std::distance(result_times, std::min_element(result_times, result_times+2));
+    std::cout << "Best performance achieved by " << settings::MMMultTypeName[best] << " with ";
+    std::cout << result_times[best]*1000 << " milliseconds" << std::endl << std::endl;
+    settings::default_MMType = static_cast<MMMultType>(best);
+}
+
+template <class T>
+void MVTest(size_t length)
+{
+    std::cout << std::endl;
+    std::cout << "Matrix-Vector multiplication performance test" << std::endl;
+    std::cout << "---------------------------------------------" << std::endl;
+
+    std::chrono::time_point<std::chrono::high_resolution_clock> start, end;
+    std::chrono::duration<double> elapsed_time;
+    double result_times[3];
+    Matrix<T> big_matrix((T)2, length, length);
+    Matrix<T> big_vector((T)2, length, 1);
+
+    for(int i = 0; i < 3; ++i)
+    {
+        settings::default_MVType = static_cast<MVMultType>(i);
+        start = std::chrono::high_resolution_clock::now();
+        big_matrix * big_vector;
+        end = std::chrono::high_resolution_clock::now();
+        elapsed_time = end-start;
+        result_times[i] = elapsed_time.count();
+        std::cout << "Time for " << length << " x " << length << " matrix-vector multiplication with method ";
+        std::cout << settings::MVMultTypeName[i] << " : " << result_times[i]*1000 << " milliseconds" << std::endl;
+    }
+
+    std::cout << "---------------------------------------------" << std::endl;
+    int best = std::distance(result_times, std::min_element(result_times, result_times+3));
+    std::cout << "Best performance achieved by " << settings::MVMultTypeName[best] << " with ";
+    std::cout << result_times[best]*1000 << " milliseconds" << std::endl << std::endl;
+    settings::default_MVType = static_cast<MVMultType>(best);
+}
+
+template <class T>
+void VMTest(size_t length)
+{
+    std::cout << std::endl;
+    std::cout << "Vector-Matrix multiplication performance test" << std::endl;
+    std::cout << "---------------------------------------------" << std::endl;
+
+    std::chrono::time_point<std::chrono::high_resolution_clock> start, end;
+    std::chrono::duration<double> elapsed_time;
+    double result_times[2];
+    Matrix<T> big_matrix((T)2, length, length);
+    Matrix<T> big_vector((T)2, 1, length);
+
+    for(int i = 0; i < 2; ++i)
+    {
+        settings::default_VMType = static_cast<VMMultType>(i);
+        start = std::chrono::high_resolution_clock::now();
+        big_vector * big_matrix;
+        end = std::chrono::high_resolution_clock::now();
+        elapsed_time = end-start;
+        result_times[i] = elapsed_time.count();
+        std::cout << "Time for " << length << " x " << length << " vector-matrix multiplication with method ";
+        std::cout << settings::VMMultTypeName[i] << " : " << result_times[i]*1000 << " milliseconds" << std::endl;
+    }
+
+    std::cout << "---------------------------------------------" << std::endl;
+    int best = std::distance(result_times, std::min_element(result_times, result_times+2));
+    std::cout << "Best performance achieved by " << settings::VMMultTypeName[best] << " with ";
+    std::cout << result_times[best]*1000 << " milliseconds" << std::endl << std::endl;
+    settings::default_VMType = static_cast<VMMultType>(best);
+}
+
+void Time(size_t length, TimeTestType type)
+{
+    switch(type)
+    {
+    case integer:
+        {
+            MMTest<int>(length);
+            MVTest<int>(16*length);
+            VMTest<int>(16*length);
+        }
+    case long_integer:
+        {
+            MMTest<long>(length);
+            MVTest<long>(16*length);
+            VMTest<long>(16*length);
+        }
+    case floating:
+        {
+            MMTest<float>(length);
+            MVTest<float>(16*length);
+            VMTest<float>(16*length);
+        }
+    case double_floating:
+        {
+            MMTest<double>(length);
+            MVTest<double>(16*length);
+            VMTest<double>(16*length);
+        }
+    default:
+        {}
+    }
+}
+
+void Optimizations(size_t length)
+{
+    double number = 3.141592;
+    double *test_array = new double[length]{};
+    std::chrono::time_point<std::chrono::high_resolution_clock> start, end;
+
+// STL algorithm
+    start = std::chrono::high_resolution_clock::now();
+
+    std::fill( test_array, test_array + length, number );
+
+    end = std::chrono::high_resolution_clock::now();
+    std::chrono::duration<double> elapsed_time = end-start;
+    std::cout << "Time for std::fill to assign " << length << " doubles : " << elapsed_time.count() << " seconds" << std::endl;
+
+// OpenMP parallel for
+    start = std::chrono::high_resolution_clock::now();
+
+    #pragma omp parallel for
+    for(size_t i = 0; i < length; ++i)
+    {
+        test_array[i] = number;
+    }
+
+    end = std::chrono::high_resolution_clock::now();
+    elapsed_time = end-start;
+    std::cout << "Time for omp parallel for to assign " << length << " doubles : " << elapsed_time.count() << " seconds" << std::endl;
+
+// OpenMP for simd
+    start = std::chrono::high_resolution_clock::now();
+
+    #pragma omp for simd
+    for(size_t i = 0; i < length; ++i)
+    {
+        test_array[i] = number;
+    }
+
+    end = std::chrono::high_resolution_clock::now();
+    elapsed_time = end-start;
+    std::cout << "Time for omp simd to assign " << length << " doubles : " << elapsed_time.count() << " seconds" << std::endl;
+
+// OpenMP parallel for simd
+    start = std::chrono::high_resolution_clock::now();
+
+    #pragma omp parallel for simd
+    for(size_t i = 0; i < length; ++i)
+    {
+        test_array[i] = number;
+    }
+
+    end = std::chrono::high_resolution_clock::now();
+    elapsed_time = end-start;
+    std::cout << "Time for omp parallel for simd to assign " << length << " doubles : " << elapsed_time.count() << " seconds" << std::endl;
+
+
+// OpenMP taskloop
+    start = std::chrono::high_resolution_clock::now();
+
+    #pragma omp taskloop
+    for(size_t i = 0; i < length; ++i)
+    {
+        test_array[i] = number;
+    }
+
+    end = std::chrono::high_resolution_clock::now();
+    elapsed_time = end-start;
+    std::cout << "Time for omp taskloop to assign " << length << " doubles : " << elapsed_time.count() << " seconds" << std::endl;
+
+// OpenMP taskloop simd
+    start = std::chrono::high_resolution_clock::now();
+
+    #pragma omp taskloop simd
+    for(size_t i = 0; i < length; ++i)
+    {
+        test_array[i] = number;
+    }
+
+    end = std::chrono::high_resolution_clock::now();
+    elapsed_time = end-start;
+    std::cout << "Time for omp taskloop simd to assign " << length << " doubles : " << elapsed_time.count() << " seconds" << std::endl;
+
+    delete[] test_array;
+}
+
 const Matrix<int> int_square_matrix(new int[9]{1,2,3,4,5,6,7,8,9}, 3, 3);
 const Matrix<int> int_rect_matrix(new int[10]{1,2,3,4,5,6,7,8,9,10}, 2, 5);
 const Matrix<long> long_square_matrix(new long[9]{1,2,3,4,5,6,7,8,9}, 3, 3);
@@ -286,215 +499,6 @@ bool Shrink()
     std::cout << (test_result ? "Success" : "Failure") << std::endl;
 
     return test_result;
-}
-
-template <class T>
-void MMTest(size_t length)
-{
-    std::cout << std::endl;
-    std::cout << "Matrix-Matrix multiplication performance test" << std::endl;
-    std::cout << "---------------------------------------------" << std::endl;
-
-    std::chrono::time_point<std::chrono::high_resolution_clock> start, end;
-    std::chrono::duration<double> elapsed_time;
-    double result_times[2];
-    Matrix<T> big_matrix((T)2, length, length);
-
-    for(int i = 0; i < 2; ++i)
-    {
-        settings::default_MMType = static_cast<MMMultType>(i);
-        start = std::chrono::high_resolution_clock::now();
-        big_matrix * big_matrix;
-        end = std::chrono::high_resolution_clock::now();
-        elapsed_time = end-start;
-        result_times[i] = elapsed_time.count();
-        std::cout << "Time for " << length << " x " << length << " with method ";
-        std::cout << settings::MMMultTypeName[i] << " : " << result_times[i]*1000 << " milliseconds" << std::endl;
-    }
-
-    std::cout << "---------------------------------------------" << std::endl;
-    int best = std::distance(result_times, std::min_element(result_times, result_times+2));
-    std::cout << "Best performance achieved by " << settings::MMMultTypeName[best] << " with ";
-    std::cout << result_times[best]*1000 << " milliseconds" << std::endl << std::endl;
-}
-
-template <class T>
-void MVTest(size_t length)
-{
-    std::cout << std::endl;
-    std::cout << "Matrix-Vector multiplication performance test" << std::endl;
-    std::cout << "---------------------------------------------" << std::endl;
-
-    std::chrono::time_point<std::chrono::high_resolution_clock> start, end;
-    std::chrono::duration<double> elapsed_time;
-    double result_times[3];
-    Matrix<T> big_matrix((T)2, length, length);
-    Matrix<T> big_vector((T)2, length, 1);
-
-    for(int i = 0; i < 3; ++i)
-    {
-        settings::default_MVType = static_cast<MVMultType>(i);
-        start = std::chrono::high_resolution_clock::now();
-        big_matrix * big_vector;
-        end = std::chrono::high_resolution_clock::now();
-        elapsed_time = end-start;
-        result_times[i] = elapsed_time.count();
-        std::cout << "Time for " << length << " x " << length << " matrix-vector multiplication with method ";
-        std::cout << settings::MVMultTypeName[i] << " : " << result_times[i]*1000 << " milliseconds" << std::endl;
-    }
-
-    std::cout << "---------------------------------------------" << std::endl;
-    int best = std::distance(result_times, std::min_element(result_times, result_times+3));
-    std::cout << "Best performance achieved by " << settings::MVMultTypeName[best] << " with ";
-    std::cout << result_times[best]*1000 << " milliseconds" << std::endl << std::endl;
-}
-
-template <class T>
-void VMTest(size_t length)
-{
-    std::cout << std::endl;
-    std::cout << "Vector-Matrix multiplication performance test" << std::endl;
-    std::cout << "---------------------------------------------" << std::endl;
-
-    std::chrono::time_point<std::chrono::high_resolution_clock> start, end;
-    std::chrono::duration<double> elapsed_time;
-    double result_times[2];
-    Matrix<T> big_matrix((T)2, length, length);
-    Matrix<T> big_vector((T)2, 1, length);
-
-    for(int i = 0; i < 2; ++i)
-    {
-        settings::default_VMType = static_cast<VMMultType>(i);
-        start = std::chrono::high_resolution_clock::now();
-        big_vector * big_matrix;
-        end = std::chrono::high_resolution_clock::now();
-        elapsed_time = end-start;
-        result_times[i] = elapsed_time.count();
-        std::cout << "Time for " << length << " x " << length << " vector-matrix multiplication with method ";
-        std::cout << settings::VMMultTypeName[i] << " : " << result_times[i]*1000 << " milliseconds" << std::endl;
-    }
-
-    std::cout << "---------------------------------------------" << std::endl;
-    int best = std::distance(result_times, std::min_element(result_times, result_times+2));
-    std::cout << "Best performance achieved by " << settings::VMMultTypeName[best] << " with ";
-    std::cout << result_times[best]*1000 << " milliseconds" << std::endl << std::endl;
-}
-
-void Time(size_t length, TimeTestType type)
-{
-    switch(type)
-    {
-    case integer:
-        {
-            MMTest<int>(length);
-            MVTest<int>(16*length);
-            VMTest<int>(16*length);
-        }
-    case long_integer:
-        {
-            MMTest<long>(length);
-            MVTest<long>(16*length);
-            VMTest<long>(16*length);
-        }
-    case floating:
-        {
-            MMTest<float>(length);
-            MVTest<float>(16*length);
-            VMTest<float>(16*length);
-        }
-    case double_floating:
-        {
-            MMTest<double>(length);
-            MVTest<double>(16*length);
-            VMTest<double>(16*length);
-        }
-    default:
-        {}
-    }
-}
-
-void Optimizations(size_t length)
-{
-    double number = 3.141592;
-    double *test_array = new double[length]{};
-    std::chrono::time_point<std::chrono::high_resolution_clock> start, end;
-
-// STL algorithm
-    start = std::chrono::high_resolution_clock::now();
-
-    std::fill( test_array, test_array + length, number );
-
-    end = std::chrono::high_resolution_clock::now();
-    std::chrono::duration<double> elapsed_time = end-start;
-    std::cout << "Time for std::fill to assign " << length << " doubles : " << elapsed_time.count() << " seconds" << std::endl;
-
-// OpenMP parallel for
-    start = std::chrono::high_resolution_clock::now();
-
-    #pragma omp parallel for
-    for(size_t i = 0; i < length; ++i)
-    {
-        test_array[i] = number;
-    }
-
-    end = std::chrono::high_resolution_clock::now();
-    elapsed_time = end-start;
-    std::cout << "Time for omp parallel for to assign " << length << " doubles : " << elapsed_time.count() << " seconds" << std::endl;
-
-// OpenMP for simd
-    start = std::chrono::high_resolution_clock::now();
-
-    #pragma omp for simd
-    for(size_t i = 0; i < length; ++i)
-    {
-        test_array[i] = number;
-    }
-
-    end = std::chrono::high_resolution_clock::now();
-    elapsed_time = end-start;
-    std::cout << "Time for omp simd to assign " << length << " doubles : " << elapsed_time.count() << " seconds" << std::endl;
-
-// OpenMP parallel for simd
-    start = std::chrono::high_resolution_clock::now();
-
-    #pragma omp parallel for simd
-    for(size_t i = 0; i < length; ++i)
-    {
-        test_array[i] = number;
-    }
-
-    end = std::chrono::high_resolution_clock::now();
-    elapsed_time = end-start;
-    std::cout << "Time for omp parallel for simd to assign " << length << " doubles : " << elapsed_time.count() << " seconds" << std::endl;
-
-
-// OpenMP taskloop
-    start = std::chrono::high_resolution_clock::now();
-
-    #pragma omp taskloop
-    for(size_t i = 0; i < length; ++i)
-    {
-        test_array[i] = number;
-    }
-
-    end = std::chrono::high_resolution_clock::now();
-    elapsed_time = end-start;
-    std::cout << "Time for omp taskloop to assign " << length << " doubles : " << elapsed_time.count() << " seconds" << std::endl;
-
-// OpenMP taskloop simd
-    start = std::chrono::high_resolution_clock::now();
-
-    #pragma omp taskloop simd
-    for(size_t i = 0; i < length; ++i)
-    {
-        test_array[i] = number;
-    }
-
-    end = std::chrono::high_resolution_clock::now();
-    elapsed_time = end-start;
-    std::cout << "Time for omp taskloop simd to assign " << length << " doubles : " << elapsed_time.count() << " seconds" << std::endl;
-
-    delete[] test_array;
 }
 
 } // namespace matrix
