@@ -32,44 +32,64 @@
 					<Add option="-Wextra" />
 					<Add option="-Wall" />
 					<Add option="-g" />
+					<Add option="-ftemplate-backtrace-limit=0" />
 				</Compiler>
 			</Target>
-			<Target title="Release">
-				<Option output="bin/Release/AstroQUT" prefix_auto="1" extension_auto="1" />
-				<Option object_output="obj/Release/" />
+			<Target title="ReleaseO2">
+				<Option output="bin/ReleaseO2/AstroQUT" prefix_auto="1" extension_auto="1" />
+				<Option object_output="obj/ReleaseO2/" />
 				<Option type="1" />
 				<Option compiler="gcc" />
 				<Compiler>
-					<Add option="-march=corei7-avx" />
 					<Add option="-O2" />
+					<Add option="-g" />
 				</Compiler>
-				<Linker>
-					<Add option="-s" />
-				</Linker>
+			</Target>
+			<Target title="ReleaseO3">
+				<Option output="bin/ReleaseO3/AstroQUT" prefix_auto="1" extension_auto="1" />
+				<Option object_output="obj/ReleaseO3/" />
+				<Option type="1" />
+				<Option compiler="gcc" />
+				<Compiler>
+					<Add option="-O3" />
+					<Add option="-g" />
+				</Compiler>
 			</Target>
 		</Build>
 		<Compiler>
-			<Add option="-ftree-vectorize -fopenmp -std=c++1z" />
+			<Add option="-m64" />
+			<Add option="-fopenmp -std=c++17 -march=native -mavx2" />
 			<Add directory="include" />
+			<Add directory="extern_include/eigen-eigen-5a0156e40feb" />
 		</Compiler>
 		<Linker>
+			<Add option="-m64" />
 			<Add option="-fopenmp" />
-			<Add directory="include" />
 		</Linker>
 		<Unit filename=".gitignore" />
 		<Unit filename="include/WS.hpp" />
 		<Unit filename="include/const.hpp" />
-		<Unit filename="include/datacontainer.hpp" />
 		<Unit filename="include/fista/poisson.hpp" />
+		<Unit filename="include/settings.hpp" />
 		<Unit filename="include/test.hpp" />
-		<Unit filename="include/test/container.hpp" />
-		<Unit filename="include/test/datacontainer.hpp" />
 		<Unit filename="include/test/fista.hpp" />
+		<Unit filename="include/test/matrix.hpp" />
+		<Unit filename="include/test/operator.hpp" />
+		<Unit filename="include/utils/linearop.hpp" />
+		<Unit filename="include/utils/matrix.hpp" />
+		<Unit filename="include/utils/matrix/functions.hpp" />
+		<Unit filename="include/utils/operator.hpp" />
+		<Unit filename="include/utils/operator/convolution.hpp" />
+		<Unit filename="include/utils/operator/matmult.hpp" />
+		<Unit filename="include/utils/operators.hpp" />
+		<Unit filename="src/WS.cpp" />
 		<Unit filename="src/fista/poisson.cpp" />
 		<Unit filename="src/main.cpp" />
+		<Unit filename="src/settings.cpp" />
 		<Unit filename="src/test.cpp" />
-		<Unit filename="src/test/container.cpp" />
 		<Unit filename="src/test/fista.cpp" />
+		<Unit filename="src/test/matrix.cpp" />
+		<Unit filename="src/test/operator.cpp" />
 		<Extensions>
 			<code_completion />
 			<envvars />
