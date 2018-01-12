@@ -3,25 +3,31 @@
 /// \brief Launcher for the ASTROQUT solver.
 /// \details Handle the user input, calls the preparation tools and the solver.
 /// \author Philippe Ganz <philippe.ganz@gmail.com>
-/// \version 0.2.0
-/// \date 2017-12-28
+/// \version 0.3.0
+/// \date 2018-01-12
 /// \copyright GPL-3.0
 ///
+
+#include "const.hpp"
+#include "test.hpp"
 
 #include <cstdlib>
 #include <iostream>
 #include <string>
 
-#include "const.hpp"
-#include "test.hpp"
 
 int main( int argc, char **argv )
 {
+//    astroqut::Blur(1.449, 2.2364, 0.01).Print();
+
     std::cout << "Running tests..." << std::endl;
 
     try
     {
-        astroqut::test::Matrix();
+        astroqut::test::Matrix<int>();
+        astroqut::test::Matrix<long long>();
+        astroqut::test::Matrix<float>();
+        astroqut::test::Matrix<double>();
     }
     catch (const std::exception& err)
     {
