@@ -3,8 +3,8 @@
 /// \brief Operator class header
 /// \details Provide operator container with operator-vector operations
 /// \author Philippe Ganz <philippe.ganz@gmail.com> 2017-2018
-/// \version 0.2.0
-/// \date 2018-01-04
+/// \version 0.3.0
+/// \date 2018-01-12
 /// \copyright GPL-3.0
 ///
 
@@ -20,7 +20,7 @@ namespace astroqut
 {
 
 template<class T>
-class Operator : public LinearOp<T>
+class Operator : public LinearOp
 {
 protected:
     Matrix<T> data_; //!< Member variable "data_"
@@ -42,7 +42,7 @@ public:
      *  \param other Object to copy from
      */
     Operator(const Operator& other)
-        : LinearOp<T>(other.height_, other.width_)
+        : LinearOp(other.height_, other.width_)
         , data_(other.data_)
         , transposed_(other.transposed_)
     {
@@ -55,7 +55,7 @@ public:
      *  \param other Object to copy from
      */
     Operator(Operator&& other)
-        : LinearOp<T>(other.height_, other.width_)
+        : LinearOp(other.height_, other.width_)
         , data_(std::move(other.data_))
         , transposed_(other.transposed_)
     {
@@ -69,7 +69,7 @@ public:
      *  \param width Width of the operator
      */
     Operator(size_t height, size_t width) noexcept
-        : LinearOp<T>(height, width)
+        : LinearOp(height, width)
         , data_(nullptr, 0, 0)
         , transposed_(false)
     {
@@ -85,7 +85,7 @@ public:
      *  \param transposed If the operator is transposed
      */
     Operator(Matrix<T>&& data, size_t height, size_t width, bool transposed) noexcept
-        : LinearOp<T>(height, width)
+        : LinearOp(height, width)
         , data_(std::forward<Matrix<T>>(data))
         , transposed_(transposed)
     {
@@ -114,7 +114,7 @@ public:
     /** Access data_
      * \return The current value of data_
      */
-    Matrix<T>& Data() const noexcept
+    const Matrix<T>& Data() const noexcept
     {
         return data_;
     }
