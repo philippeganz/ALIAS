@@ -2,8 +2,8 @@
 /// \file src/test/fista.cpp
 /// \brief Implementation of the FISTA class test suite.
 /// \author Philippe Ganz <philippe.ganz@gmail.com>
-/// \version 0.2.0
-/// \date 2017-12-28
+/// \version 0.3.0
+/// \date 2018-01-12
 /// \copyright GPL-3.0
 ///
 
@@ -13,85 +13,53 @@ namespace astroqut{
 namespace test{
 namespace fista{
 
-bool SmallExample1()
+bool SmallExample()
 {
     std::cout << "FISTA test with small data : " << std::endl << std::endl;
 
-    astroqut::MatMult<double> A(Matrix(new double[12]{1.0,2.0,3.0,4.0,5.0,6.0,7.0,8.0,9.0,10.0,11.0,12.0}, 3, 4), 3, 4);
-    astroqut::Matrix<double> u(new double[3]{3.0,2.0,1.0}, 3, 1);
-    astroqut::Matrix<double> b(new double[3]{1.0,1.0,2.0}, 3, 1);
+    double A_data[12] = {1.0,2.0,3.0,4.0,5.0,6.0,7.0,8.0,9.0,10.0,11.0,12.0};
+    const astroqut::MatMult<double> A(Matrix<double>(A_data, 12, 3, 4), 3, 4);
+    double u_data[3] = {3.0,2.0,1.0};
+    const astroqut::Matrix<double> u(u_data, 3, 3, 1);
+    double b_data[3] = {1.0,1.0,2.0};
+    const astroqut::Matrix<double> b(b_data, 3, 3, 1);
     astroqut::fista::poisson::Parameters options;
-    options.tol = 1e-4;
     options.log_period = 50;
+    double tols[3] = {1e-4, 1e-8, 1e-12};
 
-    astroqut::Matrix<double> expected_result(new double[4]{0.939214191176937, 0.0, 0.0, -0.650697826008454}, 4, 1);
-    astroqut::Matrix<double> actual_result = astroqut::fista::poisson::Solve(A, u, b, 1, options);
+    double expected_data1[4] = {0.939214191176937, 0.0, 0.0, -0.650697826008454};
+    double expected_data2[4] = {0.973320232506235, 0.0, 0.0, -0.674615621567228};
+    double expected_data3[4] = {0.973633428618360, 0.0, 0.0, -0.674833246032450};
 
-    expected_result.Print();
-    actual_result.Print();
+    const astroqut::Matrix<double> expected_result[3] = {{expected_data1, 4, 4, 1},{expected_data2, 4, 4, 1},{expected_data3, 4, 4, 1}};
 
-    double relative_error = std::abs((actual_result - expected_result).Norm(two)) / std::abs(expected_result.Norm(two));
+    bool fista_test = true;
 
-    bool fista_test = (relative_error < 100*options.tol);
+    for( int i = 0; i < 3; ++i )
+    {
+        std::cout << "Running with A = ";
+        A.Data().Print();
+        std::cout << ", b = ";
+        b.Print();
+        std::cout << "and u = ";
+        u.Print();
 
-    std::cout << std::endl << (fista_test ? "Success" : "Failure") << ", achieved ";
-    std::cout << relative_error << " relative norm error with a tol of " << options.tol << "." << std::endl;
+        options.tol = tols[i];
+        astroqut::Matrix<double> actual_result = astroqut::fista::poisson::Solve(A, u, b, 1, options);
 
-    return fista_test;
-}
+        std::cout << "Result from MATLAB computation";
+        expected_result[i].Print();
+        std::cout << "Result from this computation";
+        actual_result.Print();
 
-bool SmallExample2()
-{
-    std::cout << "FISTA test with small data : " << std::endl << std::endl;
+        double relative_error = std::abs((actual_result - expected_result[i]).Norm(two)) / std::abs(expected_result[i].Norm(two));
 
-    astroqut::MatMult<double> A(Matrix(new double[12]{1.0,2.0,3.0,4.0,5.0,6.0,7.0,8.0,9.0,10.0,11.0,12.0}, 3, 4), 3, 4);
-    astroqut::Matrix<double> u(new double[3]{3.0,2.0,1.0}, 3, 1);
-    astroqut::Matrix<double> b(new double[3]{1.0,1.0,2.0}, 3, 1);
-    astroqut::fista::poisson::Parameters options;
-    options.tol = 1e-8;
-    options.init_value = astroqut::Matrix(new double[4]{}, 4, 1);
-    options.log_period = 50;
+        bool local_result = (relative_error < 100*options.tol);
+        fista_test &= local_result;
 
-    astroqut::Matrix<double> expected_result(new double[4]{0.973320232506235, 0.0, 0.0, -0.674615621567228}, 4, 1);
-    astroqut::Matrix<double> actual_result = astroqut::fista::poisson::Solve(A, u, b, 1, options);
-
-    expected_result.Print();
-    actual_result.Print();
-
-    double relative_error = std::abs((actual_result - expected_result).Norm(two)) / std::abs(expected_result.Norm(two));
-
-    bool fista_test = (relative_error < 100*options.tol);
-
-    std::cout << std::endl << (fista_test ? "Success" : "Failure") << ", achieved ";
-    std::cout << relative_error << " relative norm error with a tol of " << options.tol << "." << std::endl;
-
-    return fista_test;
-}
-
-bool SmallExample3()
-{
-    std::cout << "FISTA test with small data : " << std::endl << std::endl;
-
-    astroqut::MatMult<double> A(Matrix(new double[12]{1.0,2.0,3.0,4.0,5.0,6.0,7.0,8.0,9.0,10.0,11.0,12.0}, 3, 4), 3, 4);
-    astroqut::Matrix<double> u(new double[3]{3.0,2.0,1.0}, 3, 1);
-    astroqut::Matrix<double> b(new double[3]{1.0,1.0,2.0}, 3, 1);
-    astroqut::fista::poisson::Parameters options;
-    options.tol = 1e-12;
-    options.init_value = astroqut::Matrix(new double[4]{}, 4, 1);
-    options.log_period = 50;
-
-    astroqut::Matrix<double> expected_result(new double[4]{0.973633428618360, 0.0, 0.0, -0.674833246032450}, 4, 1);
-    astroqut::Matrix<double> actual_result = astroqut::fista::poisson::Solve(A, u, b, 1, options);
-
-    expected_result.Print();
-    actual_result.Print();
-
-    double relative_error = std::abs((actual_result - expected_result).Norm(two)) / std::abs(expected_result.Norm(two));
-
-    bool fista_test = (relative_error < 100*options.tol);
-
-    std::cout << std::endl << (fista_test ? "Success" : "Failure") << ", achieved ";
-    std::cout << relative_error << " relative norm error with a tol of " << options.tol << "." << std::endl;
+        std::cout << std::endl << (local_result ? "Success" : "Failure") << ", achieved ";
+        std::cout << relative_error << " relative norm error with a tol of " << tols[i] << "." << std::endl;
+    }
 
     return fista_test;
 }
@@ -106,24 +74,24 @@ void Time(size_t length)
     size_t test_height = length*length;
     size_t test_width = length;
 
-    double * A_data = new double[test_height*test_width]; // destroyed when A is destroyed
-    #pragma omp parallel for
+    Matrix<double>::matrix_t * A_data = (double*) _mm_malloc(sizeof(double)*test_height*test_width, sizeof(double)); // destroyed when A is destroyed
+    #pragma omp parallel for simd
     for( size_t i = 0; i < test_height*test_width; ++i )
     {
         A_data[i] = distribution(generator);
     }
     astroqut::MatMult<double> A(astroqut::Matrix<double>(A_data, test_height, test_width), test_height, test_width);
 
-    double * u_data = new double[test_height]; // destroyed when u is destroyed
-    #pragma omp parallel for
+    Matrix<double>::matrix_t * u_data = (double*) _mm_malloc(sizeof(double)*test_height, sizeof(double));; // destroyed when u is destroyed
+    #pragma omp parallel for simd
     for( size_t i = 0; i < test_height; ++i )
     {
         u_data[i] = distribution(generator);
     }
     astroqut::Matrix<double> u(u_data, test_height, 1);
 
-    double * b_data = new double[test_height]; // destroyed when b is destroyed
-    #pragma omp parallel for
+    Matrix<double>::matrix_t * b_data = (double*) _mm_malloc(sizeof(double)*test_height, sizeof(double)); // destroyed when b is destroyed
+    #pragma omp parallel for simd
     for( size_t i = 0; i < test_height; ++i )
     {
         b_data[i] = distribution(generator);
@@ -132,12 +100,13 @@ void Time(size_t length)
 
     astroqut::fista::poisson::Parameters options;
     options.tol = 1e-8;
-    options.init_value = astroqut::Matrix(new double[test_width]{}, test_width, 1);
     options.log_period = 1;
 
     std::chrono::time_point<std::chrono::high_resolution_clock> start, end;
     start = std::chrono::high_resolution_clock::now();
+
     astroqut::fista::poisson::Solve(A, u, b, 1, options);
+
     end = std::chrono::high_resolution_clock::now();
     std::chrono::duration<double> elapsed_time = end-start;
     std::cout << std::endl << std::endl << "Time for FISTA solver with " << test_height;

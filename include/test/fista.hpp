@@ -2,8 +2,8 @@
 /// \file include/test/fista.hpp
 /// \brief Test suite to validate the FISTA class.
 /// \author Philippe Ganz <philippe.ganz@gmail.com>
-/// \version 0.2.0
-/// \date 2018-01-04
+/// \version 0.3.0
+/// \date 2018-01-12
 /// \copyright GPL-3.0
 ///
 
@@ -21,9 +21,7 @@ namespace astroqut{
 namespace test{
 namespace fista{
 
-bool SmallExample1();
-bool SmallExample2();
-bool SmallExample3();
+bool SmallExample();
 
 void Time(size_t length);
 
