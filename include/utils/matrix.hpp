@@ -3,8 +3,8 @@
 /// \brief Matrix class header
 /// \details Provide matrix container with multiple matrix operations used in the whole project.
 /// \author Philippe Ganz <philippe.ganz@gmail.com> 2017-2018
-/// \version 0.2.0
-/// \date 2018-01-04
+/// \version 0.3.0
+/// \date 2018-01-12
 /// \copyright GPL-3.0
 ///
 
@@ -12,12 +12,17 @@
 #define ASTROQUT_UTILS_MATRIX_HPP
 
 #include "utils/linearop.hpp"
-#include "utils/matrix/functions.hpp"
+#include "settings.hpp"
 
-//#include <fstream>
+#include <cmath>
 #include <iomanip>
-//#include <sstream>
+#include <limits>
 #include <string>
+#include <type_traits>
+
+#pragma GCC system_header
+#include <Eigen/Dense>
+
 
 namespace astroqut
 {
@@ -26,14 +31,49 @@ namespace astroqut
  */
 enum NormType {one, two, two_squared, inf};
 
-template <class T>
-class Matrix : public LinearOp<T>
+/** Function to verify if data is aligned
+ *  \param ptr Pointer to evaluate
+ *  \param align_byte_size The byte boundary size
+ */
+static inline bool IsAligned(const void* ptr, size_t align_byte_size)
 {
+    return (uintptr_t)ptr % align_byte_size == 0;
+}
+
+/** Floating point type comparison function
+ *  \param first First number to compare
+ *  \param second Second number to compare
+ *  \param error Amount of ULPs to use as threshold for equality
+ */
+template <class T>
+inline typename std::enable_if<!std::numeric_limits<T>::is_integer, bool>::type IsEqual(T first, T second, T error=1.0)
+{
+    return std::abs(first-second) < std::abs(first+second)*std::numeric_limits<T>::epsilon()*error ||
+        std::abs(first-second) < std::numeric_limits<T>::min();
+}
+
+/** Integral type comparison function
+ *  \param first First number to compare
+ *  \param second Second number to compare
+ */
+template <class T>
+inline typename std::enable_if<std::numeric_limits<T>::is_integer, bool>::type IsEqual(T first, T second)
+{
+    return first == second;
+}
+
+
+
+template <class T>
+class Matrix : public LinearOp
+{
+public:
+    typedef T matrix_t __attribute__((aligned (sizeof(T))));
+
 private:
-    T* data_; //!< Member variable "data_"
+    matrix_t* data_; //!< Member variable "data_"
 
 public:
-
     /** Default constructor
      *  Create an empty container
      */
@@ -51,7 +91,7 @@ public:
      *  \param width Width of the data
      */
     Matrix( size_t height, size_t width)
-        : LinearOp<T>(height, width)
+        : LinearOp(height, width)
         , data_(nullptr)
     {
 #ifdef DEBUG
@@ -61,7 +101,8 @@ public:
         {
             try
             {
-                data_ = new T[this->length_];
+                // allocate aligned memory
+                data_ = (T*) _mm_malloc (sizeof(T)*this->length_, sizeof(T));
             }
             catch (const std::bad_alloc&)
             {
@@ -72,14 +113,38 @@ public:
     }
 
     /** Full member constructor
-     *  \param data 2D array containing the pixels
+     *  \param data Dynamic 2D array containing the pixels
      *  \param height Height of the data
      *  \param width Width of the data
      */
-    Matrix( T* const data, size_t height, size_t width) noexcept
-        : LinearOp<T>(height, width)
+    Matrix( matrix_t* data, size_t height, size_t width)
+        : LinearOp(height, width)
         , data_(data)
     {
+        if( !IsAligned(data, sizeof(T)) )
+        {
+            std::cerr << "Please use only " << sizeof(T) << " bytes aligned data.";
+            throw;
+        }
+#ifdef DEBUG
+        std::cout << "Matrix : Full member constructor called" << std::endl;
+#endif // DEBUG
+    }
+
+    /** Full member constructor
+     *  \param data Static 2D array containing the pixels
+     *  \param length Length of the static array
+     *  \param height Height of the data
+     *  \param width Width of the data
+     */
+    Matrix( const T data[], size_t length, size_t height, size_t width)
+        : Matrix(height, width)
+    {
+        #pragma omp parallel for simd
+        for(size_t i = 0; i < this->length_; ++i)
+        {
+            data_[i] = data[i];
+        }
 #ifdef DEBUG
         std::cout << "Matrix : Full member constructor called" << std::endl;
 #endif // DEBUG
@@ -143,7 +208,7 @@ public:
     /** Copy constructor
      *  \param other Object to copy from
      */
-    Matrix(const Matrix<T>& other)
+    Matrix(const Matrix& other)
         : Matrix(other.height_, other.width_)
     {
 #ifdef DEBUG
@@ -155,7 +220,7 @@ public:
     /** Move constructor
      *  \param other Object to move from
      */
-    Matrix(Matrix<T>&& other) noexcept
+    Matrix(Matrix&& other) noexcept
         : Matrix(other.data_, other.height_, other.width_)
     {
 #ifdef DEBUG
@@ -180,7 +245,8 @@ public:
 #endif // DEBUG
         if( data_ != nullptr )
         {
-            delete[] data_;
+            // deallocate aligned memory
+            _mm_free(data_);
         }
         data_ = nullptr;
     }
@@ -188,15 +254,20 @@ public:
     /** Access data_
      * \return The current value of data_
      */
-    T* Data() const noexcept
+    matrix_t* Data() const noexcept
     {
         return data_;
     }
     /** Set data_
      * \param data New value to set
      */
-    void Data(T* const data) noexcept
+    void Data(matrix_t* const data)
     {
+        if( !IsAligned(data, sizeof(T)) )
+        {
+            std::cerr << "Please use only " << sizeof(T) << " bytes aligned data.";
+            throw;
+        }
         data_ = data;
     }
 
@@ -329,7 +400,8 @@ public:
         {
             if( data_ != nullptr )
             {
-                delete[] data_;
+                // deallocate aligned memory
+                _mm_free(data_);
                 data_ = nullptr;
             }
             // and we need to reallocate if there is something to store
@@ -337,7 +409,8 @@ public:
             {
                 try
                 {
-                    data_ = new T[other.length_];
+                    // allocate aligned data
+                    data_ = (T*) _mm_malloc (sizeof(T)*this->length_, sizeof(T));
                 }
                 catch (const std::bad_alloc&)
                 {
@@ -459,7 +532,7 @@ public:
             throw;
         }
 
-        Matrix result((T) 0, this->height_, other.width_); // init to zero
+        Matrix result(this->height_, other.width_);
 
         // other is a vector
         if( other.height_ == 1 || other.width_ == 1 )
@@ -886,7 +959,6 @@ public:
             throw;
         }
 
-        std::cout << std::endl;
         for( size_t i = 0; i < this->height_; ++i )
         {
             std::cout << std::endl;
@@ -1093,6 +1165,213 @@ template <class T>
 Matrix<T>&& operator/(Matrix<T>&& first, const Matrix<T>& second)
 {
     return std::move(first /= second);
+}
+
+
+using namespace settings;
+
+/** Matrix Matrix multiplication
+ *  Performs a matrix-matrix multiplication : result = first * second
+ *  \param first First matrix of size l by m
+ *  \param second Second matrix of size m by n
+ *  \param result Resulting matrix of size l by n
+ */
+template <class T>
+inline void MatrixMatrixMult(const Matrix<T>& first, const Matrix<T>& second, const Matrix<T>& result, MMMultType type = default_MMType)
+{
+    switch(type)
+    {
+    // Naive implementation, making use of multi-threading when available
+    case MM_naive:
+        {
+            // Init result to zero
+            for(size_t i = 0; i < result.Length(); ++i)
+            {
+                result.Data()[i] = 0;
+            }
+            #pragma omp parallel for
+            for(size_t i = 0; i < first.Height(); ++i)
+            {
+                for(size_t k = 0; k < first.Width(); ++k)
+                {
+                    for(size_t j = 0; j < second.Width(); ++j)
+                    {
+                        result.Data()[i*second.Width() + j] += first.Data()[i*first.Width() + k] * second.Data()[k*second.Width() + j];
+                    }
+                }
+            }
+
+            break;
+        }
+    case MM_pure_eigen:
+        {
+            MatrixMatrixMultEigen(first, second, result);
+
+            break;
+        }
+    default:
+        {}
+    }
+}
+
+/** Matrix Matrix multiplication using the Eigen library
+ *  \param first First matrix of size l by m
+ *  \param second Second matrix of size m by n
+ *  \param result Resulting matrix of size l by n
+ */
+template <class T>
+inline void MatrixMatrixMultEigen(const Matrix<T>& first, const Matrix<T>& second, const Matrix<T>& result)
+{
+    Eigen::Map<Eigen::Matrix<T, Eigen::Dynamic, Eigen::Dynamic, Eigen::RowMajor>> eigenMat(first.Data(), first.Height(), first.Width());
+    Eigen::Map<Eigen::Matrix<T, Eigen::Dynamic, Eigen::Dynamic, Eigen::RowMajor>> eigenVect(second.Data(), second.Height(), second.Width());
+    Eigen::Map<Eigen::Matrix<T, Eigen::Dynamic, Eigen::Dynamic, Eigen::RowMajor>> eigenResult(result.Data(), result.Height(), result.Width());
+    eigenResult = eigenMat * eigenVect;
+}
+template <>
+inline void MatrixMatrixMultEigen(const Matrix<double>& first, const Matrix<double>& second, const Matrix<double>& result)
+{
+    // loading the data with 8 bytes alignment
+    Eigen::Map<Eigen::Matrix<double, Eigen::Dynamic, Eigen::Dynamic, Eigen::RowMajor>, Eigen::Aligned8> eigenMat(first.Data(), first.Height(), first.Width());
+    Eigen::Map<Eigen::Matrix<double, Eigen::Dynamic, Eigen::Dynamic, Eigen::RowMajor>, Eigen::Aligned8> eigenVect(second.Data(), second.Height(), second.Width());
+    Eigen::Map<Eigen::Matrix<double, Eigen::Dynamic, Eigen::Dynamic, Eigen::RowMajor>, Eigen::Aligned8> eigenResult(result.Data(), result.Height(), result.Width());
+    eigenResult = eigenMat * eigenVect;
+}
+template <>
+inline void MatrixMatrixMultEigen(const Matrix<long long>& first, const Matrix<long long>& second, const Matrix<long long>& result)
+{
+    // loading the data with 8 bytes alignment
+    Eigen::Map<Eigen::Matrix<long long, Eigen::Dynamic, Eigen::Dynamic, Eigen::RowMajor>, Eigen::Aligned8> eigenMat(first.Data(), first.Height(), first.Width());
+    Eigen::Map<Eigen::Matrix<long long, Eigen::Dynamic, Eigen::Dynamic, Eigen::RowMajor>, Eigen::Aligned8> eigenVect(second.Data(), second.Height(), second.Width());
+    Eigen::Map<Eigen::Matrix<long long, Eigen::Dynamic, Eigen::Dynamic, Eigen::RowMajor>, Eigen::Aligned8> eigenResult(result.Data(), result.Height(), result.Width());
+    eigenResult = eigenMat * eigenVect;
+}
+
+
+/** Matrix Vector multiplication
+ *  Performs a matrix-vector multiplication : result = mat * vect
+ *  \param mat Matrix of size m by n
+ *  \param vect Vector of size n by 1
+ *  \param result Resulting vector of size m by 1
+ *  \param type Computation strategy to use
+ */
+template <class T>
+inline void MatrixVectorMult(const Matrix<T>& mat, const Matrix<T>& vect, const Matrix<T>& result, MVMultType type = default_MVType)
+{
+    switch(type)
+    {
+    // Naive implementation, making use of multi-threading when available
+    case MV_naive:
+        {
+            #pragma omp parallel for
+            for(size_t i = 0; i < mat.Height(); ++i)
+            {
+                result.Data()[i] = 0;
+                for(size_t j = 0; j < mat.Width(); ++j)
+                {
+                    result.Data()[i] += mat.Data()[i*mat.Width() + j] * vect.Data()[j];
+                }
+            }
+
+            break;
+        }
+    // Eigen implementation, that does currently not make use of multi-threading
+    case MV_pure_eigen:
+        {
+            MatrixMatrixMultEigen(mat, vect, result);
+
+            break;
+        }
+    // Mixed Eigen-OpenMP implementation, that does make use of multi-threading
+    case MV_par_eigen:
+        {
+            MatrixVectMultEigen(mat, vect, result);
+
+            break;
+        }
+    default:
+        {}
+    }
+}
+
+/** Matrix Vector multiplication using the Eigen library
+ *  \param mat Matrix of size m by n
+ *  \param vect Vector of size n by 1
+ *  \param result Resulting vector of size m by 1
+ */
+template <class T>
+inline void MatrixVectMultEigen(const Matrix<T>& mat, const Matrix<T>& vect, const Matrix<T>& result)
+{
+    Eigen::Map<Eigen::Matrix<T, 1, Eigen::Dynamic, Eigen::RowMajor>> eigenVect(vect.Data(), vect.Height());
+    #pragma omp parallel for
+    for(size_t i = 0; i < mat.Height(); ++i)
+    {
+        Eigen::Map<Eigen::Matrix<T, 1, Eigen::Dynamic, Eigen::RowMajor>> eigenMat(mat.Data() + i*mat.Width(), mat.Width());
+        result.Data()[i] = eigenMat.dot(eigenVect);
+    }
+}
+template <>
+inline void MatrixVectMultEigen(const Matrix<double>& mat, const Matrix<double>& vect, const Matrix<double>& result)
+{
+    Eigen::Map<Eigen::Matrix<double, 1, Eigen::Dynamic, Eigen::RowMajor>, Eigen::Aligned8> eigenVect(vect.Data(), vect.Height());
+    #pragma omp parallel for
+    for(size_t i = 0; i < mat.Height(); ++i)
+    {
+        Eigen::Map<Eigen::Matrix<double, 1, Eigen::Dynamic, Eigen::RowMajor>, Eigen::Aligned8> eigenMat(mat.Data() + i*mat.Width(), mat.Width());
+        result.Data()[i] = eigenMat.dot(eigenVect);
+    }
+}
+template <>
+inline void MatrixVectMultEigen(const Matrix<long long>& mat, const Matrix<long long>& vect, const Matrix<long long>& result)
+{
+    Eigen::Map<Eigen::Matrix<long long, 1, Eigen::Dynamic, Eigen::RowMajor>, Eigen::Aligned8> eigenVect(vect.Data(), vect.Height());
+    #pragma omp parallel for
+    for(size_t i = 0; i < mat.Height(); ++i)
+    {
+        Eigen::Map<Eigen::Matrix<long long, 1, Eigen::Dynamic, Eigen::RowMajor>, Eigen::Aligned8> eigenMat(mat.Data() + i*mat.Width(), mat.Width());
+        result.Data()[i] = eigenMat.dot(eigenVect);
+    }
+}
+
+
+/** Vector Matrix multiplication
+ *  Performs a matrix-vector multiplication : result = vect * mat
+ *  \param vect Vector of size 1 by m
+ *  \param mat Matrix of size m by n
+ *  \param result Resulting vector of size 1 by n
+ */
+template <class T>
+inline void VectorMatrixMult(const Matrix<T>& vect, const Matrix<T>& mat, const Matrix<T>& result, VMMultType type = default_VMType)
+{
+    switch(type)
+    {
+    // Naive implementation, making use of multi-threading when available
+    case VM_naive:
+        {
+            // Init result to zero
+            for(size_t i = 0; i < result.Length(); ++i)
+            {
+                result.Data()[i] = 0;
+            }
+            #pragma omp parallel for
+            for(size_t i = 0; i < mat.Height(); ++i)
+            {
+                for(size_t j = 0; j < mat.Width(); ++j)
+                {
+                    result.Data()[j] += vect.Data()[i] * mat.Data()[i*mat.Width() + j];
+                }
+            }
+
+            break;
+        }
+    case VM_pure_eigen:
+        {
+            MatrixMatrixMultEigen(vect, mat, result);
+
+            break;
+        }
+    default:
+        {}
+    }
 }
 
 } // namespace astroqut
