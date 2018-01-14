@@ -68,7 +68,7 @@ template <class T>
 class Matrix : public LinearOp
 {
 public:
-    typedef T matrix_t __attribute__((aligned (sizeof(T))));
+    typedef T matrix_t __attribute__(( aligned ((size_t) std::pow(2, std::ceil(std::log2(sizeof(T))))) ));
 
 private:
     matrix_t* data_; //!< Member variable "data_"
@@ -1245,6 +1245,15 @@ inline void MatrixMatrixMultEigen(const Matrix<long long>& first, const Matrix<l
     Eigen::Map<Eigen::Matrix<long long, Eigen::Dynamic, Eigen::Dynamic, Eigen::RowMajor>, Eigen::Aligned8> eigenResult(result.Data(), result.Height(), result.Width());
     eigenResult = eigenMat * eigenVect;
 }
+template <>
+inline void MatrixMatrixMultEigen(const Matrix<long double>& first, const Matrix<long double>& second, const Matrix<long double>& result)
+{
+    // loading the data with 8 bytes alignment
+    Eigen::Map<Eigen::Matrix<long double, Eigen::Dynamic, Eigen::Dynamic, Eigen::RowMajor>, Eigen::Aligned16> eigenMat(first.Data(), first.Height(), first.Width());
+    Eigen::Map<Eigen::Matrix<long double, Eigen::Dynamic, Eigen::Dynamic, Eigen::RowMajor>, Eigen::Aligned16> eigenVect(second.Data(), second.Height(), second.Width());
+    Eigen::Map<Eigen::Matrix<long double, Eigen::Dynamic, Eigen::Dynamic, Eigen::RowMajor>, Eigen::Aligned16> eigenResult(result.Data(), result.Height(), result.Width());
+    eigenResult = eigenMat * eigenVect;
+}
 
 
 /** Matrix Vector multiplication
@@ -1328,6 +1337,17 @@ inline void MatrixVectMultEigen(const Matrix<long long>& mat, const Matrix<long 
     for(size_t i = 0; i < mat.Height(); ++i)
     {
         Eigen::Map<Eigen::Matrix<long long, 1, Eigen::Dynamic, Eigen::RowMajor>, Eigen::Aligned8> eigenMat(mat.Data() + i*mat.Width(), mat.Width());
+        result.Data()[i] = eigenMat.dot(eigenVect);
+    }
+}
+template <>
+inline void MatrixVectMultEigen(const Matrix<long double>& mat, const Matrix<long double>& vect, const Matrix<long double>& result)
+{
+    Eigen::Map<Eigen::Matrix<long double, 1, Eigen::Dynamic, Eigen::RowMajor>, Eigen::Aligned16> eigenVect(vect.Data(), vect.Height());
+    #pragma omp parallel for
+    for(size_t i = 0; i < mat.Height(); ++i)
+    {
+        Eigen::Map<Eigen::Matrix<long double, 1, Eigen::Dynamic, Eigen::RowMajor>, Eigen::Aligned16> eigenMat(mat.Data() + i*mat.Width(), mat.Width());
         result.Data()[i] = eigenMat.dot(eigenVect);
     }
 }
