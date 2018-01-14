@@ -17,13 +17,11 @@ namespace astroqut{
 namespace test{
 
 template <class T>
-bool Matrix()
+bool PerfTest(size_t length)
 {
     using namespace matrix;
 
-    Time<T>(2048);
-
-    Optimizations<T>(1000000000);
+    Time<T>(length);
 
     bool transpose_square = TransposeSquare<T>();
     bool transpose_rect = TransposeRect<T>();
@@ -44,6 +42,14 @@ bool Matrix()
     bool shrink = Shrink<T>();
 
     return transpose_square && transpose_rect && add && sub && mult_square && mult_rect && vect_mat && mat_vect && norm_one && norm_two && norm_inf && sum && shrink;
+}
+
+template <class T>
+void PerfTestOptional(size_t length)
+{
+    using namespace matrix;
+
+    Optimizations<T>(length);
 }
 
 bool FISTA();
