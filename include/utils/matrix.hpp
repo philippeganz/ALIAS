@@ -4,7 +4,7 @@
 /// \details Provide matrix container with multiple matrix operations used in the whole project.
 /// \author Philippe Ganz <philippe.ganz@gmail.com> 2017-2018
 /// \version 0.3.0
-/// \date 2018-01-12
+/// \date 2018-01-21
 /// \copyright GPL-3.0
 ///
 
@@ -15,6 +15,7 @@
 #include "settings.hpp"
 
 #include <cmath>
+#include <complex>
 #include <iomanip>
 #include <limits>
 #include <string>
@@ -34,8 +35,10 @@ enum NormType {one, two, two_squared, inf};
 /** Function to verify if data is aligned
  *  \param ptr Pointer to evaluate
  *  \param align_byte_size The byte boundary size
+ *  \author Christoph from https://stackoverflow.com/a/1898487/8141262
+ *  \author Philippe Ganz <philippe.ganz@gmail.com> 2018
  */
-static inline bool IsAligned(const void* ptr, size_t align_byte_size)
+inline bool IsAligned(const void* ptr, size_t align_byte_size)
 {
     return (uintptr_t)ptr % align_byte_size == 0;
 }
@@ -43,23 +46,24 @@ static inline bool IsAligned(const void* ptr, size_t align_byte_size)
 /** Floating point type comparison function
  *  \param first First number to compare
  *  \param second Second number to compare
- *  \param error Amount of ULPs to use as threshold for equality
+ *  \author mch from https://stackoverflow.com/a/253874/8141262
+ *  \author Philippe Ganz <philippe.ganz@gmail.com> 2017-2018
  */
 template <class T>
-inline typename std::enable_if<!std::numeric_limits<T>::is_integer, bool>::type IsEqual(T first, T second, T error=1.0)
+bool IsEqual(T first, T second)
 {
-    return std::abs(first-second) < std::abs(first+second)*std::numeric_limits<T>::epsilon()*error ||
+    return std::abs(first-second) < std::abs(first+second)*std::numeric_limits<T>::epsilon() ||
         std::abs(first-second) < std::numeric_limits<T>::min();
 }
-
-/** Integral type comparison function
- *  \param first First number to compare
- *  \param second Second number to compare
- */
-template <class T>
-inline typename std::enable_if<std::numeric_limits<T>::is_integer, bool>::type IsEqual(T first, T second)
+template <>
+inline bool IsEqual(int first, int second)
 {
     return first == second;
+}
+template <>
+inline bool IsEqual(std::complex<double> first, std::complex<double> second)
+{
+    return IsEqual(std::real(first), std::real(second)) && IsEqual(std::imag(first), std::imag(second));
 }
 
 
@@ -169,41 +173,6 @@ public:
             data_[i] = number;
         }
     }
-
-// TODO
-//    /** File constructor
-//     *  \param file_path Path to the data file
-//     *  \param height Height of the data
-//     *  \param width Width of the data
-//     */
-//
-//    Matrix(std::string& file_path, size_t height, size_t width)
-//        : Matrix(height, width)
-//    {
-//        std::ifstream file;
-//        file.exceptions( std::ifstream::failbit | std::ifstream::badbit );
-//        try
-//        {
-//            file.open(file_path, std::ifstream::in);
-//        }
-//        catch (const std::ifstream::failure&)
-//        {
-//            std::cerr << "Could not open " << file_path << "! Please verify that the file exists." << std::endl;
-//            throw;
-//        }
-//        std::string line;
-//        T number;
-//        for( size_t i = 0; getline(file, line); ++i )
-//        {
-//            std::stringstream line_stream(line);
-//            for( size_t j = 0; line_stream >> number; ++j )
-//            {
-//                data_[i*width_ + j] = number;
-//            }
-//        }
-//        file.close();
-//    }
-
 
     /** Copy constructor
      *  \param other Object to copy from
@@ -328,63 +297,6 @@ public:
         return false;
     }
 
-    /** Comparison operator equal
-     *  \param other Object to compare to
-     *  \return True if both object are the same element-wise, False else
-     */
-    bool operator==(const Matrix& other) const noexcept
-    {
-        if( this->height_ != other.height_ ||
-            this->width_ != other.width_ )
-        {
-            return false;
-        }
-
-        if( data_ == other.data_ )
-        {
-            return true;
-        }
-        else
-        {
-            // quick check for first value
-            if( !IsEqual(data_[0], other.data_[0]) )
-            {
-                return false;
-            }
-
-            // if first values are the same, check for the rest in parallel
-            bool are_they_equal = true;
-            #pragma omp parallel
-            {
-                #pragma omp for
-                for(size_t i = 0; i < this->length_; ++i)
-                {
-                    if( !IsEqual(data_[i], other.data_[i]) )
-                    {
-                        #pragma omp critical
-                        {
-                            are_they_equal = false;
-                        }
-                        #pragma omp cancel for
-                    }
-                }
-            }
-            return are_they_equal;
-
-//            TODO std::equal not yet parallelized : change as soon as available
-//            std::equal(data_, data_+(this->length_), other.data_);
-        }
-    }
-
-    /** Comparison operator not-equal
-     *  \param other Object to compare to
-     *  \return False if both object are the same element-wise, True else
-     */
-    bool operator!=(const Matrix& other) const noexcept
-    {
-        return !(*this == other);
-    }
-
     /** Assignment operator
      *  \param other Object to assign to current object
      *  \return A reference to this
@@ -457,6 +369,24 @@ public:
         std::swap(data_, other.data_);
 
         return *this;
+    }
+
+    /** Array subscript setter operator
+     *  \param index Array subscript
+     *  \return A reference to the array element at index
+     */
+    T& operator[](size_t index) noexcept
+    {
+        return data_[index];
+    }
+
+    /** Array subscript getter operator
+     *  \param index Array subscript
+     *  \return A reference to the array element at index
+     */
+    const T& operator[](size_t index) const noexcept
+    {
+        return data_[index];
     }
 
     /** Additive operator in-place
@@ -541,7 +471,7 @@ public:
             if( this->height_ == 1 || this->width_ == 1 )
             {
                 std::cerr << "Vector times a vector is a single number, consider using the Inner function instead" << std::endl;
-                result.data_[0] = Inner(other);
+                result.data_[0] = Inner(*this, other);
             }
             // this is a matrix
             else
@@ -813,7 +743,7 @@ public:
         #pragma omp parallel for
         for( size_t i = 0; i < this->length_; ++i )
         {
-            data_[i] *= std::max(1 - thresh_factor / std::abs((double)data_[i]), 0.0);
+            data_[i] *= std::max(1 - thresh_factor / (double)std::abs(data_[i]), 0.0);
         }
 
         return std::move(*this);
@@ -829,39 +759,11 @@ public:
         return Matrix(*this).Shrink(thresh_factor);
     }
 
-    /** Inner product
-     *  \param other Object to divide from current object, element-wise
-     *  \return The result of type T
-     */
-    T Inner(const Matrix& other) const
-    {
-        try
-        {
-            this->ArgTest(other, add);
-        }
-        catch (const std::exception&)
-        {
-            throw;
-        }
-
-        T result = 0;
-        #pragma omp parallel for reduction(+:result)
-        for(size_t i = 0; i < this->length_; ++i)
-        {
-            result += this->data_[i] * other.data_[i];
-        }
-
-        return result;
-
-        // TODO std::inner_product not yet parallelized : change as soon as available
-        // std::inner_product( first.Data(), first.Data() + first.Length(), other.Data(), (T) 0 );
-    }
-
     /** Norm
      *  Norm of all elements considered as a one dimensional vector
      * \return The result of type T
      */
-    T Norm(const NormType l_norm) const
+    double Norm(const NormType l_norm) const
     {
         try
         {
@@ -876,16 +778,26 @@ public:
         {
         case one:
         {
-            T result = 0;
-            #pragma omp parallel for reduction(+:result)
+            double local_result[omp_get_max_threads()]{0.0};
+            #pragma omp parallel
+            {
+            size_t my_num = omp_get_thread_num();
+            #pragma omp for
             for(size_t i = 0; i < this->length_; ++i)
             {
-                result += std::abs(data_[i]);
+                local_result[my_num] += std::abs(data_[i]);
+            }
+            }
+
+            double result = 0.0;
+            for(size_t i = 0; i < omp_get_max_threads(); ++i)
+            {
+                result += local_result[i];
             }
             return result;
 
             // TODO std::accumulate not yet parallelized : change as soon as available
-            // std::accumulate(data_, data_ + (this->length_), (T) 0, [](const T acc, const T next){return acc + std::abs(next);});
+            // std::accumulate(data_, data_ + (this->length_), 0.0, [](const T acc, const T next){return acc + std::abs(next);});
         }
         case two:
         {
@@ -893,27 +805,46 @@ public:
         }
         case two_squared:
         {
-            return Inner(*this);
+            double local_result[omp_get_max_threads()]{0.0};
+            #pragma omp parallel
+            {
+            size_t my_num = omp_get_thread_num();
+            #pragma omp for
+            for(size_t i = 0; i < this->length_; ++i)
+            {
+                local_result[my_num] += std::norm(data_[i]);
+            }
+            }
+
+            double result = 0.0;
+            for(size_t i = 0; i < omp_get_max_threads(); ++i)
+            {
+                result += local_result[i];
+            }
+            return result;
         }
         case inf:
         {
-            T result = 0;
-            #pragma omp parallel for reduction(max:result)
+            double local_result[omp_get_max_threads()]{0.0};
+            #pragma omp parallel
+            {
+            size_t my_num = omp_get_thread_num();
+            #pragma omp for
             for(size_t i = 0; i < this->length_; ++i)
             {
-                if( data_[i] > result )
+                double abs_data = std::abs(data_[i]);
+                if( abs_data > local_result[my_num] )
                 {
-                    result = data_[i];
+                    local_result[my_num] = abs_data;
                 }
             }
-            return result;
+            }
 
-            // TODO std::max_element not yet parallelized : change as soon as available
-            // *std::max_element(data_, data_ + (this->length_));
+            return *std::max_element(local_result, local_result + omp_get_max_threads());
         }
         default:
         {
-            return 0;
+            return 0.0;
         }
         }
     }
@@ -933,41 +864,26 @@ public:
             throw;
         }
 
-        T result = 0;
-        #pragma omp parallel for reduction(+:result)
+        T local_result[omp_get_max_threads()]{0};
+        #pragma omp parallel
+        {
+        size_t my_num = omp_get_thread_num();
+        #pragma omp for
         for(size_t i = 0; i < this->length_; ++i)
         {
-            result += data_[i];
+            local_result[my_num] += data_[i];
+        }
+        }
+
+        T result = 0;
+        for(size_t i = 0; i < omp_get_max_threads(); ++i)
+        {
+            result += local_result[i];
         }
         return result;
 
         // TODO std::accumulate not yet parallelized : change as soon as available
         // std::accumulate(data_, data_ + this->length_, (T) 0);
-    }
-
-    /** Print
-    *   Prints the data to the console
-    */
-    void Print() const
-    {
-        try
-        {
-            IsValid();
-        }
-        catch (const std::exception&)
-        {
-            throw;
-        }
-
-        for( size_t i = 0; i < this->height_; ++i )
-        {
-            std::cout << std::endl;
-            for( size_t j = 0; j < this->width_; ++j )
-            {
-                std::cout << std::setw(10) << data_[i*this->width_ + j] << " ";
-            }
-        }
-        std::cout << std::endl;
     }
 
     void PrintRefQual() const &
@@ -979,6 +895,67 @@ public:
         std::cout << "I'm an rvalue !" << std::endl;
     }
 };
+
+/** Comparison operator equal
+ *  \param first First matrix of comparison
+ *  \param second Second matrix of comparison
+ *  \return True if both object are the same element-wise, False else
+ */
+template <class T>
+bool operator==(const Matrix<T>& first, const Matrix<T>& second)
+{
+    if( first.Height() != second.Height() ||
+        first.Width() != second.Width() )
+    {
+        return false;
+    }
+
+    if( first.Data() == second.Data() )
+    {
+        return true;
+    }
+    else
+    {
+        // quick check for first value
+        if( !IsEqual(first[0], second[0]) )
+        {
+            return false;
+        }
+
+        // if first values are the same, check for the rest in parallel
+        bool are_they_equal = true;
+        #pragma omp parallel
+        {
+            #pragma omp for
+            for(size_t i = 0; i < first.Length(); ++i)
+            {
+                if( !IsEqual(first[i], second[i]) )
+                {
+                    #pragma omp critical
+                    {
+                        are_they_equal = false;
+                    }
+                    #pragma omp cancel for
+                }
+            }
+        }
+        return are_they_equal;
+
+//        TODO std::equal not yet parallelized : change as soon as available
+//        std::equal(data_, data_+(this->length_), other.data_);
+    }
+}
+
+/** Comparison operator not-equal
+ *  \param first First matrix of comparison
+ *  \param second Second matrix of comparison
+ *  \return False if both object are the same element-wise, True else
+ */
+template <class T>
+bool operator!=(const Matrix<T>& first, const Matrix<T>& second)
+{
+    return !(first == second);
+}
 
 /** Additive operator, both Matrix are lvalues
  *  \param first Matrix, lvalue ref
@@ -1058,7 +1035,7 @@ Matrix<T>&& operator-(const Matrix<T>& first, Matrix<T>&& second)
     #pragma omp parallel for simd
     for(size_t i = 0; i < first.Length(); ++i)
     {
-        second.Data()[i] = first.Data()[i] - second.Data()[i];
+        second[i] = first[i] - second[i];
     }
 
     return std::move(second); // if second is temporary, no need to allocate new memory for the result
@@ -1098,7 +1075,7 @@ Matrix<T>&& operator&(const Matrix<T>& first, Matrix<T>&& second)
     return std::move(second &= first);
 }
 
-/** Multiplicative operator with single number
+/** Multiplicative operator with single number right
  *  \param mat Matrix, lvalue ref
  *  \param number Number to multiply the current object with
  *  \return A new instance containing the result
@@ -1110,7 +1087,7 @@ Matrix<T> operator*(const Matrix<T>& mat, T number)
     return result *= number;
 }
 
-/** Multiplicative operator with single number of temporary instance
+/** Multiplicative operator with single number right of temporary instance
  *  \param mat Matrix, rvalue ref
  *  \param number Number to multiply the current object with
  *  \return A reference to this
@@ -1119,6 +1096,28 @@ template<class T>
 Matrix<T>&& operator*(Matrix<T>&& mat, T number)
 {
     return std::move(mat *= number);
+}
+
+/** Multiplicative operator with single number left
+ *  \param number Number to multiply the current object with
+ *  \param mat Matrix, lvalue ref
+ *  \return A new instance containing the result
+ */
+template<class T>
+Matrix<T> operator*(T number, const Matrix<T>& mat)
+{
+    return mat * number;
+}
+
+/** Multiplicative operator with single number left of temporary instance
+ *  \param number Number to multiply the current object with
+ *  \param mat Matrix, rvalue ref
+ *  \return A reference to this
+ */
+template<class T>
+Matrix<T>&& operator*(T number, Matrix<T>&& mat)
+{
+    return mat * number;
 }
 
 /** Divide operator with single number
@@ -1167,6 +1166,105 @@ Matrix<T>&& operator/(Matrix<T>&& first, const Matrix<T>& second)
     return std::move(first /= second);
 }
 
+/** Output stream operator
+ *  \param os The output stream to write to
+ *  \param mat Matrix to read from
+ *  \return A reference to os
+ */
+template <class T>
+std::ostream& operator<<(std::ostream& os, const Matrix<T>& mat)
+{
+    try
+    {
+        mat.IsValid();
+    }
+    catch (const std::exception&)
+    {
+        throw;
+    }
+
+    for( size_t i = 0; i < mat.Height(); ++i )
+    {
+        os << std::endl;
+        for( size_t j = 0; j < mat.Width(); ++j )
+        {
+            os << std::setw(10) << mat[i*mat.Width() + j] << " ";
+        }
+    }
+    os << std::endl;
+    return os;
+}
+
+/** Inner product
+ *  \brief The inner product of two vectors, i.e. first^T * second
+ *  \param first Vector
+ *  \param second Vector
+ *  \return The result of type T
+ */
+template <class T>
+T Inner(const Matrix<T>& first, const Matrix<T>& second)
+{
+    try
+    {
+        first.ArgTest(second, add);
+    }
+    catch (const std::exception&)
+    {
+        throw;
+    }
+
+    T local_result[omp_get_max_threads()]{0};
+    #pragma omp parallel
+    {
+    size_t my_num = omp_get_thread_num();
+    #pragma omp for
+    for(size_t i = 0; i < first.Length(); ++i)
+    {
+        local_result[my_num] += first[i] * second[i];
+    }
+    }
+
+    T result = 0;
+    for(size_t i = 0; i < omp_get_max_threads(); ++i)
+    {
+        result += local_result[i];
+    }
+    return result;
+
+    // TODO std::inner_product not yet parallelized : change as soon as available
+    // std::inner_product( first.Data(), first.Data() + first.Length(), other.Data(), (T) 0 );
+}
+template <>
+inline std::complex<double> Inner(const Matrix<std::complex<double>>& first, const Matrix<std::complex<double>>& second)
+{
+    try
+    {
+        first.ArgTest(second, add);
+    }
+    catch (const std::exception&)
+    {
+        throw;
+    }
+
+    std::complex<double> local_result[omp_get_max_threads()]{0};
+    #pragma omp parallel
+    {
+    size_t my_num = omp_get_thread_num();
+    #pragma omp for
+    for(size_t i = 0; i < first.Length(); ++i)
+    {
+        local_result[my_num] += std::conj(first[i]) * second[i];
+    }
+    }
+
+    std::complex<double> result = 0;
+    for(size_t i = 0; i < omp_get_max_threads(); ++i)
+    {
+        result += local_result[i];
+    }
+    return result;
+}
+
 
 using namespace settings;
 
@@ -1177,7 +1275,7 @@ using namespace settings;
  *  \param result Resulting matrix of size l by n
  */
 template <class T>
-inline void MatrixMatrixMult(const Matrix<T>& first, const Matrix<T>& second, const Matrix<T>& result, MMMultType type = default_MMType)
+void MatrixMatrixMult(const Matrix<T>& first, const Matrix<T>& second, Matrix<T>& result, MMMultType type = default_MMType)
 {
     switch(type)
     {
@@ -1187,7 +1285,7 @@ inline void MatrixMatrixMult(const Matrix<T>& first, const Matrix<T>& second, co
             // Init result to zero
             for(size_t i = 0; i < result.Length(); ++i)
             {
-                result.Data()[i] = 0;
+                result[i] = 0;
             }
             #pragma omp parallel for
             for(size_t i = 0; i < first.Height(); ++i)
@@ -1196,7 +1294,7 @@ inline void MatrixMatrixMult(const Matrix<T>& first, const Matrix<T>& second, co
                 {
                     for(size_t j = 0; j < second.Width(); ++j)
                     {
-                        result.Data()[i*second.Width() + j] += first.Data()[i*first.Width() + k] * second.Data()[k*second.Width() + j];
+                        result[i*second.Width() + j] += first[i*first.Width() + k] * second[k*second.Width() + j];
                     }
                 }
             }
@@ -1220,7 +1318,7 @@ inline void MatrixMatrixMult(const Matrix<T>& first, const Matrix<T>& second, co
  *  \param result Resulting matrix of size l by n
  */
 template <class T>
-inline void MatrixMatrixMultEigen(const Matrix<T>& first, const Matrix<T>& second, const Matrix<T>& result)
+void MatrixMatrixMultEigen(const Matrix<T>& first, const Matrix<T>& second, Matrix<T>& result)
 {
     Eigen::Map<Eigen::Matrix<T, Eigen::Dynamic, Eigen::Dynamic, Eigen::RowMajor>> eigenMat(first.Data(), first.Height(), first.Width());
     Eigen::Map<Eigen::Matrix<T, Eigen::Dynamic, Eigen::Dynamic, Eigen::RowMajor>> eigenVect(second.Data(), second.Height(), second.Width());
@@ -1228,7 +1326,7 @@ inline void MatrixMatrixMultEigen(const Matrix<T>& first, const Matrix<T>& secon
     eigenResult = eigenMat * eigenVect;
 }
 template <>
-inline void MatrixMatrixMultEigen(const Matrix<double>& first, const Matrix<double>& second, const Matrix<double>& result)
+inline void MatrixMatrixMultEigen(const Matrix<double>& first, const Matrix<double>& second, Matrix<double>& result)
 {
     // loading the data with 8 bytes alignment
     Eigen::Map<Eigen::Matrix<double, Eigen::Dynamic, Eigen::Dynamic, Eigen::RowMajor>, Eigen::Aligned8> eigenMat(first.Data(), first.Height(), first.Width());
@@ -1237,7 +1335,7 @@ inline void MatrixMatrixMultEigen(const Matrix<double>& first, const Matrix<doub
     eigenResult = eigenMat * eigenVect;
 }
 template <>
-inline void MatrixMatrixMultEigen(const Matrix<long long>& first, const Matrix<long long>& second, const Matrix<long long>& result)
+inline void MatrixMatrixMultEigen(const Matrix<long long>& first, const Matrix<long long>& second, Matrix<long long>& result)
 {
     // loading the data with 8 bytes alignment
     Eigen::Map<Eigen::Matrix<long long, Eigen::Dynamic, Eigen::Dynamic, Eigen::RowMajor>, Eigen::Aligned8> eigenMat(first.Data(), first.Height(), first.Width());
@@ -1246,7 +1344,7 @@ inline void MatrixMatrixMultEigen(const Matrix<long long>& first, const Matrix<l
     eigenResult = eigenMat * eigenVect;
 }
 template <>
-inline void MatrixMatrixMultEigen(const Matrix<long double>& first, const Matrix<long double>& second, const Matrix<long double>& result)
+inline void MatrixMatrixMultEigen(const Matrix<long double>& first, const Matrix<long double>& second, Matrix<long double>& result)
 {
     // loading the data with 8 bytes alignment
     Eigen::Map<Eigen::Matrix<long double, Eigen::Dynamic, Eigen::Dynamic, Eigen::RowMajor>, Eigen::Aligned16> eigenMat(first.Data(), first.Height(), first.Width());
@@ -1254,7 +1352,15 @@ inline void MatrixMatrixMultEigen(const Matrix<long double>& first, const Matrix
     Eigen::Map<Eigen::Matrix<long double, Eigen::Dynamic, Eigen::Dynamic, Eigen::RowMajor>, Eigen::Aligned16> eigenResult(result.Data(), result.Height(), result.Width());
     eigenResult = eigenMat * eigenVect;
 }
-
+template <>
+inline void MatrixMatrixMultEigen(const Matrix<std::complex<double>>& first, const Matrix<std::complex<double>>& second, Matrix<std::complex<double>>& result)
+{
+    // loading the data with 8 bytes alignment
+    Eigen::Map<Eigen::Matrix<std::complex<double>, Eigen::Dynamic, Eigen::Dynamic, Eigen::RowMajor>, Eigen::Aligned16> eigenMat(first.Data(), first.Height(), first.Width());
+    Eigen::Map<Eigen::Matrix<std::complex<double>, Eigen::Dynamic, Eigen::Dynamic, Eigen::RowMajor>, Eigen::Aligned16> eigenVect(second.Data(), second.Height(), second.Width());
+    Eigen::Map<Eigen::Matrix<std::complex<double>, Eigen::Dynamic, Eigen::Dynamic, Eigen::RowMajor>, Eigen::Aligned16> eigenResult(result.Data(), result.Height(), result.Width());
+    eigenResult = eigenMat * eigenVect;
+}
 
 /** Matrix Vector multiplication
  *  Performs a matrix-vector multiplication : result = mat * vect
@@ -1264,7 +1370,7 @@ inline void MatrixMatrixMultEigen(const Matrix<long double>& first, const Matrix
  *  \param type Computation strategy to use
  */
 template <class T>
-inline void MatrixVectorMult(const Matrix<T>& mat, const Matrix<T>& vect, const Matrix<T>& result, MVMultType type = default_MVType)
+void MatrixVectorMult(const Matrix<T>& mat, const Matrix<T>& vect, Matrix<T>& result, MVMultType type = default_MVType)
 {
     switch(type)
     {
@@ -1274,10 +1380,10 @@ inline void MatrixVectorMult(const Matrix<T>& mat, const Matrix<T>& vect, const 
             #pragma omp parallel for
             for(size_t i = 0; i < mat.Height(); ++i)
             {
-                result.Data()[i] = 0;
+                result[i] = 0;
                 for(size_t j = 0; j < mat.Width(); ++j)
                 {
-                    result.Data()[i] += mat.Data()[i*mat.Width() + j] * vect.Data()[j];
+                    result[i] += mat[i*mat.Width() + j] * vect[j];
                 }
             }
 
@@ -1308,50 +1414,60 @@ inline void MatrixVectorMult(const Matrix<T>& mat, const Matrix<T>& vect, const 
  *  \param result Resulting vector of size m by 1
  */
 template <class T>
-inline void MatrixVectMultEigen(const Matrix<T>& mat, const Matrix<T>& vect, const Matrix<T>& result)
+void MatrixVectMultEigen(const Matrix<T>& mat, const Matrix<T>& vect, Matrix<T>& result)
 {
     Eigen::Map<Eigen::Matrix<T, 1, Eigen::Dynamic, Eigen::RowMajor>> eigenVect(vect.Data(), vect.Height());
     #pragma omp parallel for
     for(size_t i = 0; i < mat.Height(); ++i)
     {
         Eigen::Map<Eigen::Matrix<T, 1, Eigen::Dynamic, Eigen::RowMajor>> eigenMat(mat.Data() + i*mat.Width(), mat.Width());
-        result.Data()[i] = eigenMat.dot(eigenVect);
+        result[i] = eigenMat.dot(eigenVect);
     }
 }
 template <>
-inline void MatrixVectMultEigen(const Matrix<double>& mat, const Matrix<double>& vect, const Matrix<double>& result)
+inline void MatrixVectMultEigen(const Matrix<double>& mat, const Matrix<double>& vect, Matrix<double>& result)
 {
     Eigen::Map<Eigen::Matrix<double, 1, Eigen::Dynamic, Eigen::RowMajor>, Eigen::Aligned8> eigenVect(vect.Data(), vect.Height());
     #pragma omp parallel for
     for(size_t i = 0; i < mat.Height(); ++i)
     {
         Eigen::Map<Eigen::Matrix<double, 1, Eigen::Dynamic, Eigen::RowMajor>, Eigen::Aligned8> eigenMat(mat.Data() + i*mat.Width(), mat.Width());
-        result.Data()[i] = eigenMat.dot(eigenVect);
+        result[i] = eigenMat.dot(eigenVect);
     }
 }
 template <>
-inline void MatrixVectMultEigen(const Matrix<long long>& mat, const Matrix<long long>& vect, const Matrix<long long>& result)
+inline void MatrixVectMultEigen(const Matrix<long long>& mat, const Matrix<long long>& vect, Matrix<long long>& result)
 {
     Eigen::Map<Eigen::Matrix<long long, 1, Eigen::Dynamic, Eigen::RowMajor>, Eigen::Aligned8> eigenVect(vect.Data(), vect.Height());
     #pragma omp parallel for
     for(size_t i = 0; i < mat.Height(); ++i)
     {
         Eigen::Map<Eigen::Matrix<long long, 1, Eigen::Dynamic, Eigen::RowMajor>, Eigen::Aligned8> eigenMat(mat.Data() + i*mat.Width(), mat.Width());
-        result.Data()[i] = eigenMat.dot(eigenVect);
+        result[i] = eigenMat.dot(eigenVect);
     }
 }
 template <>
-inline void MatrixVectMultEigen(const Matrix<long double>& mat, const Matrix<long double>& vect, const Matrix<long double>& result)
+inline void MatrixVectMultEigen(const Matrix<long double>& mat, const Matrix<long double>& vect, Matrix<long double>& result)
 {
     Eigen::Map<Eigen::Matrix<long double, 1, Eigen::Dynamic, Eigen::RowMajor>, Eigen::Aligned16> eigenVect(vect.Data(), vect.Height());
     #pragma omp parallel for
     for(size_t i = 0; i < mat.Height(); ++i)
     {
         Eigen::Map<Eigen::Matrix<long double, 1, Eigen::Dynamic, Eigen::RowMajor>, Eigen::Aligned16> eigenMat(mat.Data() + i*mat.Width(), mat.Width());
-        result.Data()[i] = eigenMat.dot(eigenVect);
+        result[i] = eigenMat.dot(eigenVect);
     }
 }
-
+template <>
+inline void MatrixVectMultEigen(const Matrix<std::complex<double>>& mat, const Matrix<std::complex<double>>& vect, Matrix<std::complex<double>>& result)
+{
+    Eigen::Map<Eigen::Matrix<std::complex<double>, 1, Eigen::Dynamic, Eigen::RowMajor>, Eigen::Aligned16> eigenVect(vect.Data(), vect.Height());
+    #pragma omp parallel for
+    for(size_t i = 0; i < mat.Height(); ++i)
+    {
+        Eigen::Map<Eigen::Matrix<std::complex<double>, 1, Eigen::Dynamic, Eigen::RowMajor>, Eigen::Aligned16> eigenMat(mat.Data() + i*mat.Width(), mat.Width());
+        result[i] = eigenMat.conjugate().dot(eigenVect);
+    }
+}
 
 /** Vector Matrix multiplication
  *  Performs a matrix-vector multiplication : result = vect * mat
@@ -1360,7 +1476,7 @@ inline void MatrixVectMultEigen(const Matrix<long double>& mat, const Matrix<lon
  *  \param result Resulting vector of size 1 by n
  */
 template <class T>
-inline void VectorMatrixMult(const Matrix<T>& vect, const Matrix<T>& mat, const Matrix<T>& result, VMMultType type = default_VMType)
+void VectorMatrixMult(const Matrix<T>& vect, const Matrix<T>& mat, Matrix<T>& result, VMMultType type = default_VMType)
 {
     switch(type)
     {
@@ -1370,14 +1486,14 @@ inline void VectorMatrixMult(const Matrix<T>& vect, const Matrix<T>& mat, const 
             // Init result to zero
             for(size_t i = 0; i < result.Length(); ++i)
             {
-                result.Data()[i] = 0;
+                result[i] = 0;
             }
             #pragma omp parallel for
             for(size_t i = 0; i < mat.Height(); ++i)
             {
                 for(size_t j = 0; j < mat.Width(); ++j)
                 {
-                    result.Data()[j] += vect.Data()[i] * mat.Data()[i*mat.Width() + j];
+                    result[j] += vect[i] * mat[i*mat.Width() + j];
                 }
             }
 
