@@ -3,7 +3,7 @@
 /// \brief Implementation of the FISTA class test suite.
 /// \author Philippe Ganz <philippe.ganz@gmail.com>
 /// \version 0.3.0
-/// \date 2018-01-12
+/// \date 2018-01-21
 /// \copyright GPL-3.0
 ///
 
@@ -37,20 +37,15 @@ bool SmallExample()
 
     for( int i = 0; i < 3; ++i )
     {
-        std::cout << "Running with A = ";
-        A.Data().Print();
-        std::cout << ", b = ";
-        b.Print();
-        std::cout << "and u = ";
-        u.Print();
+        std::cout << "Running with A = " << A.Data();
+        std::cout << ", b = " << b;
+        std::cout << "and u = " << u;
 
         options.tol = tols[i];
         astroqut::Matrix<double> actual_result = astroqut::fista::poisson::Solve(A, u, b, 1, options);
 
-        std::cout << "Result from MATLAB computation";
-        expected_result[i].Print();
-        std::cout << "Result from this computation";
-        actual_result.Print();
+        std::cout << "Result from MATLAB computation" << expected_result[i];
+        std::cout << "Result from this computation" << actual_result;
 
         double relative_error = std::abs((actual_result - expected_result[i]).Norm(two)) / std::abs(expected_result[i].Norm(two));
 
