@@ -3,7 +3,7 @@
 /// \brief Test suite to validate the Matrix class.
 /// \author Philippe Ganz <philippe.ganz@gmail.com>
 /// \version 0.3.0
-/// \date 2018-01-12
+/// \date 2018-01-21
 /// \copyright GPL-3.0
 ///
 
@@ -215,17 +215,23 @@ void Optimizations(size_t length)
     _mm_free(test_array);
 }
 
-template <class T> const Matrix<T> SquareMatrix()
+template <class T>
+const Matrix<T> SquareMatrix()
 {
     T data[9] = {1,2,3,4,5,6,7,8,9};
     return Matrix<T>(data, 9, 3, 3);
 }
+template <>
+const Matrix<std::complex<double>> SquareMatrix();
 
-template <class T> const Matrix<T> RectMatrix()
+template <class T>
+const Matrix<T> RectMatrix()
 {
     T data[10] = {1,2,3,4,5,6,7,8,9,10};
     return Matrix<T>(data, 10, 2, 5);
 }
+template <>
+const Matrix<std::complex<double>> RectMatrix();
 
 template <class T>
 bool TransposeSquare()
@@ -240,6 +246,8 @@ bool TransposeSquare()
 
     return test_result;
 }
+template <>
+bool TransposeSquare<std::complex<double>>();
 
 template <class T>
 bool TransposeRect()
@@ -254,6 +262,8 @@ bool TransposeRect()
 
     return test_result;
 }
+template <>
+bool TransposeRect<std::complex<double>>();
 
 template <class T>
 bool Add()
@@ -268,6 +278,8 @@ bool Add()
 
     return test_result;
 }
+template <>
+bool Add<std::complex<double>>();
 
 template <class T>
 bool Sub()
@@ -275,13 +287,15 @@ bool Sub()
     std::string type(typeid(T).name());
     std::cout << "Sub test with " << type << " : ";
 
-    T data[9] = {0,0,0,0,0,0,0,0,0};
+    T data[9] = {-1,-2,-3,-4,-5,-6,-7,-8,-9};
     const Matrix<T> expected_result(data, 9, 3, 3);
-    bool test_result =  (expected_result == SquareMatrix<T>() - SquareMatrix<T>());
+    bool test_result =  (expected_result == SquareMatrix<T>() - (T)2 * SquareMatrix<T>());
     std::cout << (test_result ? "Success" : "Failure") << std::endl;
 
     return test_result;
 }
+template <>
+bool Sub<std::complex<double>>();
 
 template <class T>
 bool MultSquare()
@@ -296,6 +310,8 @@ bool MultSquare()
 
     return test_result;
 }
+template <>
+bool MultSquare<std::complex<double>>();
 
 template <class T>
 bool MultRect()
@@ -310,6 +326,8 @@ bool MultRect()
 
     return test_result;
 }
+template <>
+bool MultRect<std::complex<double>>();
 
 template <class T>
 bool MultVectMat()
@@ -328,6 +346,8 @@ bool MultVectMat()
 
     return test_result;
 }
+template <>
+bool MultVectMat<std::complex<double>>();
 
 template <class T>
 bool MultMatVect()
@@ -346,6 +366,8 @@ bool MultMatVect()
 
     return test_result;
 }
+template <>
+bool MultMatVect<std::complex<double>>();
 
 template <class T>
 bool NormOne()
@@ -358,6 +380,9 @@ bool NormOne()
 
     return test_result;
 }
+template <>
+bool NormOne<std::complex<double>>();
+
 
 template <class T>
 bool NormTwo()
@@ -370,6 +395,8 @@ bool NormTwo()
 
     return test_result;
 }
+template <>
+bool NormTwo<std::complex<double>>();
 
 template <class T>
 bool NormInf()
@@ -382,6 +409,8 @@ bool NormInf()
 
     return test_result;
 }
+template <>
+bool NormInf<std::complex<double>>();
 
 template <class T>
 bool Sum()
@@ -394,6 +423,8 @@ bool Sum()
 
     return test_result;
 }
+template <>
+bool Sum<std::complex<double>>();
 
 template <class T>
 bool Shrink()
@@ -409,6 +440,8 @@ bool Shrink()
 
     return test_result;
 }
+template <>
+bool Shrink<std::complex<double>>();
 
 } // namespace matrix
 } // namespace test
