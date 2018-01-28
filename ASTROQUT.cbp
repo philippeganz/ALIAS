@@ -123,6 +123,7 @@
 		<Unit filename="src/settings.cpp" />
 		<Unit filename="src/test.cpp" />
 		<Unit filename="src/test/fista.cpp" />
+		<Unit filename="src/test/matrix.cpp" />
 		<Extensions>
 			<code_completion />
 			<envvars />

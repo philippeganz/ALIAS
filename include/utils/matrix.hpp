@@ -384,7 +384,13 @@ public:
      *  \param index Array subscript
      *  \return A reference to the array element at index
      */
-    const T& operator[](size_t index) const noexcept
+    template <class S = T, typename std::enable_if<std::is_arithmetic<S>::value>::type* = nullptr>
+    const S operator[](size_t index) const noexcept
+    {
+        return data_[index];
+    }
+    template <class S = T, typename std::enable_if<std::is_same<S, std::complex<double>>::value>::type* = nullptr>
+    const S& operator[](size_t index) const noexcept
     {
         return data_[index];
     }
