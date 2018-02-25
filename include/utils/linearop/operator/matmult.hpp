@@ -1,17 +1,17 @@
 ///
-/// \file include/utils/operator/matmult.hpp
+/// \file include/utils/linearop/operator/matmult.hpp
 /// \brief Matrix Multiplication class header
 /// \details Provide a matrix multiplication operator
 /// \author Philippe Ganz <philippe.ganz@gmail.com> 2017-2018
-/// \version 0.2.0
-/// \date 2018-01-04
+/// \version 0.3.0
+/// \date 2018-02-25
 /// \copyright GPL-3.0
 ///
 
 #ifndef ASTROQUT_UTILS_OPERATOR_MATMULT_HPP
 #define ASTROQUT_UTILS_OPERATOR_MATMULT_HPP
 
-#include "utils/operator.hpp"
+#include "utils/linearop/operator.hpp"
 
 namespace astroqut
 {

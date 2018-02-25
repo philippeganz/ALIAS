@@ -3,14 +3,14 @@
 /// \brief Test suite to validate the Matrix class.
 /// \author Philippe Ganz <philippe.ganz@gmail.com>
 /// \version 0.3.0
-/// \date 2018-01-21
+/// \date 2018-02-25
 /// \copyright GPL-3.0
 ///
 
 #ifndef ASTROQUT_TEST_MATRIX_HPP
 #define ASTROQUT_TEST_MATRIX_HPP
 
-#include "utils/matrix.hpp"
+#include "utils/linearop/matrix.hpp"
 #include "settings.hpp"
 
 #include <chrono>

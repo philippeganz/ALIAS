@@ -1,10 +1,10 @@
 ///
-/// \file include/utils/matrix.hpp
+/// \file include/utils/linearop/matrix.hpp
 /// \brief Matrix class header
 /// \details Provide matrix container with multiple matrix operations used in the whole project.
 /// \author Philippe Ganz <philippe.ganz@gmail.com> 2017-2018
 /// \version 0.3.0
-/// \date 2018-01-21
+/// \date 2018-02-25
 /// \copyright GPL-3.0
 ///
 
@@ -297,7 +297,7 @@ public:
         return false;
     }
 
-    /** Assignment operator
+    /** Copy assignment operator
      *  \param other Object to assign to current object
      *  \return A reference to this
      */
@@ -353,7 +353,7 @@ public:
         return *this;
     }
 
-    /** Move operator
+    /** Move assignment operator
      *  \param other Object to move to current object
      *  \return A reference to this
      */
@@ -763,6 +763,66 @@ public:
     Matrix Shrink(double thresh_factor) const &
     {
         return Matrix(*this).Shrink(thresh_factor);
+    }
+
+    /** Padding function for temporary instances
+     *  \brief Pads the matrix with zero, if necessary, up to size height * width
+     *  \param S Type of the resulting Matrix, defaults to same type
+     *  \param height Height of the resulting padded Matrix
+     *  \param width Width of the resulting padded Matrix
+     *  \return A reference to this if same size, a reference to the result else
+     */
+    template <class U>
+    Matrix<U>&& Padding(size_t height, size_t width) &&
+    {
+        // check if padding is necessary
+        bool height_padding = false;
+        bool width_padding = false;
+        if( height_ < height )
+        {
+            height_padding = true;
+        }
+        if( width_ < width )
+        {
+            width_padding = true;
+        }
+
+        // no padding necessary
+        if( !height_padding && !width_padding )
+        {
+            // no type conversion necessary
+            if( std::is_same<T,U>::value )
+            {
+                return std::forward(*this);
+            }
+            Matrix<U> result = *this;
+            return std::move(result);
+        }
+
+        Matrix<U> result(height, width);
+
+        // copy the data into the resulting Matrix and set the rest to zero
+        if( width_padding )
+        {
+            #pragma omp parallel for
+            for( size_t i = 0; i < height_; ++i )
+            {
+                std::copy( data_ + i*width_, data_ + (i+1)*width_, result.Data() + i*width );
+                std::fill( result.Data() + i*width + width_, result.Data() + (i+1)*width, (T) 0 );
+            }
+        }
+
+        // set the last rows to zero
+        if( height_padding )
+        {
+            #pragma omp parallel for
+            for( size_t i = height_; i < height; ++i )
+            {
+                std::fill( result.Data() + i*width, result.Data() + (i+1)*width, (T) 0 );
+            }
+        }
+
+        return std::move(result);
     }
 
     /** Norm

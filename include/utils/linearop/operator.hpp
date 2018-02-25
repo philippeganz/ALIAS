@@ -1,17 +1,17 @@
 ///
-/// \file include/utils/operator.hpp
+/// \file include/utils/linearop/operator.hpp
 /// \brief Operator class header
 /// \details Provide operator container with operator-vector operations
 /// \author Philippe Ganz <philippe.ganz@gmail.com> 2017-2018
 /// \version 0.3.0
-/// \date 2018-01-12
+/// \date 2018-02-25
 /// \copyright GPL-3.0
 ///
 
 #ifndef ASTROQUT_UTILS_OPERATOR_HPP
 #define ASTROQUT_UTILS_OPERATOR_HPP
 
-#include "utils/matrix.hpp"
+#include "utils/linearop/matrix.hpp"
 
 #include <functional>
 #include <utility>

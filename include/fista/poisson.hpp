@@ -4,16 +4,16 @@
 /// \author Hatef Monajemi <monajemi@stanford.edu> 2012-2014
 /// \author Philippe Ganz <philippe.ganz@gmail.com> 2017-2018
 /// \version 0.3.0
-/// \date 2018-01-12
+/// \date 2018-02-25
 /// \copyright GPL-3.0
 ///
 
 #ifndef ASTROQUT_FISTA_POISSON_HPP
 #define ASTROQUT_FISTA_POISSON_HPP
 
-#include "utils/matrix.hpp"
-#include "utils/operator/matmult.hpp"
-#include "utils/operator/convolution.hpp"
+#include "utils/linearop/matrix.hpp"
+#include "utils/linearop/operator/matmult.hpp"
+#include "utils/linearop/operator/convolution.hpp"
 
 #include <iostream>
 #include <iomanip>
