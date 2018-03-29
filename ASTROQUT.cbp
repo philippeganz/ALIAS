@@ -125,6 +125,7 @@
 		<Unit filename="src/test.cpp" />
 		<Unit filename="src/test/fista.cpp" />
 		<Unit filename="src/test/matrix.cpp" />
+		<Unit filename="src/test/operator.cpp" />
 		<Extensions>
 			<code_completion />
 			<envvars />

@@ -4,7 +4,7 @@
 /// \details Provide a convolution operator
 /// \author Philippe Ganz <philippe.ganz@gmail.com> 2017-2018
 /// \version 0.3.0
-/// \date 2018-02-25
+/// \date 2018-03-29
 /// \copyright GPL-3.0
 ///
 
@@ -12,8 +12,6 @@
 #define ASTROQUT_UTILS_OPERATOR_CONVOLUTION_HPP
 
 #include "utils/linearop/operator.hpp"
-
-#include <complex>
 
 namespace astroqut
 {
@@ -30,12 +28,12 @@ public:
     {}
 
     /** Full member constructor
-     *  \param data Array containing the filter's data. Needs to be already inverted if not symmetrical.
+     *  \param data Matrix containing the filter's data. Needs to be already inverted if not symmetrical.
      *  \param height Height of the filter, must be odd
      *  \param width Width of the filter, must be odd
      */
-    Convolution(const Matrix<T>& data, size_t height, size_t width) noexcept
-        : Operator<T>(data, height, width, false)
+    Convolution(Matrix<T>&& data, size_t height, size_t width)
+        : Operator<T>(std::forward<Matrix<T>>(data), height, width, false)
     {
         if( height % 2 != 1 || width % 2 != 1 )
         {
@@ -85,29 +83,40 @@ public:
         size_t height_dist_from_center = (this->height_ - 1) / 2;
         size_t width_dist_from_center = (this->width_ - 1) / 2;
 
+#ifdef DEBUG
+        int progress_step = std::max(1, (int)other.Height()/100);
+#endif // DEBUG
+
+        #pragma omp parallel for
         for( size_t row = 0; row < other.Height(); ++row )
         {
+#ifdef DEBUG
+            if( row % progress_step == 0 )
+                std::cout << "*";
+#endif // DEBUG
+            int relative_dist_row = row - height_dist_from_center;
+            int filter_start_row = relative_dist_row < 0 ? -relative_dist_row : 0;
+            int matrix_start_row = relative_dist_row < 0 ? 0 : relative_dist_row;
             for( size_t col = 0; col < other.Width(); ++col )
             {
-                size_t relative_dist_row = row - height_dist_from_center;
-                size_t filter_start_row = relative_dist_row < 0 ? -relative_dist_row : 0;
-                size_t matrix_start_row = height_dist_from_center - relative_dist_row;
+                int relative_dist_col = col - width_dist_from_center;
+                int filter_start_col = relative_dist_col < 0 ? - relative_dist_col : 0;
+                int matrix_start_col = relative_dist_col < 0 ? 0 : relative_dist_col;
                 for(size_t filter_row = filter_start_row, matrix_row = matrix_start_row;
-                    filter_row < std::min(other.Height(), row+height_dist_from_center);
+                    filter_row < this->Height() && matrix_row < other.Height();
                     ++filter_row, ++matrix_row)
                 {
-                    size_t relative_dist_col = col - width_dist_from_center;
-                    size_t filter_start_col = relative_dist_col < 0 ? -relative_dist_col : 0;
-                    size_t matrix_start_col = width_dist_from_center - relative_dist_col;
                     for(size_t filter_col = filter_start_col, matrix_col = matrix_start_col;
-                        filter_col < std::min(other.Width(), col+width_dist_from_center);
+                        filter_col < this->Width() && matrix_col < other.Width();
                         ++filter_col, ++matrix_col)
                     {
-                        result[row * other.Width + col] += other[matrix_row * other.Width() + matrix_col] * this->data_[filter_row * this->width_ + filter_col];
+                        result[row * other.Width() + col] += other[matrix_row * other.Width() + matrix_col] * this->data_[filter_row * this->width_ + filter_col];
                     }
                 }
             }
         }
+
+        return result;
     }
 };
 

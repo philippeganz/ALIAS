@@ -12,7 +12,16 @@
 namespace astroqut{
 namespace test{
 
-bool FISTA()
+bool OperatorTest()
+{
+    bool convolution = oper::ConvolutionTest();
+
+    oper::ConvolutionTime(1024, 5);
+
+    return convolution;
+}
+
+bool FISTATest()
 {
     bool fista_small = fista::SmallExample();
 

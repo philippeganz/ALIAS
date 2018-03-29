@@ -3,15 +3,20 @@
 /// \brief Test suites to validate the project code
 /// \author Philippe Ganz <philippe.ganz@gmail.com>
 /// \version 0.3.0
-/// \date 2018-01-12
+/// \date 2018-01-14
 /// \copyright GPL-3.0
 ///
 
 #ifndef ASTROQUT_TEST_HPP
 #define ASTROQUT_TEST_HPP
 
-#include "test/matrix.hpp"
 #include "test/fista.hpp"
+#include "test/matrix.hpp"
+#include "test/operator.hpp"
+
+#include <chrono>
+#include <iostream>
+#include <random>
 
 namespace astroqut{
 namespace test{
@@ -52,7 +57,9 @@ void PerfTestOptional(size_t length)
     Optimizations<T>(length);
 }
 
-bool FISTA();
+bool OperatorTest();
+
+bool FISTATest();
 
 } // namespace test
 } // namespace astroqut
