@@ -114,6 +114,7 @@
 		<Unit filename="include/utils/linearop.hpp" />
 		<Unit filename="include/utils/linearop/matrix.hpp" />
 		<Unit filename="include/utils/linearop/operator.hpp" />
+		<Unit filename="include/utils/linearop/operator/abeltransform.hpp" />
 		<Unit filename="include/utils/linearop/operator/convolution.hpp" />
 		<Unit filename="include/utils/linearop/operator/fourier.hpp" />
 		<Unit filename="include/utils/linearop/operator/matmult.hpp" />
