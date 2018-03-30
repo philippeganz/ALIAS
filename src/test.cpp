@@ -23,7 +23,7 @@ bool OperatorTest()
     bool abel_build = AbelTestBuild();
     bool abel_apply = AbelTestApply();
 
-//    AbelTime(1024, 256);
+    AbelTime(256);
 
     return convolution && abel_build && abel_apply;
 }

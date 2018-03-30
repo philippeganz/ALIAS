@@ -26,7 +26,7 @@ void ConvolutionTime(size_t data_length, size_t filter_length);
 
 bool AbelTestBuild();
 bool AbelTestApply();
-bool AbelTime();
+void AbelTime(size_t pic_size);
 
 } // namespace oper
 } // namespace test

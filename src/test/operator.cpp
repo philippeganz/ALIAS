@@ -139,6 +139,37 @@ bool AbelTestApply()
     return test_result;
 }
 
+void AbelTime(size_t pic_size)
+{
+    std::cout << "Abel time : ";
+
+    AbelTransform<double> K(pic_size, pic_size*pic_size, pic_size/2);
+
+    std::default_random_engine generator;
+    generator.seed(123456789);
+    std::normal_distribution<double> distribution(100.0,10.0);
+    size_t test_height = pic_size;
+    size_t test_width = pic_size*pic_size;
+
+    Matrix<double>::matrix_t * target_data = (double*) _mm_malloc(sizeof(double)*test_height*test_width, sizeof(double)); // destroyed when A is destroyed
+    #pragma omp parallel for simd
+    for( size_t i = 0; i < test_height*test_width; ++i )
+    {
+        target_data[i] = distribution(generator);
+    }
+    astroqut::Matrix<double> target(target_data, test_height, test_width);
+
+    std::chrono::time_point<std::chrono::high_resolution_clock> start, end;
+    start = std::chrono::high_resolution_clock::now();
+
+    K * target;
+
+    end = std::chrono::high_resolution_clock::now();
+    std::chrono::duration<double> elapsed_time = end-start;
+
+    std::cout << elapsed_time.count() << std::endl;
+}
+
 
 
 } // namespace matrix
