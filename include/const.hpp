@@ -10,7 +10,7 @@
 #ifndef ASTROQUT_CONST_HPP
 #define ASTROQUT_CONST_HPP
 
-#define DEBUG
+//#define DEBUG
 #define VERBOSE
 #define DO_ARGCHECKS
 

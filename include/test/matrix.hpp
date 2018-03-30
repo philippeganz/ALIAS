@@ -15,7 +15,6 @@
 
 #include <chrono>
 #include <iostream>
-#include <omp.h>
 #include <typeinfo>
 
 namespace astroqut{

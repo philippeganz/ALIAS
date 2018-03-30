@@ -1,12 +1,12 @@
 CC := g++
-CFLAGS := -std=c++14 -O2 -fopenmp -pedantic -Wall
-DFLAGS := -MM -std=c++14
+CFLAGS := -std=c++17 -O3 -fopenmp -pedantic -Wall -m64
 
-PROJECTNAME := ASTROQUT
+PROJECTNAME := AstroQUT
 
 SOURCEDIR := src
 SOURCES := $(shell find $(SOURCEDIR) -name '*.cpp')
 HEADERDIR := include
+EXTERNALHEADERDIR := extern_include/eigen-eigen-5a0156e40feb
 OBJECTDIR := obj
 OBJECTS := $(addprefix $(OBJECTDIR)/,$(SOURCES:%.cpp=%.o))
 DEPENDS := $(addprefix $(OBJECTDIR)/,$(SOURCES:%.cpp=%.d))
@@ -22,12 +22,7 @@ $(PROJECTNAME): $(OBJECTS)
 -include $(DEPENDS)
 
 $(OBJECTDIR)/%.o: %.cpp
-	mkdir -p $(OBJECTDIR)/$(dir $<) && $(CC) $(CFLAGS) -I $(HEADERDIR) -c $< -o $@
-	$(CC) $(DFLAGS) -I $(HEADERDIR) $< > $(OBJECTDIR)/$(*D)/$(*F).d
-	@mv -f $(OBJECTDIR)/$(*D)/$(*F).d $(OBJECTDIR)/$(*D)/$(*F).d.tmp
-	@sed -e 's|.*:|$(OBJECTDIR)/$(*D)/$(*F).o:|' < $(OBJECTDIR)/$(*D)/$(*F).d.tmp > $(OBJECTDIR)/$(*D)/$(*F).d
-	@sed -e 's/.*://' -e 's/\\$$//' < $(OBJECTDIR)/$(*D)/$(*F).d.tmp | fmt -1 | sed -e 's/^ *//' -e 's/$$/:/' >> $(OBJECTDIR)/$(*D)/$(*F).d
-	@rm -f $(OBJECTDIR)/$(*D)/$(*F).d.tmp
+	mkdir -p $(OBJECTDIR)/$(dir $<) && $(CC) $(CFLAGS) -I $(HEADERDIR) -I $(EXTERNALHEADERDIR) -c $< -o $@
 
 .PHONY: clean
 
