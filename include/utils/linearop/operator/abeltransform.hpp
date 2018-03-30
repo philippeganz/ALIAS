@@ -64,6 +64,7 @@ public:
             x_axis[i] = (i+1) * radius_extended_to_wavelet_amount_half_ratio;
         }
 
+        #pragma omp parallel for
         for( size_t i = 0; i < pic_side_half; ++i )
         {
             double z = i * radius_to_pic_side_ratio;
@@ -145,6 +146,7 @@ public:
         Matrix<T> result( (T) 0, this->Height(), other.Width() );
 
         // iterating over blocks
+        #pragma omp parallel for
         for( size_t block = 0; block < pic_side_half; ++block )
         {
             // iterating over rows
