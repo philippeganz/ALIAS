@@ -4,7 +4,7 @@
 /// \details Handle the user input, calls the preparation tools and the solver.
 /// \author Philippe Ganz <philippe.ganz@gmail.com>
 /// \version 0.3.0
-/// \date 2018-01-12
+/// \date 2018-03-30
 /// \copyright GPL-3.0
 ///
 

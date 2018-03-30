@@ -3,7 +3,7 @@
 /// \brief Implementation of the FISTA class test suite.
 /// \author Philippe Ganz <philippe.ganz@gmail.com>
 /// \version 0.3.0
-/// \date 2018-01-21
+/// \date 2018-03-30
 /// \copyright GPL-3.0
 ///
 

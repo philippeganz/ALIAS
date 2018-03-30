@@ -4,7 +4,7 @@
 /// \details Provide a convolution operator
 /// \author Philippe Ganz <philippe.ganz@gmail.com> 2017-2018
 /// \version 0.3.0
-/// \date 2018-03-29
+/// \date 2018-03-30
 /// \copyright GPL-3.0
 ///
 
