@@ -80,6 +80,7 @@ public:
 
     Matrix<T> operator*(const Matrix<T>& other) const override final
     {
+#ifdef DO_ARGCHECKS
         try
         {
             this->ArgTest(other, mult);
@@ -88,6 +89,7 @@ public:
         {
             throw;
         }
+#endif // DO_ARGCHECKS
 
         return std::move(this->data_ * other);
     }

@@ -50,7 +50,7 @@ bool SmallExample()
         double relative_error = std::abs((actual_result - expected_result[i]).Norm(two)) / std::abs(expected_result[i].Norm(two));
 
         bool local_result = (relative_error < 100*options.tol);
-        fista_test &= local_result;
+        fista_test = fista_test && local_result;
 
         std::cout << std::endl << (local_result ? "Success" : "Failure") << ", achieved ";
         std::cout << relative_error << " relative norm error with a tol of " << tols[i] << "." << std::endl;

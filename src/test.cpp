@@ -14,11 +14,18 @@ namespace test{
 
 bool OperatorTest()
 {
-    bool convolution = oper::ConvolutionTest();
+    using namespace oper;
 
-    oper::ConvolutionTime(1024, 5);
+    bool convolution = ConvolutionTest();
 
-    return convolution;
+//    ConvolutionTime(1024, 5);
+
+    bool abel_build = AbelTestBuild();
+    bool abel_apply = AbelTestApply();
+
+//    AbelTime(1024, 256);
+
+    return convolution && abel_build && abel_apply;
 }
 
 bool FISTATest()

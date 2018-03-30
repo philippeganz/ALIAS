@@ -73,10 +73,12 @@ public:
 
     Matrix<T> operator*(const Matrix<T>& other) const override final
     {
+#ifdef DO_ARGCHECKS
         if( !IsValid() || !other.IsValid() )
         {
             throw std::invalid_argument("Can not perform a convolution with these Matrices.");
         }
+#endif // DO_ARGCHECKS
 
         Matrix<T> result((T) 0, other.Height(), other.Width());
 

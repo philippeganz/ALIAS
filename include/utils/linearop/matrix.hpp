@@ -4,7 +4,7 @@
 /// \details Provide matrix container with multiple matrix operations used in the whole project.
 /// \author Philippe Ganz <philippe.ganz@gmail.com> 2017-2018
 /// \version 0.3.0
-/// \date 2018-02-25
+/// \date 2018-03-30
 /// \copyright GPL-3.0
 ///
 
@@ -52,7 +52,7 @@ inline bool IsAligned(const void* ptr, size_t align_byte_size)
 template <class T>
 bool IsEqual(T first, T second)
 {
-    return std::abs(first-second) < std::abs(first+second)*std::numeric_limits<T>::epsilon() ||
+    return std::abs(first-second) < std::abs(first+second)*std::numeric_limits<T>::epsilon()*10 ||
         std::abs(first-second) < std::numeric_limits<T>::min();
 }
 template <>
@@ -401,6 +401,7 @@ public:
      */
     Matrix& operator+=(const Matrix& other)
     {
+#ifdef DO_ARGCHECKS
         try
         {
             this->ArgTest(other, add);
@@ -409,6 +410,7 @@ public:
         {
             throw;
         }
+#endif // DO_ARGCHECKS
 
         #pragma omp parallel for simd
         for(size_t i = 0; i < this->length_; ++i)
@@ -425,6 +427,7 @@ public:
      */
     Matrix& operator-=(const Matrix& other)
     {
+#ifdef DO_ARGCHECKS
         try
         {
             this->ArgTest(other, add);
@@ -433,6 +436,7 @@ public:
         {
             throw;
         }
+#endif // DO_ARGCHECKS
 
         #pragma omp parallel for simd
         for(size_t i = 0; i < this->length_; ++i)
@@ -459,6 +463,7 @@ public:
      */
     Matrix operator*(const Matrix& other) const
     {
+#ifdef DO_ARGCHECKS
         try
         {
             this->ArgTest(other, mult);
@@ -467,6 +472,7 @@ public:
         {
             throw;
         }
+#endif // DO_ARGCHECKS
 
         Matrix result(this->height_, other.width_);
 
@@ -509,6 +515,7 @@ public:
      */
     Matrix& operator*=(T number)
     {
+#ifdef DO_ARGCHECKS
         try
         {
             IsValid();
@@ -517,6 +524,7 @@ public:
         {
             throw;
         }
+#endif // DO_ARGCHECKS
 
         #pragma omp parallel for simd
         for(size_t i = 0; i < this->length_; ++i)
@@ -533,6 +541,7 @@ public:
      */
     Matrix& operator&=(const Matrix& other)
     {
+#ifdef DO_ARGCHECKS
         try
         {
             this->ArgTest(other, add);
@@ -541,6 +550,7 @@ public:
         {
             throw;
         }
+#endif // DO_ARGCHECKS
 
         #pragma omp parallel for simd
         for(size_t i = 0; i < this->length_; ++i)
@@ -557,6 +567,7 @@ public:
      */
     Matrix& operator/=(T number)
     {
+#ifdef DO_ARGCHECKS
         try
         {
             IsValid();
@@ -565,6 +576,7 @@ public:
         {
             throw;
         }
+#endif // DO_ARGCHECKS
 
         #pragma omp parallel for simd
         for(size_t i = 0; i < this->length_; ++i)
@@ -581,6 +593,7 @@ public:
      */
     Matrix& operator/=(const Matrix& other)
     {
+#ifdef DO_ARGCHECKS
         try
         {
             this->ArgTest(other, add);
@@ -589,6 +602,7 @@ public:
         {
             throw;
         }
+#endif // DO_ARGCHECKS
 
         #pragma omp parallel for simd
         for(size_t i = 0; i < this->length_; ++i)
@@ -604,6 +618,7 @@ public:
     */
     Matrix Transpose() const &
     {
+#ifdef DO_ARGCHECKS
         try
         {
             IsValid();
@@ -612,6 +627,7 @@ public:
         {
             throw;
         }
+#endif // DO_ARGCHECKS
 
         Matrix result(this->width_, this->height_); // width <--> height
 
@@ -641,6 +657,7 @@ public:
     */
     Matrix&& Transpose() &&
     {
+#ifdef DO_ARGCHECKS
         try
         {
             IsValid();
@@ -649,6 +666,7 @@ public:
         {
             throw;
         }
+#endif // DO_ARGCHECKS
 
         // vector
         if( this->height_ == 1 || this->width_ == 1 )
@@ -702,6 +720,7 @@ public:
      */
     Matrix&& Log() &&
     {
+#ifdef DO_ARGCHECKS
         try
         {
             IsValid();
@@ -710,6 +729,7 @@ public:
         {
             throw;
         }
+#endif // DO_ARGCHECKS
 
         #pragma omp parallel for
         for(size_t i = 0; i < this->length_; ++i)
@@ -737,6 +757,7 @@ public:
      */
     Matrix&& Shrink(double thresh_factor) &&
     {
+#ifdef DO_ARGCHECKS
         try
         {
             IsValid();
@@ -745,6 +766,7 @@ public:
         {
             throw;
         }
+#endif // DO_ARGCHECKS
 
         #pragma omp parallel for
         for( size_t i = 0; i < this->length_; ++i )
@@ -831,6 +853,7 @@ public:
      */
     double Norm(const NormType l_norm) const
     {
+#ifdef DO_ARGCHECKS
         try
         {
             IsValid();
@@ -839,6 +862,7 @@ public:
         {
             throw;
         }
+#endif // DO_ARGCHECKS
 
         switch(l_norm)
         {
@@ -921,6 +945,7 @@ public:
      */
     T Sum() const
     {
+#ifdef DO_ARGCHECKS
         try
         {
             IsValid();
@@ -929,6 +954,7 @@ public:
         {
             throw;
         }
+#endif // DO_ARGCHECKS
 
         T local_result[omp_get_max_threads()]{0};
         #pragma omp parallel
@@ -965,51 +991,19 @@ public:
 /** Comparison operator equal
  *  \param first First matrix of comparison
  *  \param second Second matrix of comparison
- *  \return True if both object are the same element-wise, False else
+ *  \return True if both object are the same pointer-wise
  */
 template <class T>
 bool operator==(const Matrix<T>& first, const Matrix<T>& second)
 {
     if( first.Height() != second.Height() ||
-        first.Width() != second.Width() )
+        first.Width() != second.Width() ||
+        first.Data() != second.Data() )
     {
         return false;
     }
 
-    if( first.Data() == second.Data() )
-    {
-        return true;
-    }
-    else
-    {
-        // quick check for first value
-        if( !IsEqual(first[0], second[0]) )
-        {
-            return false;
-        }
-
-        // if first values are the same, check for the rest in parallel
-        bool are_they_equal = true;
-        #pragma omp parallel
-        {
-            #pragma omp for
-            for(size_t i = 0; i < first.Length(); ++i)
-            {
-                if( !IsEqual(first[i], second[i]) )
-                {
-                    #pragma omp critical
-                    {
-                        are_they_equal = false;
-                    }
-                    #pragma omp cancel for
-                }
-            }
-        }
-        return are_they_equal;
-
-//        TODO std::equal not yet parallelized : change as soon as available
-//        std::equal(data_, data_+(this->length_), other.data_);
-    }
+    return false;
 }
 
 /** Comparison operator not-equal
@@ -1021,6 +1015,48 @@ template <class T>
 bool operator!=(const Matrix<T>& first, const Matrix<T>& second)
 {
     return !(first == second);
+}
+
+/** Element-wise comparison operator
+ *  \param first First matrix of comparison
+ *  \param second Second matrix of comparison
+ *  \return True if both object are the same element-wise, False else
+ */
+template <class T>
+bool Compare(const Matrix<T>& first, const Matrix<T>& second)
+{
+    bool local_result[omp_get_max_threads()];
+    for(size_t i = 0; i < omp_get_max_threads(); ++i)
+    {
+        local_result[i] = true;
+    }
+
+    #pragma omp parallel
+    {
+        size_t my_num = omp_get_thread_num();
+        #pragma omp for
+        for(size_t i = 0; i < first.Length(); ++i)
+        {
+            if( !IsEqual(first[i], second[i]) )
+            {
+                {
+                    local_result[my_num] = false;
+                    #pragma omp cancel for
+                }
+            }
+        }
+    }
+
+    bool are_they_equal = true;
+    for(size_t i = 0; i < omp_get_max_threads(); ++i)
+    {
+        are_they_equal = are_they_equal && local_result[i];
+    }
+    return are_they_equal;
+
+//    TODO std::equal not yet parallelized : change as soon as available
+//    std::equal(data_, data_+(this->length_), other.data_);
+
 }
 
 /** Additive operator, both Matrix are lvalues
@@ -1089,6 +1125,8 @@ template<class T>
 Matrix<T>&& operator-(const Matrix<T>& first, Matrix<T>&& second)
 {
     // Need to implement it fully again since `-` is not commutative
+
+#ifdef DO_ARGCHECKS
     try
     {
         first.ArgTest(second, add);
@@ -1097,6 +1135,7 @@ Matrix<T>&& operator-(const Matrix<T>& first, Matrix<T>&& second)
     {
         throw;
     }
+#endif // DO_ARGCHECKS
 
     #pragma omp parallel for simd
     for(size_t i = 0; i < first.Length(); ++i)
@@ -1240,6 +1279,7 @@ Matrix<T>&& operator/(Matrix<T>&& first, const Matrix<T>& second)
 template <class T>
 std::ostream& operator<<(std::ostream& os, const Matrix<T>& mat)
 {
+#ifdef DO_ARGCHECKS
     try
     {
         mat.IsValid();
@@ -1248,6 +1288,7 @@ std::ostream& operator<<(std::ostream& os, const Matrix<T>& mat)
     {
         throw;
     }
+#endif // DO_ARGCHECKS
 
     for( size_t i = 0; i < mat.Height(); ++i )
     {
@@ -1270,6 +1311,7 @@ std::ostream& operator<<(std::ostream& os, const Matrix<T>& mat)
 template <class T>
 T Inner(const Matrix<T>& first, const Matrix<T>& second)
 {
+#ifdef DO_ARGCHECKS
     try
     {
         first.ArgTest(second, add);
@@ -1278,6 +1320,7 @@ T Inner(const Matrix<T>& first, const Matrix<T>& second)
     {
         throw;
     }
+#endif // DO_ARGCHECKS
 
     T local_result[omp_get_max_threads()]{0};
     #pragma omp parallel
@@ -1303,6 +1346,7 @@ T Inner(const Matrix<T>& first, const Matrix<T>& second)
 template <>
 inline std::complex<double> Inner(const Matrix<std::complex<double>>& first, const Matrix<std::complex<double>>& second)
 {
+#ifdef DO_ARGCHECKS
     try
     {
         first.ArgTest(second, add);
@@ -1311,6 +1355,7 @@ inline std::complex<double> Inner(const Matrix<std::complex<double>>& first, con
     {
         throw;
     }
+#endif // DO_ARGCHECKS
 
     std::complex<double> local_result[omp_get_max_threads()]{0};
     #pragma omp parallel
