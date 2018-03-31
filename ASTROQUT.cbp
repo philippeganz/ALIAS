@@ -12,25 +12,15 @@
 				<Option type="1" />
 				<Option compiler="gcc" />
 				<Compiler>
-					<Add option="-Wnon-virtual-dtor" />
-					<Add option="-Wshadow" />
-					<Add option="-Winit-self" />
-					<Add option="-Wredundant-decls" />
-					<Add option="-Wcast-align" />
-					<Add option="-Wundef" />
-					<Add option="-Wfloat-equal" />
-					<Add option="-Winline" />
-					<Add option="-Wunreachable-code" />
-					<Add option="-Wmissing-declarations" />
-					<Add option="-Wmissing-include-dirs" />
-					<Add option="-Wswitch-enum" />
-					<Add option="-Wswitch-default" />
-					<Add option="-Weffc++" />
-					<Add option="-Wzero-as-null-pointer-constant" />
-					<Add option="-Wmain" />
-					<Add option="-pedantic" />
-					<Add option="-Wextra" />
-					<Add option="-Wall" />
+					<Add option="-g" />
+				</Compiler>
+			</Target>
+			<Target title="DebugOg">
+				<Option output="bin/DebugOg/AstroQUT" prefix_auto="1" extension_auto="1" />
+				<Option object_output="obj/DebugOg/" />
+				<Option type="1" />
+				<Option compiler="gcc" />
+				<Compiler>
 					<Add option="-Og" />
 					<Add option="-g" />
 				</Compiler>
@@ -42,64 +32,6 @@
 				<Option compiler="gcc" />
 				<Compiler>
 					<Add option="-O1" />
-					<Add option="-Wnon-virtual-dtor" />
-					<Add option="-Wshadow" />
-					<Add option="-Winit-self" />
-					<Add option="-Wredundant-decls" />
-					<Add option="-Wcast-align" />
-					<Add option="-Wundef" />
-					<Add option="-Wfloat-equal" />
-					<Add option="-Winline" />
-					<Add option="-Wunreachable-code" />
-					<Add option="-Wmissing-declarations" />
-					<Add option="-Wmissing-include-dirs" />
-					<Add option="-Wswitch-enum" />
-					<Add option="-Wswitch-default" />
-					<Add option="-Weffc++" />
-					<Add option="-Wzero-as-null-pointer-constant" />
-					<Add option="-Wmain" />
-					<Add option="-pedantic" />
-					<Add option="-Wextra" />
-					<Add option="-Wall" />
-					<Add option="-falign-labels" />
-					<Add option="-fcaller-saves" />
-					<Add option="-fcode-hoisting" />
-					<Add option="-fcrossjumping" />
-					<Add option="-fcse-follow-jumps" />
-					<Add option="-fdevirtualize" />
-					<Add option="-fdevirtualize-speculatively" />
-					<Add option="-fgcse" />
-					<Add option="-fhoist-adjacent-loads" />
-					<Add option="-findirect-inlining" />
-					<Add option="-finline-small-functions" />
-					<Add option="-fipa-bit-cp" />
-					<Add option="-fipa-cp" />
-					<Add option="-fipa-icf" />
-					<Add option="-fipa-icf-functions" />
-					<Add option="-fipa-icf-variables" />
-					<Add option="-fipa-ra" />
-					<Add option="-fipa-sra" />
-					<Add option="-fipa-vrp" />
-					<Add option="-fisolate-erroneous-paths-dereference" />
-					<Add option="-flra-remat" />
-					<Add option="-foptimize-sibling-calls" />
-					<Add option="-foptimize-strlen" />
-					<Add option="-fpartial-inlining" />
-					<Add option="-fpeephole2" />
-					<Add option="-freorder-blocks-algorithm=stc" />
-					<Add option="-freorder-blocks-and-partition" />
-					<Add option="-freorder-functions" />
-					<Add option="-frerun-cse-after-loop" />
-					<Add option="-fschedule-insns2" />
-					<Add option="-fstore-merging" />
-					<Add option="-fstrict-aliasing" />
-					<Add option="-fstrict-overflow" />
-					<Add option="-fthread-jumps" />
-					<Add option="-ftree-pre" />
-					<Add option="-ftree-switch-conversion" />
-					<Add option="-ftree-tail-merge" />
-					<Add option="-ftree-vrp" />
-					<Add option="-fvect-cost-model=cheap" />
 				</Compiler>
 			</Target>
 			<Target title="ReleaseO2">
@@ -109,25 +41,6 @@
 				<Option compiler="gcc" />
 				<Compiler>
 					<Add option="-O2" />
-					<Add option="-Wnon-virtual-dtor" />
-					<Add option="-Wshadow" />
-					<Add option="-Winit-self" />
-					<Add option="-Wredundant-decls" />
-					<Add option="-Wcast-align" />
-					<Add option="-Wundef" />
-					<Add option="-Wfloat-equal" />
-					<Add option="-Winline" />
-					<Add option="-Wunreachable-code" />
-					<Add option="-Wmissing-declarations" />
-					<Add option="-Wmissing-include-dirs" />
-					<Add option="-Wswitch-enum" />
-					<Add option="-Wswitch-default" />
-					<Add option="-Weffc++" />
-					<Add option="-Wzero-as-null-pointer-constant" />
-					<Add option="-Wmain" />
-					<Add option="-pedantic" />
-					<Add option="-Wextra" />
-					<Add option="-Wall" />
 				</Compiler>
 			</Target>
 			<Target title="ReleaseO3">
@@ -137,30 +50,31 @@
 				<Option compiler="gcc" />
 				<Compiler>
 					<Add option="-O3" />
-					<Add option="-Wnon-virtual-dtor" />
-					<Add option="-Wshadow" />
-					<Add option="-Wredundant-decls" />
-					<Add option="-Wcast-align" />
-					<Add option="-Wundef" />
-					<Add option="-Wfloat-equal" />
-					<Add option="-Winline" />
-					<Add option="-Wunreachable-code" />
-					<Add option="-Wmissing-declarations" />
-					<Add option="-Wmissing-include-dirs" />
-					<Add option="-Wswitch-enum" />
-					<Add option="-Wswitch-default" />
-					<Add option="-Weffc++" />
-					<Add option="-Wzero-as-null-pointer-constant" />
-					<Add option="-Wmain" />
-					<Add option="-pedantic" />
-					<Add option="-Wextra" />
-					<Add option="-Wall" />
 				</Compiler>
 			</Target>
 		</Build>
 		<Compiler>
+			<Add option="-Wnon-virtual-dtor" />
+			<Add option="-Wshadow" />
+			<Add option="-Winit-self" />
+			<Add option="-Wredundant-decls" />
+			<Add option="-Wcast-align" />
+			<Add option="-Wundef" />
+			<Add option="-Wfloat-equal" />
+			<Add option="-Winline" />
+			<Add option="-Wunreachable-code" />
+			<Add option="-Wmissing-declarations" />
+			<Add option="-Wmissing-include-dirs" />
+			<Add option="-Wswitch-enum" />
+			<Add option="-Wswitch-default" />
+			<Add option="-Weffc++" />
+			<Add option="-Wzero-as-null-pointer-constant" />
+			<Add option="-Wmain" />
+			<Add option="-pedantic" />
+			<Add option="-Wextra" />
+			<Add option="-Wall" />
 			<Add option="-m64" />
-			<Add option="-fopenmp -std=c++17 -march=corei7-avx" />
+			<Add option="-fopenmp -std=c++17 -march=native -mno-sse5" />
 			<Add directory="include" />
 			<Add directory="extern_include/eigen-eigen-5a0156e40feb" />
 		</Compiler>
@@ -184,6 +98,7 @@
 		<Unit filename="include/utils/linearop/operator/convolution.hpp" />
 		<Unit filename="include/utils/linearop/operator/fourier.hpp" />
 		<Unit filename="include/utils/linearop/operator/matmult.hpp" />
+		<Unit filename="include/utils/linearop/operator/wavelet.hpp" />
 		<Unit filename="include/utils/operators.hpp" />
 		<Unit filename="src/WS.cpp" />
 		<Unit filename="src/fista/poisson.cpp" />
@@ -193,6 +108,7 @@
 		<Unit filename="src/test/fista.cpp" />
 		<Unit filename="src/test/matrix.cpp" />
 		<Unit filename="src/test/operator.cpp" />
+		<Unit filename="src/utils/linearop/operator/wavelet/wavelet.cpp" />
 		<Extensions>
 			<code_completion />
 			<envvars />
