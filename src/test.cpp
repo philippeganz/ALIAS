@@ -22,10 +22,11 @@ bool OperatorTest()
 
     bool abel_build = AbelTestBuild();
     bool abel_apply = AbelTestApply();
+    bool abel_apply2 = AbelTestApply2();
 
-    AbelTime(256);
+    AbelTime(512);
 
-    return convolution && abel_build && abel_apply;
+    return convolution && abel_build && abel_apply && abel_apply2;
 }
 
 bool FISTATest()
