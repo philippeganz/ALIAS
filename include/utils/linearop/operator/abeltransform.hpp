@@ -13,6 +13,10 @@
 
 #include "utils/linearop/operator.hpp"
 
+#ifdef DEBUG
+    #include <sstream>
+#endif // DEBUG
+
 namespace astroqut
 {
 
@@ -20,8 +24,8 @@ template <class T>
 class AbelTransform : public Operator<T>
 {
 private:
-    size_t pic_side;
-    size_t wavelet_amount;
+    size_t pic_side_;
+    size_t wavelet_amount_;
 
 public:
 
@@ -46,14 +50,14 @@ public:
      *  \param pixel_amount Total amount of pixels of the target picture
      *  \param radius Amount of pixels from centre to border of galaxy, typically pixel_amount/2
      */
-    AbelTransform(unsigned int wavelets, unsigned int pixel_amount, unsigned int radius)
-        : Operator<T>(Matrix<T>((T) 0, pixel_amount/4, wavelets/2), pixel_amount, wavelets, false)
-        , pic_side(std::sqrt(pixel_amount))
-        , wavelet_amount(wavelets)
+    AbelTransform(unsigned int wavelets_amount, unsigned int pixel_amount, unsigned int radius)
+        : Operator<T>(Matrix<T>((T) 0, pixel_amount/4, wavelets_amount/2), pixel_amount, wavelets_amount, false)
+        , pic_side_(std::sqrt(pixel_amount))
+        , wavelet_amount_(wavelets_amount)
     {
-        size_t pic_side_half = pic_side/2;
+        size_t pic_side_half = pic_side_/2;
         size_t pic_side_extended = std::floor(pic_side_half*std::sqrt(2.0));
-        size_t wavelet_amount_half = wavelet_amount/2;
+        size_t wavelet_amount_half = wavelet_amount_/2;
         double radius_extended = radius * std::sqrt(2.0);
         double radius_extended_to_pic_side_extended_ratio = radius_extended/pic_side_extended;
         double radius_to_pic_side_ratio = radius/pic_side_half;
@@ -91,7 +95,7 @@ public:
                         ri1 = s;
                     }
 
-                    size_t index = (wavelet_amount_half-i-1)*pic_side_half*wavelet_amount_half + (pic_side_half-j-1)*wavelet_amount_half + (wavelet_amount_half-k-1);
+                    size_t index = (wavelet_amount_half-i-1)*pic_side_half*wavelet_amount_half + (pic_side_half-j-1)*wavelet_amount_half + wavelet_amount_half-k-1;
                     this->data_[index] = 2*(std::sqrt(ri1*ri1 - s*s) - std::sqrt(ri0*ri0 - s*s));
                 }
             }
@@ -141,9 +145,15 @@ public:
         }
 #endif // DO_ARGCHECKS
 
-        size_t pic_side_half = pic_side/2;
-        size_t wavelet_amount_half = wavelet_amount/2;
+        size_t pic_side_half = pic_side_/2;
+        size_t wavelet_amount_half = wavelet_amount_/2;
         Matrix<T> result( (T) 0, this->Height(), other.Width() );
+
+#ifdef DEBUG
+        int progress_step = std::max(1, (int)(pic_side_half*pic_side_half)/100);
+        int step = 0;
+        std::cout << std::endl;
+#endif // DEBUG
 
         // iterating over blocks
         #pragma omp parallel for
@@ -152,6 +162,15 @@ public:
             // iterating over rows
             for( size_t i = 0; i < pic_side_half; ++i )
             {
+#ifdef DEBUG
+                if( (block*pic_side_half+i) % progress_step == 0 )
+                {
+                    std::stringstream output;
+                    output << "\r" << step++;
+                    std::cout << output.str();
+                }
+#endif // DEBUG
+
                 // iterating over matrix multiplication vectors
                 for( size_t k = 0; k < wavelet_amount_half; ++k )
                 {
@@ -167,10 +186,10 @@ public:
 
                         T left_temp = this->data_[abel_left_index] * other[target_left_index];
 
-                        size_t result_left_upper_index = (block*pic_side + i)*other.Width() + j;
+                        size_t result_left_upper_index = (block*pic_side_ + i)*other.Width() + j;
                         result[result_left_upper_index] += left_temp;
 
-                        size_t result_left_lower_index = (block*pic_side + pic_side - i - 1)*other.Width() + j;
+                        size_t result_left_lower_index = (block*pic_side_ + pic_side_ - i - 1)*other.Width() + j;
                         result[result_left_lower_index] += left_temp;
 
 
@@ -179,10 +198,10 @@ public:
 
                         T right_temp = this->data_[abel_right_index] * other[target_right_index];
 
-                        size_t result_right_upper_index = ((block + pic_side_half)*pic_side + i)*other.Width() + j;
+                        size_t result_right_upper_index = ((block + pic_side_half)*pic_side_ + i)*other.Width() + j;
                         result[result_right_upper_index] += right_temp;
 
-                        size_t result_right_lower_index = ((block + pic_side_half)*pic_side + pic_side - i - 1)*other.Width() + j;
+                        size_t result_right_lower_index = ((block + pic_side_half)*pic_side_ + pic_side_ - i - 1)*other.Width() + j;
                         result[result_right_lower_index] += right_temp;
                     }
                 }
