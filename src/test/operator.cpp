@@ -217,8 +217,35 @@ void AbelTime(size_t pic_size)
     std::cout << elapsed_time.count() << " seconds" << std::endl;
 }
 
+bool WaveletTest()
+{
+    std::cout << "Wavelet transform test : ";
 
+    double picture_data[16] = {1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16};
+    Matrix<double> picture(picture_data, 16, 16, 1);
+#ifdef VERBOSE
+    std::cout << std::endl << "Picture :" << picture;
+#endif // VERBOSE
 
-} // namespace matrix
+    Wavelet<double> daubechies_6(daubechies, 6);
+
+    double result_data[16] = {33.9999999996562, 1.92870260709001, 11.0375107155067, -8.07873392230074, 8.81797181064152, -2.38323234580054, 2.05073458214855e-12, -2.11018414439074, 7.58753530181676, -1.93068105222996, 1.00010971726405e-12, 6.99973412565669e-12, 1.30005450849069e-11, 1.89994409094396e-11, 2.49996690016019e-11, 3.10010350723644e-11};
+    Matrix<double> result(result_data, 16, 16, 1);
+#ifdef VERBOSE
+    std::cout << std::endl << "Expected result :" << result;
+#endif // VERBOSE
+
+    Matrix<double> computed_result = daubechies_6 * picture;
+#ifdef VERBOSE
+    std::cout << std::endl << "Computed result :" << computed_result;
+#endif // VERBOSE
+
+    bool test_result = Compare(result, computed_result);
+    std::cout << (test_result ? "Success" : "Failure") << std::endl;
+
+    return test_result;
+}
+
+} // namespace oper
 } // namespace test
 } // namespace astroqut

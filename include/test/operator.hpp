@@ -12,6 +12,7 @@
 
 #include "utils/linearop/operator/convolution.hpp"
 #include "utils/linearop/operator/abeltransform.hpp"
+#include "utils/linearop/operator/wavelet.hpp"
 
 #include <chrono>
 #include <iostream>
@@ -28,6 +29,8 @@ bool AbelTestBuild();
 bool AbelTestApply();
 bool AbelTestApply2();
 void AbelTime(size_t pic_size);
+
+bool WaveletTest();
 
 } // namespace oper
 } // namespace test

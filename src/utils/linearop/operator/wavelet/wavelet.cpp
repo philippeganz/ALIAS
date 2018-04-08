@@ -1,10 +1,10 @@
 ///
 /// \file src/utils/linearop/operator/wavelet.cpp
 /// \brief Wavelet transform class implementation
-/// \details Provide the various functions and tools for the Wavelet class
+/// \details Provide various functions and tools for the Wavelet class
 /// \author Philippe Ganz <philippe.ganz@gmail.com> 2017-2018
 /// \version 0.3.0
-/// \date 2018-03-31
+/// \date 2018-04-08
 /// \copyright GPL-3.0
 ///
 
@@ -15,14 +15,15 @@ namespace astroqut
 namespace wavelet
 {
 
-/** Make Orthonormal Filter
- *  \brief Generate Orthonormal QMF Filter for Wavelet Transform
+/** Make orthonormal  QMF filter
+ *  \brief Generate orthonormal QMF filter for Wavelet Transform
  *  \param type Wavelet type, can be one of haar, beylkin, coiflet, daubechies, symmlet, vaidyanathan, battle
  *  \param parameter Integer parameter specific to each wavelet type
- *  \author Jonathan Buckheit and David Donoho MATLAB version 1993-1995
+ *  \param f_type Low or high pass filter
+ *  \author Jonathan Buckheit and David Donoho, MATLAB version in Wavelab 850, 1993-1995
  *  \author Philippe Ganz <philippe.ganz@gmail.com> 2018
  */
-Matrix<double> MakeONFilter(wavelet_type type, int parameter)
+Matrix<double> MakeONFilter(wavelet_type type, int parameter, filter_type f_type)
 {
     size_t data_size = 0;
     double data[59] = {0.0};
@@ -269,9 +270,164 @@ Matrix<double> MakeONFilter(wavelet_type type, int parameter)
         }
     }
 
+    if( f_type == high )
+    {
+        for( size_t i = 1; i < data_size; i += 2 )
+        {
+            data[i] = -data[i];
+        }
+    }
+
     Matrix<double> result(data, data_size, data_size, 1);
     return result/result.Norm(two);
 }
+
+/** Forward Wavelet Transform (periodized, orthogonal)
+ *  \brief Applies a periodized and orthogonal discrete wavelet transform.
+ *  \param signal Signal to transform, must be length a power of 2
+ *  \param wcoef Result array, must be the same size as signal
+ *  \param column Column to transform
+ *  \param coarsest_level Coarsest level of the wavelet transform
+ *  \param low_pass_filter Quadrature mirror filter for low pass filtering
+ *  \param high_pass_filter Mirrored quadrature mirror filter for high pass filtering
+ *  \param intermediate Temporary array of size 1 x Height of signal
+ *  \param intermediate_temp Temporary array of size 1 x Height of signal
+ *  \author David Donoho <donoho@stat.stanford.edu> 1993
+ *  \author Philippe Ganz <philippe.ganz@gmail.com> 2018
+ */
+void FWT_PO(const Matrix<double>& signal,
+            Matrix<double>& wcoef,
+            unsigned int column,
+            unsigned int coarsest_level,
+            const Matrix<double>& low_pass_filter,
+            const Matrix<double>& high_pass_filter,
+            double* intermediate,
+            double* intermediate_temp )
+{
+    size_t level_max = (size_t) std::ceil(std::log2(signal.Height()));
+    size_t level_offset = signal.Height();
+
+#ifdef DO_ARGCHECKS
+    if( (size_t) std::pow(2,level_max) != signal.Length() )
+    {
+        std::cerr << "Signal height must be length a power of two." << std::endl;
+        throw;
+    }
+
+    if( coarsest_level >= level_max )
+    {
+        std::cerr << "The coarsest level must be in the [0, " << level_max << ") range." << std::endl;
+        throw;
+    }
+
+    if( column >= signal.Width() )
+    {
+        std::cerr << "The column must be in the [0, " << signal.Width() << ") range." << std::endl;
+        throw;
+    }
+#endif // DO_ARGCHECKS
+
+    for( size_t i = 0; i < signal.Height(); ++i )
+    {
+        intermediate[i] = signal[i*wcoef.Width() + column];
+    }
+
+    for( size_t level = level_max; level > coarsest_level; --level )
+    {
+        for( size_t pass_index = 0; pass_index < level_offset/2; ++pass_index )
+        {
+            double low_pass_local_coef = 0.0;
+            size_t low_pass_offset = 2*pass_index;
+            double high_pass_local_coef = 0.0;
+            int high_pass_offset = 2*pass_index+1;
+
+            for( size_t filter_index = 0; filter_index < low_pass_filter.Length(); ++filter_index )
+            {
+                low_pass_local_coef += low_pass_filter[filter_index] * intermediate[low_pass_offset];
+
+                ++low_pass_offset;
+                if( low_pass_offset >= level_offset )
+                {
+                    low_pass_offset -= level_offset;
+                }
+
+                high_pass_local_coef += high_pass_filter[filter_index] * intermediate[high_pass_offset];
+
+                --high_pass_offset;
+                if( high_pass_offset < 0 )
+                {
+                    high_pass_offset += level_offset;
+                }
+            }
+
+            intermediate_temp[pass_index] = low_pass_local_coef;
+            intermediate_temp[pass_index + level_offset/2] = high_pass_local_coef;
+        }
+
+        for( size_t i = 0; i < level_offset; ++i )
+        {
+            intermediate[i] = intermediate_temp[i];
+        }
+
+        level_offset /= 2;
+    }
+
+    for( size_t i = 0; i < signal.Height(); ++i )
+    {
+        wcoef[i*wcoef.Width() + column] = intermediate[i];
+    }
+}
+
+/** Inverse Wavelet Transform (periodized, orthogonal)
+ *  \brief Applies a periodized and orthogonal inverse discrete wavelet transform.
+ *  \param wcoef Wavelet coefficients to transform back, must be length a power of 2
+ *  \param signal Result array, must be the same size as wcoef
+ *  \param column Column to transform, -1 to transform all
+ *  \param coarsest_level Coarsest level of the wavelet transform
+ *  \param low_pass_filter Quadrature mirror filter for low pass filtering
+ *  \param high_pass_filter Mirrored quadrature mirror filter for high pass filtering
+ *  \param intermediate Temporary array of size 1 x Height of signal
+ *  \param intermediate_temp Temporary array of size 1 x Height of signal
+ *  \author David Donoho <donoho@stat.stanford.edu> 1993
+ *  \author Philippe Ganz <philippe.ganz@gmail.com> 2018
+ */
+void IWT_PO(const Matrix<double>& wcoef,
+            Matrix<double>& signal,
+            unsigned int column,
+            unsigned int coarsest_level,
+            const Matrix<double>& low_pass_filter,
+            const Matrix<double>& high_pass_filter,
+            double* intermediate,
+            double* intermediate_temp )
+{
+    size_t level_max = (size_t) std::ceil(std::log2(signal.Height()));
+    size_t level_offset = signal.Height();
+
+#ifdef DO_ARGCHECKS
+    if( (size_t) std::pow(2,level_max) != signal.Length() )
+    {
+        std::cerr << "Signal height must be length a power of two." << std::endl;
+        throw;
+    }
+
+    if( coarsest_level >= level_max )
+    {
+        std::cerr << "The coarsest level must be in the [0, " << level_max << ") range." << std::endl;
+        throw;
+    }
+
+    if( column >= signal.Width() )
+    {
+        std::cerr << "The column must be in the [0, " << signal.Width() << ") range." << std::endl;
+        throw;
+    }
+#endif // DO_ARGCHECKS
+
+
+
+}
+
+
 
 } // namespace wavelet
 } // namespace astroqut

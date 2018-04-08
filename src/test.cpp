@@ -24,9 +24,11 @@ bool OperatorTest()
     bool abel_apply = AbelTestApply();
     bool abel_apply2 = AbelTestApply2();
 
-    AbelTime(512);
+//    AbelTime(512);
 
-    return convolution && abel_build && abel_apply && abel_apply2;
+    bool wavelet = WaveletTest();
+
+    return convolution && abel_build && abel_apply && abel_apply2 && wavelet;
 }
 
 bool FISTATest()
