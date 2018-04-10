@@ -401,7 +401,10 @@ void IWT_PO(const Matrix<double>& wcoef,
             double* intermediate_temp )
 {
     size_t level_max = (size_t) std::ceil(std::log2(signal.Height()));
-    size_t level_offset = signal.Height();
+    size_t level_offset = 1;
+    size_t filter_length = low_pass_filter.Length();
+    size_t filter_length_half_even = (filter_length + 1) / 2;
+    size_t filter_length_half_odd = filter_length / 2;
 
 #ifdef DO_ARGCHECKS
     if( (size_t) std::pow(2,level_max) != signal.Length() )
@@ -423,7 +426,76 @@ void IWT_PO(const Matrix<double>& wcoef,
     }
 #endif // DO_ARGCHECKS
 
+    for( size_t i = 0; i < (size_t) std::pow(2, coarsest_level); ++i )
+    {
+        intermediate[i] = wcoef[i*wcoef.Width() + column];
+    }
 
+    for( size_t level = (size_t) std::pow(2, coarsest_level); level <= level_max; ++level )
+    {
+        for( size_t pass_index = 0; pass_index < level_offset; ++pass_index )
+        {
+            double even_local_coef = 0.0;
+            int low_pass_offset = pass_index;
+            double odd_local_coef = 0.0;
+            size_t high_pass_offset = pass_index;
+
+            for( size_t filter_index = 0; filter_index < filter_length_half_even; ++filter_index )
+            {
+                even_local_coef += low_pass_filter[2*filter_index] * intermediate[low_pass_offset];
+
+                --low_pass_offset;
+                if( low_pass_offset < 0 )
+                {
+                    low_pass_offset += level_offset;
+                }
+
+                odd_local_coef += high_pass_filter[2*filter_index] * wcoef[(level_offset + high_pass_offset)*wcoef.Width() + column];
+
+                ++high_pass_offset;
+                if( high_pass_offset >= level_offset )
+                {
+                    high_pass_offset -= level_offset;
+                }
+            }
+
+            low_pass_offset = pass_index;
+            high_pass_offset = pass_index;
+            for( size_t filter_index = 0; filter_index < filter_length_half_odd; ++filter_index )
+            {
+                odd_local_coef += low_pass_filter[2*filter_index+1] * intermediate[low_pass_offset];
+
+                --low_pass_offset;
+                if( low_pass_offset < 0 )
+                {
+                    low_pass_offset += level_offset;
+                }
+
+                even_local_coef += high_pass_filter[2*filter_index+1] * wcoef[(level_offset + high_pass_offset)*wcoef.Width() + column];
+
+                ++high_pass_offset;
+                if( high_pass_offset >= level_offset )
+                {
+                    high_pass_offset -= level_offset;
+                }
+            }
+
+            intermediate_temp[2*pass_index] = even_local_coef;
+            intermediate_temp[2*pass_index + 1] = odd_local_coef;
+        }
+
+        for( size_t i = 0; i < 2*level_offset; ++i )
+        {
+            intermediate[i] = intermediate_temp[i];
+        }
+
+        level_offset *= 2;
+    }
+
+    for( size_t i = 0; i < signal.Height(); ++i )
+    {
+        signal[i*signal.Width() + column] = intermediate[i];
+    }
 
 }
 

@@ -130,6 +130,7 @@ public:
 
         if(this->transposed_)
         {
+            #pragma omp parallel for
             for( size_t i = 0; i < other.Width(); ++i )
             {
                 wavelet::IWT_PO(other, result, i, 0, low_pass_filter_, high_pass_filter_, temp_1, temp_2);
@@ -137,6 +138,7 @@ public:
         }
         else
         {
+            #pragma omp parallel for
             for( size_t i = 0; i < other.Width(); ++i )
             {
                 wavelet::FWT_PO(other, result, i, 0, low_pass_filter_, high_pass_filter_, temp_1, temp_2);
@@ -147,6 +149,16 @@ public:
         delete[] temp_2;
 
         return result;
+    }
+
+    /** Transpose in-place
+     *   \return A reference to this
+     */
+    virtual Wavelet& Transpose() override final
+    {
+        std::swap(this->height_, this->width_);
+        this->transposed_ = !this->transposed_;
+        return *this;
     }
 };
 

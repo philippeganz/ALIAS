@@ -240,10 +240,26 @@ bool WaveletTest()
     std::cout << std::endl << "Computed result :" << computed_result;
 #endif // VERBOSE
 
-    bool test_result = Compare(result, computed_result);
-    std::cout << (test_result ? "Success" : "Failure") << std::endl;
+    bool forward_test_result = Compare(result, computed_result);
 
-    return test_result;
+    Wavelet<double> daubechies_6_t = Wavelet<double>(daubechies, 6).Transpose();
+
+    double result_data_inverse[16] = {0.999999999830280, 1.99999999983316, 2.99999999982896, 3.99999999983609, 4.99999999986459, 5.99999999983541, 6.99999999982718, 7.99999999982039, 8.99999999983825, 9.99999999986950, 10.9999999998462, 11.9999999998085, 12.9999999998490, 13.9999999998423, 14.9999999998291, 15.9999999998298};
+    Matrix<double> result_inverse(result_data_inverse, 16, 16, 1);
+#ifdef VERBOSE
+    std::cout << std::endl << "Expected result :" << result_inverse;
+#endif // VERBOSE
+
+    Matrix<double> computed_result_inverse = daubechies_6_t * computed_result;
+#ifdef VERBOSE
+    std::cout << std::endl << "Computed result inverse :" << computed_result_inverse;
+#endif // VERBOSE
+
+    bool inverse_test_result = Compare(result_inverse, computed_result_inverse);
+
+    std::cout << ( (forward_test_result && inverse_test_result) ? "Success" : "Failure") << std::endl;
+
+    return (forward_test_result && inverse_test_result);
 }
 
 } // namespace oper
