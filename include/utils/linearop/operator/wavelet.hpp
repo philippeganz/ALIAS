@@ -4,7 +4,7 @@
 /// \details Provide the Wavelet transform operator
 /// \author Philippe Ganz <philippe.ganz@gmail.com> 2017-2018
 /// \version 0.3.0
-/// \date 2018-04-08
+/// \date 2018-04-17
 /// \copyright GPL-3.0
 ///
 
@@ -111,19 +111,26 @@ public:
      */
     bool IsValid() const override final
     {
-        if( this->height_ != 0 && this->width_ != 0 &&
-            !this->data_.IsEmpty() )
+        if( !low_pass_filter_.IsEmpty() && !high_pass_filter_.IsEmpty() )
         {
             return true;
         }
         else
         {
-            throw std::invalid_argument("Operator dimensions must be non-zero and function shall not be nullptr!");
+            throw std::invalid_argument("Filters shall not be empty!");
         }
     }
 
     Matrix<T> operator*(const Matrix<T>& other) const override final
     {
+#ifdef DO_ARGCHECKS
+    if( !this->IsValid() || !other.IsValid() )
+    {
+        throw;
+    }
+
+#endif // DO_ARGCHECKS
+
         Matrix<T> result( other.Height(), other.Width() );
         double* temp_1 = new double[other.Height()];
         double* temp_2 = new double[other.Height()];
@@ -161,8 +168,6 @@ public:
         return *this;
     }
 };
-
-
 
 } // namespace astroqut
 
