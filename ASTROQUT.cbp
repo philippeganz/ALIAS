@@ -108,7 +108,10 @@
 		<Unit filename="src/test/fista.cpp" />
 		<Unit filename="src/test/matrix.cpp" />
 		<Unit filename="src/test/operator.cpp" />
-		<Unit filename="src/utils/linearop/operator/wavelet/wavelet.cpp" />
+		<Unit filename="src/utils/linearop/operator/abeltransform/apply.cpp" />
+		<Unit filename="src/utils/linearop/operator/abeltransform/generatebasis.cpp" />
+		<Unit filename="src/utils/linearop/operator/wavelet/dwt.cpp" />
+		<Unit filename="src/utils/linearop/operator/wavelet/makeonfilter.cpp" />
 		<Extensions>
 			<code_completion />
 			<envvars />

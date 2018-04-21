@@ -138,7 +138,7 @@ public:
         }
         else
         {
-            throw std::invalid_argument("Operator dimensions must be non-zero and function shall not be nullptr!");
+            throw std::invalid_argument("Operator dimensions must be non-zero!");
         }
     }
 
