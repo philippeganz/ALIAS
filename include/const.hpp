@@ -11,7 +11,7 @@
 #define ASTROQUT_CONST_HPP
 
 //#define DEBUG
-#define VERBOSE
+//#define VERBOSE
 #define DO_ARGCHECKS
 
 #endif // ASTROQUT_CONST_HPP

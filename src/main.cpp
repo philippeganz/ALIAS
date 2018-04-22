@@ -19,14 +19,12 @@
 
 int main( int argc, char **argv )
 {
-//    astroqut::Blur(1.449, 2.2364, 0.01).Print();
-
     try
     {
 //        astroqut::test::PerfTest<int>(2048);
 //        astroqut::test::PerfTest<long long>(2048);
 //        astroqut::test::PerfTest<float>(2048);
-//        astroqut::test::PerfTest<double>(2048);
+        astroqut::test::PerfTest<double>(2048);
 //        astroqut::test::PerfTest<long double>(2048);
 //        astroqut::test::PerfTest<std::complex<double>>(2048);
     }
@@ -50,7 +48,7 @@ int main( int argc, char **argv )
 
     try
     {
-//        astroqut::test::FISTATest();
+        astroqut::test::FISTATest();
     }
     catch (const std::exception& err)
     {

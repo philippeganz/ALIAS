@@ -100,7 +100,6 @@
 		<Unit filename="include/utils/linearop/operator/fourier.hpp" />
 		<Unit filename="include/utils/linearop/operator/matmult.hpp" />
 		<Unit filename="include/utils/linearop/operator/matmult/spline.hpp" />
-		<Unit filename="include/utils/linearop/operator/spline.hpp" />
 		<Unit filename="include/utils/linearop/operator/wavelet.hpp" />
 		<Unit filename="src/WS.cpp" />
 		<Unit filename="src/fista/poisson.cpp" />
