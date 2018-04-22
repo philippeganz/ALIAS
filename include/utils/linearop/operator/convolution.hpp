@@ -4,7 +4,7 @@
 /// \details Provide a convolution operator
 /// \author Philippe Ganz <philippe.ganz@gmail.com> 2017-2018
 /// \version 0.3.0
-/// \date 2018-03-30
+/// \date 2018-04-22
 /// \copyright GPL-3.0
 ///
 
@@ -29,13 +29,11 @@ public:
 
     /** Full member constructor
      *  \param data Matrix containing the filter's data. Needs to be already inverted if not symmetrical.
-     *  \param height Height of the filter, must be odd
-     *  \param width Width of the filter, must be odd
      */
-    Convolution(Matrix<T>&& data, size_t height, size_t width)
-        : Operator<T>(std::forward<Matrix<T>>(data), height, width, false)
+    Convolution(Matrix<T>&& data)
+        : Operator<T>(std::forward<Matrix<T>>(data), data.Height(), data.Width(), false)
     {
-        if( height % 2 != 1 || width % 2 != 1 )
+        if( this->height_ % 2 != 1 || this->width_ % 2 != 1 )
         {
             throw std::invalid_argument("The filter size for the convolution needs to be odd in both dimensions.");
         }
@@ -67,7 +65,7 @@ public:
         }
         else
         {
-            throw std::invalid_argument("Operator dimensions must be non-zero and function shall not be nullptr!");
+            throw std::invalid_argument("Convolution dimensions must be non-zero and odd, and data shall not be empty!");
         }
     }
 
