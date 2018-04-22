@@ -96,10 +96,12 @@
 		<Unit filename="include/utils/linearop/operator.hpp" />
 		<Unit filename="include/utils/linearop/operator/abeltransform.hpp" />
 		<Unit filename="include/utils/linearop/operator/convolution.hpp" />
+		<Unit filename="include/utils/linearop/operator/convolution/blur.hpp" />
 		<Unit filename="include/utils/linearop/operator/fourier.hpp" />
 		<Unit filename="include/utils/linearop/operator/matmult.hpp" />
+		<Unit filename="include/utils/linearop/operator/matmult/spline.hpp" />
+		<Unit filename="include/utils/linearop/operator/spline.hpp" />
 		<Unit filename="include/utils/linearop/operator/wavelet.hpp" />
-		<Unit filename="include/utils/operators.hpp" />
 		<Unit filename="src/WS.cpp" />
 		<Unit filename="src/fista/poisson.cpp" />
 		<Unit filename="src/main.cpp" />
@@ -109,7 +111,9 @@
 		<Unit filename="src/test/matrix.cpp" />
 		<Unit filename="src/test/operator.cpp" />
 		<Unit filename="src/utils/linearop/operator/abeltransform/apply.cpp" />
-		<Unit filename="src/utils/linearop/operator/abeltransform/generatebasis.cpp" />
+		<Unit filename="src/utils/linearop/operator/abeltransform/generate.cpp" />
+		<Unit filename="src/utils/linearop/operator/convolution/blur.cpp" />
+		<Unit filename="src/utils/linearop/operator/matmult/spline.cpp" />
 		<Unit filename="src/utils/linearop/operator/wavelet/dwt.cpp" />
 		<Unit filename="src/utils/linearop/operator/wavelet/makeonfilter.cpp" />
 		<Extensions>
