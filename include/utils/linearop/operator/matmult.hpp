@@ -1,17 +1,16 @@
 ///
-/// \file include/utils/operator/matmult.hpp
+/// \file include/utils/linearop/operator/matmult.hpp
 /// \brief Matrix Multiplication class header
-/// \details Provide a matrix multiplication operator
 /// \author Philippe Ganz <philippe.ganz@gmail.com> 2017-2018
-/// \version 0.2.0
-/// \date 2018-01-04
+/// \version 0.3.0
+/// \date 2018-04-22
 /// \copyright GPL-3.0
 ///
 
 #ifndef ASTROQUT_UTILS_OPERATOR_MATMULT_HPP
 #define ASTROQUT_UTILS_OPERATOR_MATMULT_HPP
 
-#include "utils/operator.hpp"
+#include "utils/linearop/operator.hpp"
 
 namespace astroqut
 {
@@ -80,6 +79,7 @@ public:
 
     Matrix<T> operator*(const Matrix<T>& other) const override final
     {
+#ifdef DO_ARGCHECKS
         try
         {
             this->ArgTest(other, mult);
@@ -88,6 +88,7 @@ public:
         {
             throw;
         }
+#endif // DO_ARGCHECKS
 
         return std::move(this->data_ * other);
     }

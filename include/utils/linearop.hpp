@@ -3,8 +3,8 @@
 /// \brief LinearOp class header
 /// \details Provide generic linear operator base class.
 /// \author Philippe Ganz <philippe.ganz@gmail.com> 2017-2018
-/// \version 0.2.0
-/// \date 2018-01-04
+/// \version 0.3.0
+/// \date 2018-01-12
 /// \copyright GPL-3.0
 ///
 
@@ -24,11 +24,6 @@ namespace astroqut
  */
 enum ArgTestType {mult, add};
 
-/** Forward declaration of the Matrix class
- */
-template <class T> class Matrix;
-
-template <class T>
 class LinearOp
 {
 protected:

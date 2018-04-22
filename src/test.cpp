@@ -2,8 +2,8 @@
 /// \file src/test.cpp
 /// \brief Implementation of the test suites.
 /// \author Philippe Ganz <philippe.ganz@gmail.com> 2017-2018
-/// \version 0.2.0
-/// \date 2018-01-03
+/// \version 0.3.0
+/// \date 2018-04-22
 /// \copyright GPL-3.0
 ///
 
@@ -12,42 +12,36 @@
 namespace astroqut{
 namespace test{
 
-bool Matrix()
+bool OperatorTest()
 {
-    matrix::Time(2048, matrix::double_floating);
+    using namespace oper;
 
-    matrix::Optimizations(1000000000);
+    bool convolution = ConvolutionTest();
 
-    bool transpose_square = matrix::TransposeSquare();
-    bool transpose_rect = matrix::TransposeRect();
+//    ConvolutionTime(1024, 5);
 
-    bool add = matrix::Add();
-    bool sub = matrix::Sub();
-    bool mult_square = matrix::MultSquare();
-    bool mult_rect = matrix::MultRect();
-    bool vect_mat = matrix::MultVectMat();
-    bool mat_vect = matrix::MultMatVect();
+    bool abel_build = AbelTestBuild();
+    bool abel_apply = AbelTestApply();
+    bool abel_apply2 = AbelTestApply2();
 
-    bool norm_one = matrix::NormOne();
-    bool norm_two = matrix::NormTwo();
-    bool norm_inf = matrix::NormInf();
+//    AbelTime(512);
 
-    bool sum = matrix::Sum();
+    bool wavelet = WaveletTest();
 
-    bool shrink = matrix::Shrink();
+    bool spline = SplineTest();
 
-    return transpose_square && transpose_rect && add && sub && mult_square && mult_rect && vect_mat && mat_vect && norm_one && norm_two && norm_inf && sum && shrink;
+    bool blur = BlurTest();
+
+    return convolution && abel_build && abel_apply && abel_apply2 && wavelet && spline && blur;
 }
 
-bool FISTA()
+bool FISTATest()
 {
-    bool fista_small1 = fista::SmallExample1();
-    bool fista_small2 = fista::SmallExample2();
-    bool fista_small3 = fista::SmallExample3();
+    bool fista_small = fista::SmallExample();
 
     fista::Time(1024);
 
-    return fista_small1 && fista_small2 && fista_small3;
+    return fista_small;
 }
 
 } // namespace test

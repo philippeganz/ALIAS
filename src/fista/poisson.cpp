@@ -1,10 +1,10 @@
 ///
 /// \file src/fista/poisson.cpp
 /// \brief FISTA implementation.
-/// \author Hatef Monajemi <monajemi@stanford.edu> 2012-2014
+/// \author Hatef Monajemi <monajemi@stanford.edu> MATLAB version 2012-2014
 /// \author Philippe Ganz <philippe.ganz@gmail.com> 2017-2018
-/// \version 0.2.0
-/// \date 2018-01-04
+/// \version 0.3.0
+/// \date 2018-01-21
 /// \copyright GPL-3.0
 ///
 
@@ -14,14 +14,14 @@ namespace astroqut{
 namespace fista{
 namespace poisson{
 
-inline double Func( const Matrix<double>& Axu,
+static double Func( const Matrix<double>& Axu,
                     const Matrix<double>& b )
 {
     // sum(A*x+u - b.*log(A*x+u))
     return (Axu - (b & (Axu.Log()))).Sum();
 }
 
-inline Matrix<double> FuncGrad(const Matrix<double>& Axu,
+static Matrix<double> FuncGrad(const Matrix<double>& Axu,
                                const Operator<double>& At,
                                const Matrix<double>& b )
 {
@@ -29,7 +29,7 @@ inline Matrix<double> FuncGrad(const Matrix<double>& Axu,
     return At * ((Axu - b) / Axu);
 }
 
-inline double FLasso( const Matrix<double>& Axu,
+static double FLasso( const Matrix<double>& Axu,
                       const Matrix<double>& x_woi,
                       const Matrix<double>& b,
                       const double lambda )
@@ -38,7 +38,7 @@ inline double FLasso( const Matrix<double>& Axu,
     return Func(Axu, b) + lambda*x_woi.Norm(one);
 }
 
-inline double FLassoApprox( const Matrix<double>& Ayu,
+static double FLassoApprox( const Matrix<double>& Ayu,
                             const Operator<double>& At,
                             const Matrix<double>& x,
                             const Matrix<double>& x_woi,
@@ -48,7 +48,7 @@ inline double FLassoApprox( const Matrix<double>& Ayu,
                             double L )
 {
     // sum(A*x+u - b.*log(A*x+u)) + <(x-y), gradfunc(A,y,u,b,w)> + 0.5*L*||x-y||^2  + lambda * norm(x[-0],1)
-    return Func(Ayu, b) + (x-y).Inner(FuncGrad(Ayu, At, b)) + 0.5*L*(x-y).Norm(two_squared) + lambda*x_woi.Norm(one);
+    return Func(Ayu, b) + Inner( x-y, FuncGrad(Ayu, At, b) ) + 0.5*L*(x-y).Norm(two_squared) + lambda*x_woi.Norm(one);
 }
 
 Matrix<double> Solve(const Operator<double>& A,
@@ -69,12 +69,10 @@ Matrix<double> Solve(const Operator<double>& A,
     std::cout << std::scientific;
 
     // x and y variables
-    Matrix<double> x(options.init_value);
-    if( x.IsEmpty() )
+    Matrix<double> x(0.0, A.Width(), 1);
+    if( !options.init_value.IsEmpty() )
     {
-        x.Height(A.Width());
-        x.Width(1);
-        x.Data(new double[A.Width()]{});
+        x = options.init_value;
     }
     Matrix<double> x_next(x);
     Matrix<double> x_next_woi(x_next.Data()+1, x_next.Height()-1, 1); // points to second element of x_next;

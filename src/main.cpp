@@ -3,25 +3,30 @@
 /// \brief Launcher for the ASTROQUT solver.
 /// \details Handle the user input, calls the preparation tools and the solver.
 /// \author Philippe Ganz <philippe.ganz@gmail.com>
-/// \version 0.2.0
-/// \date 2017-12-28
+/// \version 0.3.0
+/// \date 2018-03-30
 /// \copyright GPL-3.0
 ///
-
-#include <cstdlib>
-#include <iostream>
-#include <string>
 
 #include "const.hpp"
 #include "test.hpp"
 
+#include <complex>
+#include <cstdlib>
+#include <iostream>
+#include <string>
+
+
 int main( int argc, char **argv )
 {
-    std::cout << "Running tests..." << std::endl;
-
     try
     {
-        astroqut::test::Matrix();
+//        astroqut::test::PerfTest<int>(2048);
+//        astroqut::test::PerfTest<long long>(2048);
+//        astroqut::test::PerfTest<float>(2048);
+        astroqut::test::PerfTest<double>(2048);
+//        astroqut::test::PerfTest<long double>(2048);
+//        astroqut::test::PerfTest<std::complex<double>>(2048);
     }
     catch (const std::exception& err)
     {
@@ -32,7 +37,18 @@ int main( int argc, char **argv )
 
     try
     {
-        astroqut::test::FISTA();
+        astroqut::test::OperatorTest();
+    }
+    catch (const std::exception& err)
+    {
+        std::cerr << err.what() << std::endl;
+        std::cerr << "Operator tests failed! Please refer to the individual test results for more details." << std::endl;
+        return EXIT_FAILURE;
+    }
+
+    try
+    {
+        astroqut::test::FISTATest();
     }
     catch (const std::exception& err)
     {

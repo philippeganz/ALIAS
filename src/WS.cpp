@@ -3,7 +3,7 @@
 /// \brief AstroQUT solver implementation.
 /// \author Jairo Diaz <jairo.diaz@unige.ch> 2016-2017
 /// \author Philippe Ganz <philippe.ganz@gmail.com> 2017
-/// \version 0.2.0
+/// \version 0.3.0
 /// \date 2017-12-28
 /// \copyright GPL-3.0
 ///
