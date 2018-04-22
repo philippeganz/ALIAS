@@ -1,9 +1,9 @@
 ///
-/// \file include/utils/linearop/operator/abeltransform/generatebasis.cpp
-/// \brief Create a basis for the Abel transform
+/// \file include/utils/linearop/operator/abeltransform/generate.cpp
+/// \brief Create an Abel transform matrix
 /// \author Philippe Ganz <philippe.ganz@gmail.com> 2017-2018
 /// \version 0.3.0
-/// \date 2018-04-17
+/// \date 2018-04-22
 /// \copyright GPL-3.0
 ///
 
@@ -21,10 +21,10 @@ namespace abeltransform
  *  \param pic_side Width of the square picture
  *  \param radius Amount of pixels from centre to border of galaxy, typically pixel_amount/2
  */
-void GenerateBasis( Matrix<double>& result,
-                    unsigned int wavelets_amount,
-                    unsigned int pic_side,
-                    unsigned int radius)
+void Generate(  Matrix<double>& result,
+                unsigned int wavelets_amount,
+                unsigned int pic_side,
+                unsigned int radius)
 {
     size_t pic_side_half = pic_side/2;
     size_t pic_side_extended = std::floor(pic_side_half*std::sqrt(2.0));

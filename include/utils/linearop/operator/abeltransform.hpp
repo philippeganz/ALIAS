@@ -4,7 +4,7 @@
 /// \details Provide the Abel transform operator
 /// \author Philippe Ganz <philippe.ganz@gmail.com> 2017-2018
 /// \version 0.3.0
-/// \date 2018-03-30
+/// \date 2018-04-22
 /// \copyright GPL-3.0
 ///
 
@@ -23,10 +23,10 @@ namespace astroqut
 namespace abeltransform
 {
 
-void GenerateBasis( Matrix<double>& result,
-                    unsigned int wavelets_amount,
-                    unsigned int pic_side,
-                    unsigned int radius);
+void Generate(  Matrix<double>& result,
+                unsigned int wavelets_amount,
+                unsigned int pic_side,
+                unsigned int radius);
 
 void Apply( const Matrix<double>& signal,
             Matrix<double>& result,
@@ -72,7 +72,7 @@ public:
         , pic_side_(std::sqrt(pixel_amount))
         , wavelet_amount_(wavelets_amount)
     {
-        abeltransform::GenerateBasis(this->data_, wavelets_amount, pic_side_, radius);
+        abeltransform::Generate(this->data_, wavelets_amount, pic_side_, radius);
     }
 
     /** Clone function
