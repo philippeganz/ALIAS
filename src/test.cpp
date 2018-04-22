@@ -3,7 +3,7 @@
 /// \brief Implementation of the test suites.
 /// \author Philippe Ganz <philippe.ganz@gmail.com> 2017-2018
 /// \version 0.3.0
-/// \date 2018-03-30
+/// \date 2018-04-22
 /// \copyright GPL-3.0
 ///
 
@@ -28,7 +28,11 @@ bool OperatorTest()
 
     bool wavelet = WaveletTest();
 
-    return convolution && abel_build && abel_apply && abel_apply2 && wavelet;
+    bool spline = SplineTest();
+
+    bool blur = BlurTest();
+
+    return convolution && abel_build && abel_apply && abel_apply2 && wavelet && spline && blur;
 }
 
 bool FISTATest()
