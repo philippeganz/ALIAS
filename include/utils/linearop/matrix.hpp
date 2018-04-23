@@ -16,6 +16,7 @@
 
 #include <cmath>
 #include <complex>
+#include <fstream>
 #include <iomanip>
 #include <limits>
 #include <string>
@@ -1300,6 +1301,45 @@ std::ostream& operator<<(std::ostream& os, const Matrix<T>& mat)
     }
     os << std::endl;
     return os;
+}
+
+/** Input stream operator
+ *  \param is The input stream to read from
+ *  \param mat Matrix to read from
+ *  \return A reference to is
+ */
+template <class T>
+std::istream& operator>>(std::istream& is, Matrix<T>& mat)
+{
+#ifdef DO_ARGCHECKS
+    try
+    {
+        mat.IsValid();
+    }
+    catch (const std::exception&)
+    {
+        throw;
+    }
+#endif // DO_ARGCHECKS
+
+    size_t file_size = is.tellg();
+    if(file_size == 0)
+    {
+        std::cerr << "Input file is empty";
+        throw;
+    }
+    char* memblock = new char [file_size];
+    is.seekg(0, std::ios::beg);
+    is.read(memblock, file_size);
+
+    T* reinterpret_memblock = (T*) memblock;
+
+    for(size_t i = 0; i < file_size/sizeof(T); ++i)
+    {
+        mat[i] = reinterpret_memblock[i];
+    }
+
+    return is;
 }
 
 /** Inner product

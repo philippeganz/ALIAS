@@ -442,6 +442,8 @@ bool Shrink()
 template <>
 bool Shrink<std::complex<double>>();
 
+bool Input();
+
 } // namespace matrix
 } // namespace test
 } // namespace astroqut

@@ -39,7 +39,7 @@ bool FISTATest()
 {
     bool fista_small = fista::SmallExample();
 
-    fista::Time(1024);
+//    fista::Time(1024);
 
     return fista_small;
 }
