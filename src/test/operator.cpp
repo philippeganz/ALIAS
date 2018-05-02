@@ -96,7 +96,7 @@ bool AbelTestBuild()
     std::cout << std::endl << "Expected result :" << result;
 #endif // VERBOSE
 
-    AbelTransform<double> K(8, 64, 4);
+    AbelTransform K(8, 64, 4);
 #ifdef VERBOSE
     std::cout << "Computed result :" << K.Data();
 #endif // VERBOSE
@@ -117,7 +117,7 @@ bool AbelTestApply()
     std::cout << std::endl << "Target matrix :" << target;
 #endif // VERBOSE
 
-    AbelTransform<double> K(4, 16, 2);
+    AbelTransform K(4, 16, 2);
 #ifdef VERBOSE
     std::cout << std::endl << "Reduced Abel matrix :" << K.Data();
 #endif // VERBOSE
@@ -149,7 +149,7 @@ bool AbelTestApply2()
     std::cout << std::endl << "Target matrix :" << target;
 #endif // VERBOSE
 
-    AbelTransform<double> K(8, 64, 4);
+    AbelTransform K(8, 64, 4);
 #ifdef VERBOSE
     std::cout << std::endl << "Reduced Abel matrix :" << K.Data();
 #endif // VERBOSE
@@ -175,7 +175,7 @@ void AbelTime(size_t pic_size)
 {
     std::cout << "Abel time : ";
 
-    AbelTransform<double> K(pic_size, pic_size*pic_size, pic_size/2);
+    AbelTransform K(pic_size, pic_size*pic_size, pic_size/2);
 
     std::default_random_engine generator;
     generator.seed(123456789);
@@ -227,7 +227,7 @@ bool WaveletTest()
     std::cout << std::endl << "Picture :" << picture;
 #endif // VERBOSE
 
-    Wavelet<double> daubechies_6(daubechies, 6);
+    Wavelet daubechies_6(daubechies, 6);
 
     double result_data[16] = {33.9999999996562, 1.92870260709001, 11.0375107155067, -8.07873392230074, 8.81797181064152, -2.38323234580054, 2.05073458214855e-12, -2.11018414439074, 7.58753530181676, -1.93068105222996, 1.00010971726405e-12, 6.99973412565669e-12, 1.30005450849069e-11, 1.89994409094396e-11, 2.49996690016019e-11, 3.10010350723644e-11};
     Matrix<double> result(result_data, 16, 16, 1);
@@ -242,7 +242,7 @@ bool WaveletTest()
 
     bool forward_test_result = Compare(result, computed_result);
 
-    Wavelet<double> daubechies_6_t = Wavelet<double>(daubechies, 6).Transpose();
+    Wavelet daubechies_6_t = Wavelet(daubechies, 6).Transpose();
 
     double result_data_inverse[16] = {0.999999999830280, 1.99999999983316, 2.99999999982896, 3.99999999983609, 4.99999999986459, 5.99999999983541, 6.99999999982718, 7.99999999982039, 8.99999999983825, 9.99999999986950, 10.9999999998462, 11.9999999998085, 12.9999999998490, 13.9999999998423, 14.9999999998291, 15.9999999998298};
     Matrix<double> result_inverse(result_data_inverse, 16, 16, 1);

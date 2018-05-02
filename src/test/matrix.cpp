@@ -206,6 +206,7 @@ bool Input()
     Matrix<double> input_test(8, 8);
 
     file >> input_test;
+    file.close();
 #ifdef VERBOSE
     std::cout << std::endl << "Read data :" << input_test;
 #endif // VERBOSE

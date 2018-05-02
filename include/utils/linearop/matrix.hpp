@@ -4,7 +4,7 @@
 /// \details Provide matrix container with multiple matrix operations used in the whole project.
 /// \author Philippe Ganz <philippe.ganz@gmail.com> 2017-2018
 /// \version 0.3.0
-/// \date 2018-03-30
+/// \date 2018-05-01
 /// \copyright GPL-3.0
 ///
 
@@ -12,7 +12,7 @@
 #define ASTROQUT_UTILS_MATRIX_HPP
 
 #include "utils/linearop.hpp"
-#include "settings.hpp"
+#include "utils/settings.hpp"
 
 #include <cmath>
 #include <complex>

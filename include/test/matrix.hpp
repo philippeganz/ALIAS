@@ -11,7 +11,7 @@
 #define ASTROQUT_TEST_MATRIX_HPP
 
 #include "utils/linearop/matrix.hpp"
-#include "settings.hpp"
+#include "utils/settings.hpp"
 
 #include <chrono>
 #include <iostream>

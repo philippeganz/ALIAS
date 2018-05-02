@@ -11,7 +11,7 @@
 #define ASTROQUT_TEST_FISTA_HPP
 
 #include "fista/poisson.hpp"
-#include "settings.hpp"
+#include "utils/settings.hpp"
 
 #include <chrono>
 #include <iostream>
