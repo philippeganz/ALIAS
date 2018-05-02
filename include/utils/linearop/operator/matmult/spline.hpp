@@ -3,7 +3,7 @@
 /// \brief Spline operator class header
 /// \author Philippe Ganz <philippe.ganz@gmail.com> 2017-2018
 /// \version 0.3.0
-/// \date 2018-04-22
+/// \date 2018-05-01
 /// \copyright GPL-3.0
 ///
 
@@ -45,8 +45,7 @@ public:
 
     /** Build constructor
      *  \brief Builds the Spline operator with the qmf matrix corresponding to type and parameter
-     *  \param type Spline type, can be one of haar, beylkin, coiflet, daubechies, symmlet, vaidyanathan, battle
-     *  \param parameter Integer parameter specific to each wavelet type
+     *  \param pic_size Side size of the picture in pixel
      */
     Spline(size_t pic_size)
         : MatMult<double>(spline::Generate(pic_size), pic_size, pic_size)
@@ -56,6 +55,17 @@ public:
      */
     virtual ~Spline()
     {}
+
+    /** Transpose in-place
+     *   \return A reference to this
+     */
+    Spline& Transpose() override final
+    {
+        std::swap(this->height_, this->width_);
+        this->transposed_ = !this->transposed_;
+        this->data_ = std::move(this->data_.Transpose());
+        return *this;
+    }
 };
 
 } // namespace astroqut
