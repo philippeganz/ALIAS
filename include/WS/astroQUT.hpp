@@ -1,21 +1,23 @@
 ///
-/// \file include/WS.hpp
+/// \file include/WS/astroQUT.hpp
 /// \brief AstroQUT solver header
 /// \author Jairo Diaz <jairo.diaz@unige.ch> 2016-2017
-/// \author Philippe Ganz <philippe.ganz@gmail.com> 2017
+/// \author Philippe Ganz <philippe.ganz@gmail.com> 2017-2018
 /// \version 0.3.0
-/// \date 2018-02-25
+/// \date 2018-05-02
 /// \copyright GPL-3.0
 ///
 
-#ifndef ASTROQUT_WS_HPP
-#define ASTROQUT_WS_HPP
+#ifndef ASTROQUT_WS_ASTROQUT_HPP
+#define ASTROQUT_WS_ASTROQUT_HPP
 
 #include "utils/linearop/matrix.hpp"
+#include "utils/linearop/operator/wavelet.hpp"
 
-
-namespace astroqut{
-namespace WS{
+namespace astroqut
+{
+namespace WS
+{
 
 enum ForcePosType{none, intercept, kings};
 
@@ -28,7 +30,7 @@ struct Parameters
         : blur_thresh(0.01)
         , blur_alpha(1.449)
         , blur_R0(2.2364)
-        , wavelet{1,8}
+        , wavelet{3,8}
         , nb_iter(100)
         , ps(true)
         , ps_clean(false)
@@ -58,14 +60,13 @@ struct Parameters
 
 };
 
-Matrix<double> Solve(const Matrix<double>& image,
-                            const Matrix<double>& sensitivity,
-                            const Matrix<double>& background,
-                            const Matrix<double>& K,
-                            const Parameters& options );
+Matrix<double> Solve(   const Matrix<double>& image,
+                        const Matrix<double>& sensitivity,
+                        const Matrix<double>& background,
+                        const Parameters& options = WS::Parameters() );
 
 } // namespace WS
 } // namespace astroqut
 
-#endif // ASTROQUT_WS_HPP
+#endif // ASTROQUT_WS_ASTROQUT_HPP
 
