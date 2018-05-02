@@ -83,11 +83,11 @@
 			<Add option="-fopenmp" />
 		</Linker>
 		<Unit filename=".gitignore" />
-		<Unit filename="include/WS.hpp" />
+		<Unit filename="include/WS/astroQUT.hpp" />
 		<Unit filename="include/const.hpp" />
 		<Unit filename="include/fista/poisson.hpp" />
-		<Unit filename="include/settings.hpp" />
 		<Unit filename="include/test.hpp" />
+		<Unit filename="include/test/WS.hpp" />
 		<Unit filename="include/test/fista.hpp" />
 		<Unit filename="include/test/matrix.hpp" />
 		<Unit filename="include/test/operator.hpp" />
@@ -95,26 +95,31 @@
 		<Unit filename="include/utils/linearop/matrix.hpp" />
 		<Unit filename="include/utils/linearop/operator.hpp" />
 		<Unit filename="include/utils/linearop/operator/abeltransform.hpp" />
+		<Unit filename="include/utils/linearop/operator/astrooperator.hpp" />
 		<Unit filename="include/utils/linearop/operator/convolution.hpp" />
 		<Unit filename="include/utils/linearop/operator/convolution/blur.hpp" />
 		<Unit filename="include/utils/linearop/operator/fourier.hpp" />
 		<Unit filename="include/utils/linearop/operator/matmult.hpp" />
 		<Unit filename="include/utils/linearop/operator/matmult/spline.hpp" />
 		<Unit filename="include/utils/linearop/operator/wavelet.hpp" />
-		<Unit filename="src/WS.cpp" />
+		<Unit filename="include/utils/settings.hpp" />
+		<Unit filename="src/WS/astroQUT.cpp" />
 		<Unit filename="src/fista/poisson.cpp" />
 		<Unit filename="src/main.cpp" />
-		<Unit filename="src/settings.cpp" />
 		<Unit filename="src/test.cpp" />
+		<Unit filename="src/test/WS.cpp" />
 		<Unit filename="src/test/fista.cpp" />
 		<Unit filename="src/test/matrix.cpp" />
 		<Unit filename="src/test/operator.cpp" />
 		<Unit filename="src/utils/linearop/operator/abeltransform/apply.cpp" />
 		<Unit filename="src/utils/linearop/operator/abeltransform/generate.cpp" />
+		<Unit filename="src/utils/linearop/operator/astrooperator/BAW.cpp" />
+		<Unit filename="src/utils/linearop/operator/astrooperator/WtAtBt.cpp" />
 		<Unit filename="src/utils/linearop/operator/convolution/blur.cpp" />
 		<Unit filename="src/utils/linearop/operator/matmult/spline.cpp" />
 		<Unit filename="src/utils/linearop/operator/wavelet/dwt.cpp" />
 		<Unit filename="src/utils/linearop/operator/wavelet/makeonfilter.cpp" />
+		<Unit filename="src/utils/settings.cpp" />
 		<Extensions>
 			<code_completion />
 			<envvars />
