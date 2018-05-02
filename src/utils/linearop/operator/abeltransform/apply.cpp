@@ -3,7 +3,7 @@
 /// \brief Apply the Abel transform
 /// \author Philippe Ganz <philippe.ganz@gmail.com> 2017-2018
 /// \version 0.3.0
-/// \date 2018-04-21
+/// \date 2018-05-02
 /// \copyright GPL-3.0
 ///
 
@@ -22,11 +22,11 @@ namespace abeltransform
  *  \param pic_side Width of the square picture
  *  \param compressed_abel Compressed Abel matrix of size pixel_amount/4 * wavelets_amount/2
  */
-void Apply( const Matrix<double>& signal,
-            Matrix<double>& result,
-            size_t wavelet_amount,
-            size_t pic_side,
-            const Matrix<double>& compressed_abel)
+void Forward(   const Matrix<double>& signal,
+                Matrix<double>& result,
+                size_t wavelet_amount,
+                size_t pic_side,
+                const Matrix<double>& compressed_abel)
 {
     size_t pic_side_half = pic_side/2;
     size_t wavelet_amount_half = wavelet_amount/2;
@@ -89,6 +89,33 @@ void Apply( const Matrix<double>& signal,
             }
         }
     }
+}
+
+/** Transposed Abel transform
+ *  \brief Applies a transposed Abel transform from the compressed Abel matrix.
+ *  \param signal Signal to apply the Abel transform to. Currently only accepts double type matrix
+ *  \param result Resulting matrix of size pixel_amount * wavelets_amount. Currently only accepts double type matrix
+ *  \param wavelet_amount Power of 2 amount of wavelets
+ *  \param pic_side Width of the square picture
+ *  \param compressed_abel Compressed Abel matrix of size pixel_amount/4 * wavelets_amount/2
+ */
+void Transposed(const Matrix<double>& signal,
+                Matrix<double>& result,
+                size_t wavelet_amount,
+                size_t pic_side,
+                const Matrix<double>& compressed_abel)
+{
+    size_t pic_side_half = pic_side/2;
+    size_t wavelet_amount_half = wavelet_amount/2;
+
+#ifdef DEBUG
+    int progress_step = std::max(1, (int)(pic_side_half*pic_side_half)/100);
+    int step = 0;
+    std::cout << std::endl;
+#endif // DEBUG
+
+// TODO
+
 }
 
 } // namespace abeltransform

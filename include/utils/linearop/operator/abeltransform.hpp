@@ -28,17 +28,22 @@ void Generate(  Matrix<double>& result,
                 unsigned int pic_side,
                 unsigned int radius);
 
-void Apply( const Matrix<double>& signal,
-            Matrix<double>& result,
-            size_t wavelets_amount,
-            size_t pic_side,
-            const Matrix<double>& compressed_abel);
+void Forward(   const Matrix<double>& signal,
+                Matrix<double>& result,
+                size_t wavelet_amount,
+                size_t pic_side,
+                const Matrix<double>& compressed_abel);
+
+void Transposed(const Matrix<double>& signal,
+                Matrix<double>& result,
+                size_t wavelet_amount,
+                size_t pic_side,
+                const Matrix<double>& compressed_abel);
 
 } // namespace abeltransform
 
 
-template <class T>
-class AbelTransform : public Operator<T>
+class AbelTransform : public Operator<double>
 {
 private:
     size_t pic_side_;
@@ -49,7 +54,9 @@ public:
     /** Default constructor
      */
     AbelTransform()
-        : Operator<T>(0, 0)
+        : Operator<double>(0, 0)
+        , pic_side_(0)
+        , wavelet_amount_(0)
     {}
 
     /** Full member constructor
@@ -57,8 +64,10 @@ public:
      *  \param height Height of the full Abel matrix
      *  \param width Width of the full Abel matrix
      */
-    AbelTransform(Matrix<T>&& data, size_t height, size_t width)
-        : Operator<T>(std::forward<Matrix<T>>(data), height, width, false)
+    AbelTransform(Matrix<double>&& data, size_t height, size_t width)
+        : Operator<double>(std::forward<Matrix<double>>(data), height, width, false)
+        , pic_side_(height)
+        , wavelet_amount_(height)
     {}
 
     /** Build constructor
@@ -68,7 +77,7 @@ public:
      *  \param radius Amount of pixels from centre to border of galaxy, typically pixel_amount/2
      */
     AbelTransform(unsigned int wavelets_amount, unsigned int pixel_amount, unsigned int radius)
-        : Operator<T>(Matrix<T>((T) 0, pixel_amount/4, wavelets_amount/2), pixel_amount, wavelets_amount, false)
+        : Operator<double>(Matrix<double>((double) 0, pixel_amount/4, wavelets_amount/2), pixel_amount, wavelets_amount, false)
         , pic_side_(std::sqrt(pixel_amount))
         , wavelet_amount_(wavelets_amount)
     {
@@ -104,7 +113,7 @@ public:
         }
     }
 
-    Matrix<T> operator*(const Matrix<T>& other) const override final
+    Matrix<double> operator*(const Matrix<double>& other) const override final
     {
 #ifdef DO_ARGCHECKS
         try
@@ -117,16 +126,30 @@ public:
         }
 #endif // DO_ARGCHECKS
 
+        Matrix<double> result( 0.0, this->Height(), other.Width() );
 
-        Matrix<T> result( (T) 0, this->Height(), other.Width() );
-
-        abeltransform::Apply(other, result, wavelet_amount_, pic_side_, this->data_);
+        if(!this->transposed_)
+        {
+            abeltransform::Forward(other, result, wavelet_amount_, pic_side_, this->data_);
+        }
+        else
+        {
+            abeltransform::Transposed(other, result, wavelet_amount_, pic_side_, this->data_);
+        }
 
         return result;
     }
+
+    /** Transpose in-place
+     *   \return A reference to this
+     */
+    virtual AbelTransform& Transpose()
+    {
+        std::swap(this->height_, this->width_);
+        this->transposed_ = !this->transposed_;
+        return *this;
+    }
 };
-
-
 
 } // namespace astroqut
 

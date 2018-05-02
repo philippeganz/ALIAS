@@ -16,18 +16,18 @@ namespace wavelet
 
 /** Make orthonormal  QMF filter
  *  \brief Generate orthonormal QMF filter for Wavelet Transform
- *  \param type Wavelet type, can be one of haar, beylkin, coiflet, daubechies, symmlet, vaidyanathan, battle
+ *  \param wavelet_type Wavelet type, can be one of haar, beylkin, coiflet, daubechies, symmlet, vaidyanathan, battle
  *  \param parameter Integer parameter specific to each wavelet type
- *  \param f_type Low or high pass filter
+ *  \param filter_type Low or high pass filter
  *  \author Jonathan Buckheit and David Donoho, MATLAB version in Wavelab 85, 1993-1995
  *  \author Philippe Ganz <philippe.ganz@gmail.com> 2018
  */
-Matrix<double> MakeONFilter(wavelet_type type, int parameter, filter_type f_type)
+Matrix<double> MakeONFilter(WaveletType wavelet_type, int parameter, FilterType filter_type)
 {
     size_t data_size = 0;
     double data[59] = {0.0};
 
-    switch(type)
+    switch(wavelet_type)
     {
     case haar:
         {
@@ -269,7 +269,7 @@ Matrix<double> MakeONFilter(wavelet_type type, int parameter, filter_type f_type
         }
     }
 
-    if( f_type == high )
+    if( filter_type == high )
     {
         for( size_t i = 1; i < data_size; i += 2 )
         {
