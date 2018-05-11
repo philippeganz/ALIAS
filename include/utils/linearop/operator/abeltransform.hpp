@@ -146,6 +146,7 @@ public:
     virtual AbelTransform& Transpose()
     {
         std::swap(this->height_, this->width_);
+        this->data_ = std::move(this->data_.Transpose());
         this->transposed_ = !this->transposed_;
         return *this;
     }
