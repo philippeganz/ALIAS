@@ -1339,6 +1339,8 @@ std::istream& operator>>(std::istream& is, Matrix<T>& mat)
         mat[i] = reinterpret_memblock[i];
     }
 
+    delete[] memblock;
+
     return is;
 }
 

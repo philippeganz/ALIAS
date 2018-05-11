@@ -3,7 +3,7 @@
 /// \brief Implementation of the test suites.
 /// \author Philippe Ganz <philippe.ganz@gmail.com> 2017-2018
 /// \version 0.3.0
-/// \date 2018-04-22
+/// \date 2018-05-04
 /// \copyright GPL-3.0
 ///
 
@@ -23,6 +23,8 @@ bool OperatorTest()
     bool abel_build = AbelTestBuild();
     bool abel_apply = AbelTestApply();
     bool abel_apply2 = AbelTestApply2();
+    bool abel_transposed = AbelTestTransposed();
+    bool abel_transposed2 = AbelTestTransposed2();
 
 //    AbelTime(512);
 
@@ -32,7 +34,7 @@ bool OperatorTest()
 
     bool blur = BlurTest();
 
-    return convolution && abel_build && abel_apply && abel_apply2 && wavelet && spline && blur;
+    return convolution && abel_build && abel_apply && abel_apply2 && abel_transposed && abel_transposed2 && wavelet && spline && blur;
 }
 
 bool FISTATest()

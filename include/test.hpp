@@ -13,6 +13,7 @@
 #include "test/fista.hpp"
 #include "test/matrix.hpp"
 #include "test/operator.hpp"
+#include "test/WS.hpp"
 
 #include <chrono>
 #include <iostream>
