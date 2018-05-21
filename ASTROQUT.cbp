@@ -74,7 +74,7 @@
 			<Add option="-Wextra" />
 			<Add option="-Wall" />
 			<Add option="-m64" />
-			<Add option="-fopenmp -std=c++17 -march=native -mno-sse5" />
+			<Add option="-fopenmp -std=c++17 -march=native -mno-sse5 --param inline-unit-growth=100" />
 			<Add directory="include" />
 			<Add directory="extern_include/eigen-eigen-5a0156e40feb" />
 		</Compiler>
@@ -84,6 +84,7 @@
 		</Linker>
 		<Unit filename=".gitignore" />
 		<Unit filename="include/WS/astroQUT.hpp" />
+		<Unit filename="include/WS/parameters.hpp" />
 		<Unit filename="include/const.hpp" />
 		<Unit filename="include/fista/poisson.hpp" />
 		<Unit filename="include/test.hpp" />
@@ -117,7 +118,8 @@
 		<Unit filename="src/utils/linearop/operator/astrooperator/WtAtBt.cpp" />
 		<Unit filename="src/utils/linearop/operator/convolution/blur.cpp" />
 		<Unit filename="src/utils/linearop/operator/matmult/spline.cpp" />
-		<Unit filename="src/utils/linearop/operator/wavelet/dwt.cpp" />
+		<Unit filename="src/utils/linearop/operator/wavelet/FWT_PO.cpp" />
+		<Unit filename="src/utils/linearop/operator/wavelet/IWT_PO.cpp" />
 		<Unit filename="src/utils/linearop/operator/wavelet/makeonfilter.cpp" />
 		<Unit filename="src/utils/settings.cpp" />
 		<Extensions>
