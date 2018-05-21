@@ -2,8 +2,8 @@
 /// \file include/utils/linearop/operator/astrooperator.hpp
 /// \brief Combination of all operators to create the main operator
 /// \author Philippe Ganz <philippe.ganz@gmail.com> 2017-2018
-/// \version 0.3.0
-/// \date 2018-05-02
+/// \version 0.3.1
+/// \date 2018-05-21
 /// \copyright GPL-3.0
 ///
 
@@ -37,15 +37,15 @@ public:
     /** Default constructor
      */
     AstroOperator()
-        : abel_(AbelTransform())
-        , abel_transposed_(AbelTransform())
-        , blur_(Blur())
-        , sensitivity_(Matrix<double>())
-        , standardise_(Matrix<double>())
-        , spline_(Spline())
-        , spline_transposed_(Spline())
-        , wavelet_(Wavelet())
-        , wavelet_transposed_(Wavelet())
+        : abel_()
+        , abel_transposed_()
+        , blur_()
+        , sensitivity_()
+        , standardise_()
+        , spline_()
+        , spline_transposed_()
+        , wavelet_()
+        , wavelet_transposed_()
     {}
 
     /** Build constructor
@@ -71,8 +71,8 @@ public:
         , blur_(Blur(params.blur_thresh, params.blur_R0, params.blur_alpha))
         , sensitivity_(sensitivity.Transpose())
         , standardise_(standardise)
-        , spline_(Spline(pic_size))
-        , spline_transposed_(Spline(pic_size).Transpose())
+        , spline_(Spline(pic_size).Transpose())
+        , spline_transposed_(Spline(pic_size))
         , wavelet_(Wavelet((WaveletType) params.wavelet[0], params.wavelet[1]))
         , wavelet_transposed_(Wavelet((WaveletType) params.wavelet[0], params.wavelet[1]).Transpose())
     {}
@@ -96,8 +96,15 @@ public:
         return result;
     }
 
-    Matrix<double> BAW(const Matrix<double> source) const;
-    Matrix<double> WtAtBt(const Matrix<double> source) const;
+    Matrix<double> BAW(const Matrix<double> source,
+                       bool wavelet = true,
+                       bool spline = true,
+                       bool ps = true ) const;
+
+    Matrix<double> WtAtBt(const Matrix<double> source,
+                          bool wavelet = true,
+                          bool spline = true,
+                          bool ps = true ) const;
 };
 
 } // namespace astroqut
