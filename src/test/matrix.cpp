@@ -2,8 +2,8 @@
 /// \file src/test/matrix.cpp
 /// \brief Test suite specializations to validate the Matrix class with particular types
 /// \author Philippe Ganz <philippe.ganz@gmail.com>
-/// \version 0.3.0
-/// \date 2018-03-30
+/// \version 0.3.1
+/// \date 2018-05-1
 /// \copyright GPL-3.0
 ///
 
@@ -204,11 +204,9 @@ bool Input()
     std::cout << std::endl << "Expected result :" << expected_result;
 #endif // VERBOSE
 
-    std::ifstream file("data/test/test.data", std::ios::binary | std::ios::in | std::ios::ate);
     Matrix<double> input_test(8, 8);
+    "data/test/test.data" >> input_test;
 
-    file >> input_test;
-    file.close();
 #ifdef VERBOSE
     std::cout << std::endl << "Read data :" << input_test;
 #endif // VERBOSE
