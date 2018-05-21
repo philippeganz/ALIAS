@@ -2,8 +2,8 @@
 /// \file src/test/operator.cpp
 /// \brief Test suite to validate the operator classes
 /// \author Philippe Ganz <philippe.ganz@gmail.com>
-/// \version 0.3.0
-/// \date 2018-05-04
+/// \version 0.3.1
+/// \date 2018-05-21
 /// \copyright GPL-3.0
 ///
 
@@ -366,6 +366,52 @@ bool BlurTest()
 #endif // VERBOSE
 
     bool test_result = Compare(expected_result, filter.Data());
+
+    std::cout << ( test_result ? "Success" : "Failure") << std::endl;
+
+    return test_result;
+}
+
+bool AstroTest()
+{
+    std::cout << "Astro operator test : ";
+
+    Matrix<double> x("data/test/x.data", 4224, 1);
+
+    Matrix<double> divx("data/test/divx.data", 4224,1);
+
+    Matrix<double> E("data/test/E.data", 4096,1);
+
+    Matrix<double> expected_result("data/test/res.data", 4096,1);
+
+    AstroOperator astro(64, 64, 32, E, divx, false, WS::Parameters());
+
+    Matrix<double> computed_result = astro * x;
+
+    bool test_result = Compare(expected_result, computed_result);
+
+    std::cout << ( test_result ? "Success" : "Failure") << std::endl;
+
+    return test_result;
+}
+
+bool AstroTestTransposed()
+{
+    std::cout << "Astro transposed operator test : ";
+
+    Matrix<double> x("data/test/x.data", 4096, 1);
+
+    Matrix<double> divx("data/test/divx.data", 4096, 1);
+
+    Matrix<double> E("data/test/E.data", 4096,1);
+
+    Matrix<double> expected_result("data/test/res.data", 4096,1);
+
+    AstroOperator astro(64, 64, 32, E, divx, false, WS::Parameters());
+
+    Matrix<double> computed_result = astro * x;
+
+    bool test_result = Compare(expected_result, computed_result);
 
     std::cout << ( test_result ? "Success" : "Failure") << std::endl;
 
