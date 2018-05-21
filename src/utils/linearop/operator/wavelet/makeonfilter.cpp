@@ -2,16 +2,14 @@
 /// \file src/utils/linearop/operator/wavelet/makeonfilter.cpp
 /// \brief Create an orthonormal quadrature mirror filter for the DWT
 /// \author Philippe Ganz <philippe.ganz@gmail.com> 2017-2018
-/// \version 0.3.0
-/// \date 2018-04-21
+/// \version 0.3.1
+/// \date 2018-05-21
 /// \copyright GPL-3.0
 ///
 
 #include "utils/linearop/operator/wavelet.hpp"
 
 namespace astroqut
-{
-namespace wavelet
 {
 
 /** Make orthonormal  QMF filter
@@ -22,7 +20,9 @@ namespace wavelet
  *  \author Jonathan Buckheit and David Donoho, MATLAB version in Wavelab 85, 1993-1995
  *  \author Philippe Ganz <philippe.ganz@gmail.com> 2018
  */
-Matrix<double> MakeONFilter(WaveletType wavelet_type, int parameter, FilterType filter_type)
+Matrix<double> Wavelet::MakeONFilter(WaveletType wavelet_type,
+                                     int parameter,
+                                     FilterType filter_type) const
 {
     size_t data_size = 0;
     double data[59] = {0.0};
@@ -281,5 +281,4 @@ Matrix<double> MakeONFilter(WaveletType wavelet_type, int parameter, FilterType 
     return result/result.Norm(two);
 }
 
-} // namespace wavelet
 } // namespace astroqut
