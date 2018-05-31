@@ -3,7 +3,7 @@
 /// \brief Abel transform class header
 /// \details Provide the Abel transform operator
 /// \author Philippe Ganz <philippe.ganz@gmail.com> 2017-2018
-/// \version 0.3.0
+/// \version 0.4.0
 /// \date 2018-04-22
 /// \copyright GPL-3.0
 ///
@@ -19,29 +19,6 @@
 
 namespace astroqut
 {
-
-namespace abeltransform
-{
-
-void Generate(  Matrix<double>& result,
-                unsigned int wavelets_amount,
-                unsigned int pic_side,
-                unsigned int radius);
-
-void Forward(   const Matrix<double>& signal,
-                Matrix<double>& result,
-                size_t wavelet_amount,
-                size_t pic_side,
-                const Matrix<double>& compressed_abel);
-
-void Transposed(const Matrix<double>& signal,
-                Matrix<double>& result,
-                size_t wavelet_amount,
-                size_t pic_side,
-                const Matrix<double>& compressed_abel);
-
-} // namespace abeltransform
-
 
 class AbelTransform : public Operator<double>
 {
@@ -81,7 +58,7 @@ public:
         , pic_side_(std::sqrt(pixel_amount))
         , wavelet_amount_(wavelets_amount)
     {
-        abeltransform::Generate(this->data_, wavelets_amount, pic_side_, radius);
+        Generate(this->data_, radius);
     }
 
     /** Clone function
@@ -130,11 +107,11 @@ public:
 
         if(!this->transposed_)
         {
-            abeltransform::Forward(other, result, wavelet_amount_, pic_side_, this->data_);
+            Forward(other, result);
         }
         else
         {
-            abeltransform::Transposed(other, result, wavelet_amount_, pic_side_, this->data_);
+            Transposed(other, result);
         }
 
         return result;
@@ -150,6 +127,12 @@ public:
         this->transposed_ = !this->transposed_;
         return *this;
     }
+
+    void Generate(Matrix<double>& result, unsigned int radius) const;
+
+    void Forward(const Matrix<double>& signal, Matrix<double>& result ) const;
+
+    void Transposed(const Matrix<double>& signal, Matrix<double>& result ) const;
 };
 
 } // namespace astroqut
