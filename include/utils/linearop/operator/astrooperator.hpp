@@ -2,7 +2,7 @@
 /// \file include/utils/linearop/operator/astrooperator.hpp
 /// \brief Combination of all operators to create the main operator
 /// \author Philippe Ganz <philippe.ganz@gmail.com> 2017-2018
-/// \version 0.3.1
+/// \version 0.4.0
 /// \date 2018-05-21
 /// \copyright GPL-3.0
 ///
@@ -22,6 +22,7 @@ namespace astroqut
 class AstroOperator : public Operator<double>
 {
 private:
+    size_t pic_size_;
     AbelTransform abel_;
     AbelTransform abel_transposed_;
     Blur blur_;
@@ -37,7 +38,8 @@ public:
     /** Default constructor
      */
     AstroOperator()
-        : abel_()
+        : pic_size_()
+        , abel_()
         , abel_transposed_()
         , blur_()
         , sensitivity_()
@@ -65,7 +67,8 @@ public:
                     const Matrix<double> standardise,
                     bool transposed = false,
                     WS::Parameters params = WS::Parameters() )
-        : Operator<double>(Matrix<double>(), pic_size, pic_size, transposed)
+        : Operator<double>(Matrix<double>(), pic_size*pic_size, (pic_size+2)*pic_size, transposed)
+        , pic_size_(pic_size)
         , abel_(AbelTransform(wavelet_amount, pic_size*pic_size, radius))
         , abel_transposed_(AbelTransform(wavelet_amount, pic_size*pic_size, radius).Transpose())
         , blur_(Blur(params.blur_thresh, params.blur_R0, params.blur_alpha))
@@ -84,6 +87,16 @@ public:
 
     virtual Matrix<double> operator*(const Matrix<double>& other) const override final
     {
+#ifdef DO_ARGCHECKS
+        try
+        {
+            this->ArgTest(other, mult);
+        }
+        catch (const std::exception&)
+        {
+            throw;
+        }
+#endif // DO_ARGCHECKS
         Matrix<double> result;
         if(!this->transposed_)
         {

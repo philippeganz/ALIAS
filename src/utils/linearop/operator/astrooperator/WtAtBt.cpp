@@ -2,7 +2,7 @@
 /// \file src/utils/linearop/operator/astrooperator/WtAtBt.cpp
 /// \brief Transposed astro transform
 /// \author Philippe Ganz <philippe.ganz@gmail.com> 2017-2018
-/// \version 0.3.1
+/// \version 0.4.0
 /// \date 2018-05-21
 /// \copyright GPL-3.0
 ///
@@ -17,19 +17,17 @@ Matrix<double> AstroOperator::WtAtBt(const Matrix<double> source,
                                   bool apply_spline,
                                   bool ps ) const
 {
-    size_t pic_size = this->height_;
-
     // result matrix
-    Matrix<double> result((pic_size+2)*pic_size, 1);
+    Matrix<double> result((pic_size_+2)*pic_size_, 1);
     // result components pointers
-    Matrix<double> result_wavelet(&result[0], pic_size, 1);
-    Matrix<double> result_spline(&result[pic_size], pic_size, 1);
-    Matrix<double> result_ps(&result[2*pic_size], pic_size, pic_size);
+    Matrix<double> result_wavelet(&result[0], pic_size_, 1);
+    Matrix<double> result_spline(&result[pic_size_], pic_size_, 1);
+    Matrix<double> result_ps(&result[2*pic_size_], pic_size_, pic_size_);
 
     // E' .* x
     Matrix<double> BEtx = this->sensitivity_ & source;
-    BEtx.Height(pic_size);
-    BEtx.Width(pic_size);
+    BEtx.Height(pic_size_);
+    BEtx.Width(pic_size_);
 
     // B * Etx
     BEtx = this->blur_ * BEtx;
@@ -53,6 +51,7 @@ Matrix<double> AstroOperator::WtAtBt(const Matrix<double> source,
         Matrix<double> spline = this->spline_transposed_ * AtBEtx;
         result_spline = spline;
     }
+
 
     // release pointers
     result_wavelet.Data(nullptr);

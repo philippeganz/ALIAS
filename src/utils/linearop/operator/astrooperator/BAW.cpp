@@ -2,7 +2,7 @@
 /// \file src/utils/linearop/operator/astrooperator/BAW.cpp
 /// \brief Forward astro transform
 /// \author Philippe Ganz <philippe.ganz@gmail.com> 2017-2018
-/// \version 0.3.1
+/// \version 0.4.0
 /// \date 2018-05-21
 /// \copyright GPL-3.0
 ///
@@ -17,14 +17,12 @@ Matrix<double> AstroOperator::BAW(const Matrix<double> source,
                                   bool apply_spline,
                                   bool ps ) const
 {
-    size_t pic_size = this->height_;
-
     Matrix<double> normalized_source = source / this->standardise_;
 
     // split the normalized source into wavelet, spline and ps components
-    Matrix<double> source_wavelet(&normalized_source[0], pic_size, 1);
-    Matrix<double> source_spline(&normalized_source[pic_size], pic_size, 1);
-    Matrix<double> source_ps(&normalized_source[2*pic_size], pic_size, pic_size);
+    Matrix<double> source_wavelet(&normalized_source[0], pic_size_, 1);
+    Matrix<double> source_spline(&normalized_source[pic_size_], pic_size_, 1);
+    Matrix<double> source_ps(&normalized_source[2*pic_size_], pic_size_, pic_size_);
 
     // W * xw
     Matrix<double> result_wavelet;
@@ -38,8 +36,8 @@ Matrix<double> AstroOperator::BAW(const Matrix<double> source,
 
     // A * (Wxw + Wxs)
     Matrix<double> result = this->abel_ * (result_wavelet + result_spline);
-    result.Height(pic_size);
-    result.Width(pic_size);
+    result.Height(pic_size_);
+    result.Width(pic_size_);
 
     // AWx + ps
     if( ps )
@@ -47,6 +45,8 @@ Matrix<double> AstroOperator::BAW(const Matrix<double> source,
 
     // B(AWx + ps)
     result = this->blur_ * result;
+    result.Height(pic_size_*pic_size_);
+    result.Width(1);
 
     // E' .* B(AWx + ps)
     result = this->sensitivity_ & result;
