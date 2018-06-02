@@ -3,7 +3,7 @@
 /// \brief Combination of all operators to create the main operator
 /// \author Philippe Ganz <philippe.ganz@gmail.com> 2017-2018
 /// \version 0.4.0
-/// \date 2018-05-21
+/// \date 2018-06-02
 /// \copyright GPL-3.0
 ///
 
@@ -24,15 +24,11 @@ class AstroOperator : public Operator<double>
 private:
     size_t pic_size_;
     AbelTransform abel_;
-    AbelTransform abel_transposed_;
     Blur blur_;
     Matrix<double> sensitivity_;
     Matrix<double> standardise_;
     Spline spline_;
-    Spline spline_transposed_;
     Wavelet wavelet_;
-    Wavelet wavelet_transposed_;
-
 
 public:
     /** Default constructor
@@ -40,14 +36,11 @@ public:
     AstroOperator()
         : pic_size_()
         , abel_()
-        , abel_transposed_()
         , blur_()
         , sensitivity_()
         , standardise_()
         , spline_()
-        , spline_transposed_()
         , wavelet_()
-        , wavelet_transposed_()
     {}
 
     /** Build constructor
@@ -60,30 +53,88 @@ public:
      *  \param params
      *  \param transposed
      */
-    AstroOperator(  size_t pic_size,
-                    size_t wavelet_amount,
-                    size_t radius,
-                    const Matrix<double> sensitivity,
-                    const Matrix<double> standardise,
-                    bool transposed = false,
-                    WS::Parameters params = WS::Parameters() )
-        : Operator<double>(Matrix<double>(), pic_size*pic_size, (pic_size+2)*pic_size, transposed)
+    AstroOperator(size_t pic_size,
+                  size_t wavelet_amount,
+                  size_t radius,
+                  const Matrix<double> sensitivity,
+                  const Matrix<double> standardise,
+                  bool transposed = false,
+                  WS::Parameters params = WS::Parameters() )
+        : Operator<double>(Matrix<double>(),
+                           transposed ? (pic_size+2)*pic_size : pic_size*pic_size,
+                           transposed ? pic_size*pic_size : (pic_size+2)*pic_size,
+                           transposed)
         , pic_size_(pic_size)
-        , abel_(AbelTransform(wavelet_amount, pic_size*pic_size, radius))
-        , abel_transposed_(AbelTransform(wavelet_amount, pic_size*pic_size, radius).Transpose())
+        , abel_(transposed ?
+                AbelTransform(wavelet_amount, pic_size*pic_size, radius).Transpose() :
+                AbelTransform(wavelet_amount, pic_size*pic_size, radius))
         , blur_(Blur(params.blur_thresh, params.blur_R0, params.blur_alpha))
         , sensitivity_(sensitivity.Transpose())
         , standardise_(standardise)
-        , spline_(Spline(pic_size).Transpose())
-        , spline_transposed_(Spline(pic_size))
-        , wavelet_(Wavelet((WaveletType) params.wavelet[0], params.wavelet[1]))
-        , wavelet_transposed_(Wavelet((WaveletType) params.wavelet[0], params.wavelet[1]).Transpose())
+        , spline_(transposed ?
+                  Spline(pic_size).Transpose() :
+                  Spline(pic_size))
+        , wavelet_(transposed ?
+                   Wavelet((WaveletType) params.wavelet[0], params.wavelet[1]).Transpose() :
+                   Wavelet((WaveletType) params.wavelet[0], params.wavelet[1]))
+    {}
+
+    /** Full member constructor
+     *  \brief Constructs the AstroOperator with all member attributes given
+     *  \param pic_size Side size of the picture in pixel
+     *  \param wavelet_amount
+     *  \param radius
+     *  \param sensitivity
+     *  \param standardise
+     *  \param params
+     *  \param transposed
+     */
+    AstroOperator(size_t pic_size,
+                  const AbelTransform abel,
+                  const Blur blur,
+                  const Matrix<double> sensitivity,
+                  const Matrix<double> standardise,
+                  const Spline spline,
+                  const Wavelet wavelet,
+                  bool transposed = false )
+        : Operator<double>(Matrix<double>(),
+                           transposed ? (pic_size+2)*pic_size : pic_size*pic_size,
+                           transposed ? pic_size*pic_size : (pic_size+2)*pic_size,
+                           transposed)
+        , pic_size_(pic_size)
+        , abel_( transposed ? abel : abel.Clone()->Transpose() )
+        , blur_(blur)
+        , sensitivity_(sensitivity.Transpose())
+        , standardise_(standardise)
+        , spline_( transposed ? spline : spline.Clone()->Transpose() )
+        , wavelet_( transposed ? wavelet : wavelet.Clone()->Transpose() )
     {}
 
     /** Default destructor
      */
     virtual ~AstroOperator()
     {}
+
+    /** Clone function
+     *  \return A copy of the current instance
+     */
+    AstroOperator* Clone() const override final
+    {
+        return new AstroOperator(*this);
+    }
+
+    /** Transpose in-place
+     *  \return A reference to this
+     */
+    AstroOperator& Transpose() override final
+    {
+        this->transposed_ = !this->transposed_;
+        std::swap(this->height_, this->width_);
+        abel_ = abel_.Transpose();
+        spline_ = spline_.Transpose();
+        wavelet_ = wavelet_.Transpose();
+        return *this;
+    }
 
     virtual Matrix<double> operator*(const Matrix<double>& other) const override final
     {
