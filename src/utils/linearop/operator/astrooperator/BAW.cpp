@@ -3,7 +3,7 @@
 /// \brief Forward astro transform
 /// \author Philippe Ganz <philippe.ganz@gmail.com> 2017-2018
 /// \version 0.4.0
-/// \date 2018-05-21
+/// \date 2018-06-02
 /// \copyright GPL-3.0
 ///
 
@@ -17,7 +17,7 @@ Matrix<double> AstroOperator::BAW(const Matrix<double> source,
                                   bool apply_spline,
                                   bool ps ) const
 {
-    Matrix<double> normalized_source = source / this->standardise_;
+    Matrix<double> normalized_source = source / standardise_;
 
     // split the normalized source into wavelet, spline and ps components
     Matrix<double> source_wavelet(&normalized_source[0], pic_size_, 1);
@@ -27,15 +27,15 @@ Matrix<double> AstroOperator::BAW(const Matrix<double> source,
     // W * xw
     Matrix<double> result_wavelet;
     if( apply_wavelet )
-        result_wavelet = this->wavelet_ * source_wavelet;
+        result_wavelet = wavelet_ * source_wavelet;
 
     // W * xs
     Matrix<double> result_spline;
     if( apply_spline )
-        result_spline = this->spline_ * source_spline;
+        result_spline = spline_ * source_spline;
 
     // A * (Wxw + Wxs)
-    Matrix<double> result = this->abel_ * (result_wavelet + result_spline);
+    Matrix<double> result = abel_ * (result_wavelet + result_spline);
     result.Height(pic_size_);
     result.Width(pic_size_);
 
@@ -44,12 +44,12 @@ Matrix<double> AstroOperator::BAW(const Matrix<double> source,
         result += source_ps;
 
     // B(AWx + ps)
-    result = this->blur_ * result;
+    result = blur_ * result;
     result.Height(pic_size_*pic_size_);
     result.Width(1);
 
     // E' .* B(AWx + ps)
-    result = this->sensitivity_ & result;
+    result = result & sensitivity_;
 
     // release pointers
     source_wavelet.Data(nullptr);

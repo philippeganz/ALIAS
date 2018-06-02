@@ -3,7 +3,7 @@
 /// \brief Transposed astro transform
 /// \author Philippe Ganz <philippe.ganz@gmail.com> 2017-2018
 /// \version 0.4.0
-/// \date 2018-05-21
+/// \date 2018-06-02
 /// \copyright GPL-3.0
 ///
 
@@ -25,30 +25,32 @@ Matrix<double> AstroOperator::WtAtBt(const Matrix<double> source,
     Matrix<double> result_ps(&result[2*pic_size_], pic_size_, pic_size_);
 
     // E' .* x
-    Matrix<double> BEtx = this->sensitivity_ & source;
+    Matrix<double> BEtx = source & sensitivity_;
     BEtx.Height(pic_size_);
     BEtx.Width(pic_size_);
 
     // B * Etx
-    BEtx = this->blur_ * BEtx;
+    BEtx = blur_ * BEtx;
+    BEtx.Height(pic_size_*pic_size_);
+    BEtx.Width(1);
 
     if( ps )
         result_ps = BEtx;
 
     // A' * BEtx
-    Matrix<double> AtBEtx = this->abel_transposed_ * BEtx;
+    Matrix<double> AtBEtx = abel_ * BEtx;
 
     // W' * AtBEtx
     if( apply_wavelet )
     {
-        Matrix<double> wavelet = this->wavelet_transposed_ * AtBEtx;
+        Matrix<double> wavelet = wavelet_ * AtBEtx;
         result_wavelet = wavelet;
     }
 
     // S' * AtBEtx
     if( apply_spline )
     {
-        Matrix<double> spline = this->spline_transposed_ * AtBEtx;
+        Matrix<double> spline = spline_ * AtBEtx;
         result_spline = spline;
     }
 
@@ -59,7 +61,7 @@ Matrix<double> AstroOperator::WtAtBt(const Matrix<double> source,
     result_ps.Data(nullptr);
 
     // standardize
-    result /= this->standardise_;
+    result /= standardise_;
 
     return result;
 }
