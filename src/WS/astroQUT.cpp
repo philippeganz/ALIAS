@@ -3,8 +3,8 @@
 /// \brief AstroQUT solver implementation.
 /// \author Jairo Diaz <jairo.diaz@unige.ch> 2016-2017
 /// \author Philippe Ganz <philippe.ganz@gmail.com> 2017-2018
-/// \version 0.3.1
-/// \date 2018-05-21
+/// \version 0.4.0
+/// \date 2018-06-02
 /// \copyright GPL-3.0
 ///
 
@@ -28,7 +28,10 @@ Matrix<double> Solve( const Matrix<double>& image,
 
     AstroOperator astro(512, 512, 256, sensitivity, divX, false, options);
 
-    Matrix<double> solution = fista::poisson::Solve(astro, background, image, lambda, fista::poisson::Parameters());
+    fista::poisson::Parameters params;
+    params.log_period = 1;
+
+    Matrix<double> solution = fista::poisson::Solve(astro, background, image, lambda, params);
 
     return solution;
 }
