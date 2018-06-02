@@ -3,8 +3,8 @@
 /// \brief Matrix class header
 /// \details Provide matrix container with multiple matrix operations used in the whole project.
 /// \author Philippe Ganz <philippe.ganz@gmail.com> 2017-2018
-/// \version 0.3.1
-/// \date 2018-05-21
+/// \version 0.4.0
+/// \date 2018-06-02
 /// \copyright GPL-3.0
 ///
 
@@ -53,7 +53,7 @@ inline bool IsAligned(const void* ptr, size_t align_byte_size)
 template <class T>
 bool IsEqual(T first, T second)
 {
-    bool normal_test = std::abs(first-second) < std::abs(first+second)*std::numeric_limits<T>::epsilon()*10;
+    bool normal_test = std::abs(first-second) < std::abs(first+second)*std::numeric_limits<T>::epsilon()*100;
     bool subnormal_test = std::abs(first-second) < std::numeric_limits<T>::min();
 
 #ifdef DEBUG
@@ -1073,47 +1073,27 @@ bool operator!=(const Matrix<T>& first, const Matrix<T>& second)
 template <class T>
 bool Compare(const Matrix<T>& first, const Matrix<T>& second)
 {
-    bool local_result[omp_get_max_threads()];
-    size_t local_amount_wrong[omp_get_max_threads()];
-    for(size_t i = 0; i < omp_get_max_threads(); ++i)
-    {
-        local_result[i] = true;
-        local_amount_wrong[i] = 0;
-    }
+    bool result = true;
+    size_t amount_wrong = 0;
 
-    #pragma omp parallel
+    for(size_t i = 0; i < first.Length(); ++i)
     {
-        size_t my_num = omp_get_thread_num();
-        #pragma omp for
-        for(size_t i = 0; i < first.Length(); ++i)
+        if( !IsEqual(first[i], second[i]) )
         {
-            if( !IsEqual(first[i], second[i]) )
             {
-                {
-                    local_result[my_num] = false;
-                    ++local_amount_wrong[my_num];
-                }
+                result = false;
+                ++amount_wrong;
+#ifdef VERBOSE
+                std::cout << std::setprecision(16) << i << " : " << first[i] << " != " << second[i] << std::endl;
+#endif // VERBOSE
             }
         }
     }
 
-    bool are_they_equal = true;
-    size_t amount_wrong = 0;
-    for(size_t i = 0; i < omp_get_max_threads(); ++i)
-    {
-        are_they_equal = are_they_equal && local_result[i];
-        amount_wrong += local_amount_wrong[i];
-    }
-#ifdef VERBOSE
     std::cout << "Amount wrong : " << amount_wrong << " / " << first.Length();
-    std::cout << " ~= " << (double)amount_wrong/(double)first.Length() << "%" << std::endl;
-#endif // VERBOSE
+    std::cout << std::defaultfloat << " ~= " << 100.0 * (double)amount_wrong/(double)first.Length() << "%" << std::endl;
 
-    return are_they_equal;
-
-//    TODO std::equal not yet parallelized : change as soon as available
-//    std::equal(data_, data_+(this->length_), other.data_);
-
+    return result;
 }
 
 /** Additive operator, both Matrix are lvalues
@@ -1357,6 +1337,42 @@ std::ostream& operator<<(std::ostream& os, const Matrix<T>& mat)
     }
     os << std::endl;
     return os;
+}
+
+/** Output file operator
+ *  \param filename The name of the file to write to
+ *  \param mat Matrix to read from
+ */
+template <class T>
+void operator<<(std::string filename, Matrix<T>& mat)
+{
+#ifdef DO_ARGCHECKS
+    try
+    {
+        mat.IsValid();
+    }
+    catch (const std::exception&)
+    {
+        throw;
+    }
+#endif // DO_ARGCHECKS
+
+    std::ofstream file(filename, std::ios::binary | std::ios::out);
+
+    T* memblock = new T[mat.Length()];
+
+    for(size_t i = 0; i < mat.Length(); ++i)
+    {
+        memblock[i] = mat[i];
+    }
+
+    char* reinterpret_memblock = (char*) memblock;
+
+    file.write(reinterpret_memblock, mat.Length()*sizeof(T));
+
+    file.close();
+
+    delete[] memblock;
 }
 
 /** Input stream operator
