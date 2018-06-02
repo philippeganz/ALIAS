@@ -2,7 +2,7 @@
 /// \file include/test/matrix.hpp
 /// \brief Test suite to validate the Matrix class.
 /// \author Philippe Ganz <philippe.ganz@gmail.com>
-/// \version 0.3.0
+/// \version 0.4.0
 /// \date 2018-03-30
 /// \copyright GPL-3.0
 ///
@@ -11,7 +11,7 @@
 #define ASTROQUT_TEST_MATRIX_HPP
 
 #include "utils/linearop/matrix.hpp"
-#include "settings.hpp"
+#include "utils/settings.hpp"
 
 #include <chrono>
 #include <iostream>
@@ -441,6 +441,8 @@ bool Shrink()
 }
 template <>
 bool Shrink<std::complex<double>>();
+
+bool Input();
 
 } // namespace matrix
 } // namespace test

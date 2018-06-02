@@ -1,8 +1,8 @@
 ///
-/// \file include/settings.hpp
+/// \file include/utils/settings.hpp
 /// \brief Constant optimization values used throughout the whole project
 /// \author Philippe Ganz <philippe.ganz@gmail.com>
-/// \version 0.3.0
+/// \version 0.4.0
 /// \date 2018-01-07
 /// \copyright GPL-3.0
 ///

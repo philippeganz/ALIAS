@@ -2,8 +2,8 @@
 /// \file include/utils/linearop/operator/matmult.hpp
 /// \brief Matrix Multiplication class header
 /// \author Philippe Ganz <philippe.ganz@gmail.com> 2017-2018
-/// \version 0.3.0
-/// \date 2018-04-22
+/// \version 0.4.0
+/// \date 2018-06-02
 /// \copyright GPL-3.0
 ///
 
@@ -46,7 +46,7 @@ public:
     /** Clone function
      *  \return A copy of the current instance
      */
-    MatMult* Clone() const override final
+    virtual MatMult* Clone() const override
     {
         return new MatMult(*this);
     }
@@ -96,13 +96,14 @@ public:
     /** Transpose in-place
      *   \return A reference to this
      */
-    MatMult& Transpose() override final
+    virtual MatMult& Transpose() override
     {
         std::swap(this->height_, this->width_);
         this->transposed_ = !this->transposed_;
         this->data_ = std::move(this->data_.Transpose());
         return *this;
     }
+
 };
 
 } // namespace astroqut

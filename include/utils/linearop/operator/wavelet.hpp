@@ -3,8 +3,8 @@
 /// \brief Wavelet transform class header
 /// \details Provide the Wavelet transform operator
 /// \author Philippe Ganz <philippe.ganz@gmail.com> 2017-2018
-/// \version 0.3.0
-/// \date 2018-04-21
+/// \version 0.4.0
+/// \date 2018-06-02
 /// \copyright GPL-3.0
 ///
 
@@ -16,39 +16,13 @@
 namespace astroqut
 {
 
-enum wavelet_type{haar, beylkin, coiflet, daubechies, symmlet, vaidyanathan, battle};
-enum filter_type{low, high};
+enum WaveletType{haar, beylkin, coiflet, daubechies, symmlet, vaidyanathan, battle};
+enum FilterType{low, high};
 
-namespace wavelet
-{
-
-Matrix<double> MakeONFilter(wavelet_type type, int parameter, filter_type f_type);
-
-void FWT_PO(const Matrix<double>& signal,
-            Matrix<double>& wcoef,
-            unsigned int column,
-            unsigned int coarsest_level,
-            const Matrix<double>& low_pass_filter,
-            const Matrix<double>& high_pass_filter,
-            double* intermediate,
-            double* intermediate_temp );
-
-void IWT_PO(const Matrix<double>& wcoef,
-            Matrix<double>& signal,
-            unsigned int column,
-            unsigned int coarsest_level,
-            const Matrix<double>& low_pass_filter,
-            const Matrix<double>& high_pass_filter,
-            double* intermediate,
-            double* intermediate_temp );
-
-} // namespace wavelet
-
-template <class T>
-class Wavelet : public Operator<T>
+class Wavelet : public Operator<double>
 {
 private:
-    wavelet_type type_;
+    WaveletType wavelet_type_;
     int parameter_;
     Matrix<double> low_pass_filter_;
     Matrix<double> high_pass_filter_;
@@ -58,18 +32,23 @@ public:
     /** Default constructor
      */
     Wavelet()
-        : Operator<T>(0, 0)
+        : Operator<double>(0, 0)
+        , wavelet_type_((WaveletType) 0)
+        , parameter_(0)
+        , low_pass_filter_(Matrix<double>())
+        , high_pass_filter_(Matrix<double>())
     {}
 
     /** Full member constructor
      *  \param low_pass_filter QMF matrix for low pass filtering
      *  \param low_pass_filter Mirrored QMF matrix for high pass filtering
-     *  \param height Height of the full Abel matrix
-     *  \param width Width of the full Abel matrix
+     *  \param wavelet_type Wavelet type, can be one of haar, beylkin, coiflet, daubechies, symmlet, vaidyanathan, battle
+     *  \param parameter Integer parameter specific to each wavelet type
+     *  \param transposed Transposition state of the operator
      */
-    Wavelet(Matrix<double>&& low_pass_filter, Matrix<double>&& high_pass_filter, wavelet_type type, int parameter)
-        : Operator<T>(1, 1)
-        , type_(type)
+    Wavelet(Matrix<double>&& low_pass_filter, Matrix<double>&& high_pass_filter, WaveletType wavelet_type, int parameter, bool transposed = false)
+        : Operator<double>(Matrix<double>(), 1, 1, transposed)
+        , wavelet_type_(wavelet_type)
         , parameter_(parameter)
         , low_pass_filter_(low_pass_filter)
         , high_pass_filter_(high_pass_filter)
@@ -77,20 +56,21 @@ public:
 
     /** Build constructor
      *  \brief Builds the Wavelet operator with the qmf matrix corresponding to type and parameter
-     *  \param type Wavelet type, can be one of haar, beylkin, coiflet, daubechies, symmlet, vaidyanathan, battle
+     *  \param wavelet_type Wavelet type, can be one of haar, beylkin, coiflet, daubechies, symmlet, vaidyanathan, battle
      *  \param parameter Integer parameter specific to each wavelet type
+     *  \param transposed Transposition state of the operator
      */
-    Wavelet(wavelet_type type, int parameter)
-        : Operator<T>(1, 1)
-        , type_(type)
+    Wavelet(WaveletType wavelet_type, int parameter, bool transposed = false)
+        : Operator<double>(Matrix<double>(), 1, 1, transposed)
+        , wavelet_type_(wavelet_type)
         , parameter_(parameter)
-        , low_pass_filter_(wavelet::MakeONFilter(type, parameter, low))
-        , high_pass_filter_(wavelet::MakeONFilter(type, parameter, high))
+        , low_pass_filter_(MakeONFilter(wavelet_type, parameter, low))
+        , high_pass_filter_(MakeONFilter(wavelet_type, parameter, high))
     {
-#ifdef VERBOSE
+#ifdef DEBUG
     std::cout << std::endl << "Low pass filter :" << low_pass_filter_;
     std::cout << std::endl << "High pass filter :" << high_pass_filter_;
-#endif // VERBOSE
+#endif // DEBUG
     }
 
     /** Clone function
@@ -121,7 +101,7 @@ public:
         }
     }
 
-    Matrix<T> operator*(const Matrix<T>& other) const override final
+    Matrix<double> operator*(const Matrix<double>& other) const override final
     {
 #ifdef DO_ARGCHECKS
     if( !this->IsValid() || !other.IsValid() )
@@ -131,16 +111,16 @@ public:
 
 #endif // DO_ARGCHECKS
 
-        Matrix<T> result( other.Height(), other.Width() );
+        Matrix<double> result( other.Height(), other.Width() );
         double* temp_1 = new double[other.Height()];
         double* temp_2 = new double[other.Height()];
 
-        if(this->transposed_)
+        if(!this->transposed_)
         {
             #pragma omp parallel for
             for( size_t i = 0; i < other.Width(); ++i )
             {
-                wavelet::IWT_PO(other, result, i, 0, low_pass_filter_, high_pass_filter_, temp_1, temp_2);
+                IWT_PO(other, result, i, 0, temp_1, temp_2);
             }
         }
         else
@@ -148,7 +128,7 @@ public:
             #pragma omp parallel for
             for( size_t i = 0; i < other.Width(); ++i )
             {
-                wavelet::FWT_PO(other, result, i, 0, low_pass_filter_, high_pass_filter_, temp_1, temp_2);
+                FWT_PO(other, result, i, 0, temp_1, temp_2);
             }
         }
 
@@ -167,6 +147,25 @@ public:
         this->transposed_ = !this->transposed_;
         return *this;
     }
+
+    Matrix<double> MakeONFilter(WaveletType wavelet_type,
+                                int parameter,
+                                FilterType filter_type) const;
+
+    void FWT_PO(const Matrix<double>& signal,
+                Matrix<double>& wcoef,
+                unsigned int column,
+                unsigned int coarsest_level,
+                double* intermediate,
+                double* intermediate_temp ) const;
+
+    void IWT_PO(const Matrix<double>& wcoef,
+                Matrix<double>& signal,
+                unsigned int column,
+                unsigned int coarsest_level,
+                double* intermediate,
+                double* intermediate_temp ) const;
+
 };
 
 } // namespace astroqut

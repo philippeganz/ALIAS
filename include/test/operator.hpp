@@ -2,8 +2,8 @@
 /// \file include/test/operator.hpp
 /// \brief Test suite to validate the Operator class.
 /// \author Philippe Ganz <philippe.ganz@gmail.com>
-/// \version 0.3.0
-/// \date 2018-04-22
+/// \version 0.4.0
+/// \date 2018-06-02
 /// \copyright GPL-3.0
 ///
 
@@ -11,6 +11,7 @@
 #define ASTROQUT_TEST_OPERATOR_HPP
 
 #include "utils/linearop/operator/abeltransform.hpp"
+#include "utils/linearop/operator/astrooperator.hpp"
 #include "utils/linearop/operator/convolution.hpp"
 #include "utils/linearop/operator/convolution/blur.hpp"
 #include "utils/linearop/operator/matmult/spline.hpp"
@@ -30,6 +31,8 @@ void ConvolutionTime(size_t data_length, size_t filter_length);
 bool AbelTestBuild();
 bool AbelTestApply();
 bool AbelTestApply2();
+bool AbelTestTransposed();
+bool AbelTestTransposed2();
 void AbelTime(size_t pic_size);
 
 bool WaveletTest();
@@ -37,6 +40,9 @@ bool WaveletTest();
 bool SplineTest();
 
 bool BlurTest();
+
+bool AstroTest();
+bool AstroTestTransposed();
 
 } // namespace oper
 } // namespace test

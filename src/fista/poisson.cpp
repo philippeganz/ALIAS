@@ -3,8 +3,8 @@
 /// \brief FISTA implementation.
 /// \author Hatef Monajemi <monajemi@stanford.edu> MATLAB version 2012-2014
 /// \author Philippe Ganz <philippe.ganz@gmail.com> 2017-2018
-/// \version 0.3.0
-/// \date 2018-01-21
+/// \version 0.4.0
+/// \date 2018-06-02
 /// \copyright GPL-3.0
 ///
 
@@ -149,6 +149,9 @@ Matrix<double> Solve(const Operator<double>& A,
     }
 
     std::cout << std::setw(5) << k << " | " << std::setprecision(4) << std::abs(tol) << " | " << std::setw(12) << f_lasso_next << " | " << Lf << " | " << lambda << std::endl << std::endl;
+
+    std::cout << "FISTA: converged in " << k << " iterations" << std::endl;
+    std::cout << "FISTA: Relative error: " << std::abs(tol) << std::endl;
 
     x_next_woi.Data(nullptr); // release pointer
 

@@ -2,8 +2,8 @@
 /// \file include/utils/linearop/operator/abeltransform/generate.cpp
 /// \brief Create an Abel transform matrix
 /// \author Philippe Ganz <philippe.ganz@gmail.com> 2017-2018
-/// \version 0.3.0
-/// \date 2018-04-22
+/// \version 0.4.0
+/// \date 2018-05-26
 /// \copyright GPL-3.0
 ///
 
@@ -11,24 +11,18 @@
 
 namespace astroqut
 {
-namespace abeltransform
-{
 
 /** Generate a compressed Abel matrix
  *  \brief Builds an Abel transform matrix with diagonal radius, without duplicating data or inserting zeros
  *  \param result Resulting matrix of size pixel_amount/4 * wavelets_amount/2. Currently only accepts double type matrix
- *  \param wavelet_amount Power of 2 amount of wavelets, typically (pixel_amount/2)^2
- *  \param pic_side Width of the square picture
  *  \param radius Amount of pixels from centre to border of galaxy, typically pixel_amount/2
  */
-void Generate(  Matrix<double>& result,
-                unsigned int wavelets_amount,
-                unsigned int pic_side,
-                unsigned int radius)
+void AbelTransform::Generate(Matrix<double>& result,
+                             unsigned int radius ) const
 {
-    size_t pic_side_half = pic_side/2;
+    size_t pic_side_half = pic_side_/2;
     size_t pic_side_extended = std::floor(pic_side_half*std::sqrt(2.0));
-    size_t wavelet_amount_half = wavelets_amount/2;
+    size_t wavelet_amount_half = wavelet_amount_/2;
     double radius_extended = radius * std::sqrt(2.0);
     double radius_extended_to_pic_side_extended_ratio = radius_extended/pic_side_extended;
     double radius_to_pic_side_ratio = radius/pic_side_half;
@@ -74,5 +68,4 @@ void Generate(  Matrix<double>& result,
     delete[] x_axis;
 }
 
-} // namespace abeltransform
 } // namespace astroqut

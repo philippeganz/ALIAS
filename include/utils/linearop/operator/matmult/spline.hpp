@@ -2,8 +2,8 @@
 /// \file include/utils/linearop/operator/matmult/spline.hpp
 /// \brief Spline operator class header
 /// \author Philippe Ganz <philippe.ganz@gmail.com> 2017-2018
-/// \version 0.3.0
-/// \date 2018-04-22
+/// \version 0.4.0
+/// \date 2018-05-01
 /// \copyright GPL-3.0
 ///
 
@@ -14,13 +14,6 @@
 
 namespace astroqut
 {
-
-namespace spline
-{
-
-Matrix<double> Generate(size_t pic_side);
-
-} // namespace spline
 
 class Spline : public MatMult<double>
 {
@@ -45,17 +38,37 @@ public:
 
     /** Build constructor
      *  \brief Builds the Spline operator with the qmf matrix corresponding to type and parameter
-     *  \param type Spline type, can be one of haar, beylkin, coiflet, daubechies, symmlet, vaidyanathan, battle
-     *  \param parameter Integer parameter specific to each wavelet type
+     *  \param pic_size Side size of the picture in pixel
      */
     Spline(size_t pic_size)
-        : MatMult<double>(spline::Generate(pic_size), pic_size, pic_size)
+        : MatMult<double>(Generate(pic_size), pic_size, pic_size)
     {}
+
+    /** Clone function
+     *  \return A copy of the current instance
+     */
+    virtual Spline* Clone() const override
+    {
+        return new Spline(*this);
+    }
 
     /** Default destructor
      */
     virtual ~Spline()
     {}
+
+    /** Transpose in-place
+     *   \return A reference to this
+     */
+    Spline& Transpose() override final
+    {
+        std::swap(this->height_, this->width_);
+        this->transposed_ = !this->transposed_;
+        this->data_ = std::move(this->data_.Transpose());
+        return *this;
+    }
+
+    Matrix<double> Generate(size_t pic_side);
 };
 
 } // namespace astroqut

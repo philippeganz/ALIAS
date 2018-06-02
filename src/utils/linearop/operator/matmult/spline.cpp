@@ -2,8 +2,8 @@
 /// \file include/utils/linearop/operator/spline/generatebasis.cpp
 /// \brief Create a basis for the King's spline function
 /// \author Philippe Ganz <philippe.ganz@gmail.com> 2017-2018
-/// \version 0.3.0
-/// \date 2018-04-22
+/// \version 0.4.0
+/// \date 2018-06-02
 /// \copyright GPL-3.0
 ///
 
@@ -11,29 +11,20 @@
 
 namespace astroqut
 {
-namespace spline
-{
 
 /** Generate a full King spline matrix
  *  \brief Builds an Abel transform matrix with diagonal radius, without duplicating data or inserting zeros
  *  \param pic_side Width of the square picture
  */
-Matrix<double> Generate( size_t pic_side )
+Matrix<double> Spline::Generate( size_t pic_side )
 {
     size_t height = 2*pic_side;
     size_t height_sqrt = (size_t) std::sqrt(height);
 
-#ifndef DEBUG
     Matrix<double> temp(0.0, height, pic_side);
     Matrix<double> result(pic_side, pic_side);
     double* bi = new double[height_sqrt];
     double* ri = new double[height_sqrt];
-#else
-    double temp[128]{};
-    double result[64]{};
-    double bi[4]{};
-    double ri[4]{};
-#endif // DEBUG
 
     for( size_t i = 0; i < height_sqrt; ++i )
     {
@@ -93,12 +84,9 @@ Matrix<double> Generate( size_t pic_side )
         std::copy( &temp[index*pic_side], &temp[(index+1)*pic_side], &result[i*pic_side]);
     }
 
-#ifndef DEBUG
     delete[] bi;
     delete[] ri;
-    return result;
-#endif // DEBUG
+    return result.Transpose();
 }
 
-} // namespace spline
 } // namespace astroqut

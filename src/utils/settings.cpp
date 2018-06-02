@@ -1,13 +1,13 @@
 ///
-/// \file include/settings.cpp
+/// \file include/utils/settings.cpp
 /// \brief Constant optimization values used throughout the whole project
 /// \author Philippe Ganz <philippe.ganz@gmail.com>
-/// \version 0.3.0
+/// \version 0.4.0
 /// \date 2018-01-07
 /// \copyright GPL-3.0
 ///
 
-#include "settings.hpp"
+#include "utils/settings.hpp"
 
 namespace astroqut
 {

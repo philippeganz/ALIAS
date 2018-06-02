@@ -2,8 +2,8 @@
 /// \file src/test.cpp
 /// \brief Implementation of the test suites.
 /// \author Philippe Ganz <philippe.ganz@gmail.com> 2017-2018
-/// \version 0.3.0
-/// \date 2018-04-22
+/// \version 0.4.0
+/// \date 2018-06-02
 /// \copyright GPL-3.0
 ///
 
@@ -23,6 +23,8 @@ bool OperatorTest()
     bool abel_build = AbelTestBuild();
     bool abel_apply = AbelTestApply();
     bool abel_apply2 = AbelTestApply2();
+    bool abel_transposed = AbelTestTransposed();
+    bool abel_transposed2 = AbelTestTransposed2();
 
 //    AbelTime(512);
 
@@ -32,14 +34,17 @@ bool OperatorTest()
 
     bool blur = BlurTest();
 
-    return convolution && abel_build && abel_apply && abel_apply2 && wavelet && spline && blur;
+    bool astro = AstroTest();
+    bool astro_transposed = AstroTestTransposed();
+
+    return convolution && abel_build && abel_apply && abel_apply2 && abel_transposed && abel_transposed2 && wavelet && spline && blur && astro && astro_transposed;
 }
 
 bool FISTATest()
 {
     bool fista_small = fista::SmallExample();
 
-    fista::Time(1024);
+//    fista::Time(1024);
 
     return fista_small;
 }

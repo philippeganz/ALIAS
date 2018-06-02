@@ -1,21 +1,22 @@
 ///
-/// \file include/WS.hpp
-/// \brief AstroQUT solver header
+/// \file include/WS/parameters.hpp
+/// \brief AstroQUT parameters
 /// \author Jairo Diaz <jairo.diaz@unige.ch> 2016-2017
-/// \author Philippe Ganz <philippe.ganz@gmail.com> 2017
-/// \version 0.3.0
-/// \date 2018-02-25
+/// \author Philippe Ganz <philippe.ganz@gmail.com> 2017-2018
+/// \version 0.4.0
+/// \date 2018-06-02
 /// \copyright GPL-3.0
 ///
 
-#ifndef ASTROQUT_WS_HPP
-#define ASTROQUT_WS_HPP
+#ifndef ASTROQUT_WS_PARAMETERS_HPP
+#define ASTROQUT_WS_PARAMETERS_HPP
 
 #include "utils/linearop/matrix.hpp"
 
-
-namespace astroqut{
-namespace WS{
+namespace astroqut
+{
+namespace WS
+{
 
 enum ForcePosType{none, intercept, kings};
 
@@ -28,7 +29,7 @@ struct Parameters
         : blur_thresh(0.01)
         , blur_alpha(1.449)
         , blur_R0(2.2364)
-        , wavelet{1,8}
+        , wavelet{3,8}
         , nb_iter(100)
         , ps(true)
         , ps_clean(false)
@@ -39,7 +40,20 @@ struct Parameters
         , beta0(std::numeric_limits<double>::infinity())
         , iter_sol(false)
         , force_pos(kings)
-    {}
+    {
+#ifdef DEBUG
+        std::cerr << "WS::Parameters Default constructor called." << std::endl;
+#endif // DEBUG
+    }
+
+    /** Default destructor
+     */
+    ~Parameters()
+    {
+#ifdef DEBUG
+        std::cerr << "WS::Parameters Default destructor called." << std::endl;
+#endif // DEBUG
+    }
 
     double blur_thresh; //!< Member variable "blur_thresh" threshold for bluring mask size
     double blur_alpha; //!< Member variable "blur_alpha" alpha in psf
@@ -58,14 +72,8 @@ struct Parameters
 
 };
 
-Matrix<double> Solve(const Matrix<double>& image,
-                            const Matrix<double>& sensitivity,
-                            const Matrix<double>& background,
-                            const Matrix<double>& K,
-                            const Parameters& options );
-
 } // namespace WS
 } // namespace astroqut
 
-#endif // ASTROQUT_WS_HPP
+#endif // ASTROQUT_WS_PARAMETERS_HPP
 

@@ -3,8 +3,8 @@
 /// \brief Matrix class header
 /// \details Provide matrix container with multiple matrix operations used in the whole project.
 /// \author Philippe Ganz <philippe.ganz@gmail.com> 2017-2018
-/// \version 0.3.0
-/// \date 2018-03-30
+/// \version 0.4.0
+/// \date 2018-06-02
 /// \copyright GPL-3.0
 ///
 
@@ -12,10 +12,11 @@
 #define ASTROQUT_UTILS_MATRIX_HPP
 
 #include "utils/linearop.hpp"
-#include "settings.hpp"
+#include "utils/settings.hpp"
 
 #include <cmath>
 #include <complex>
+#include <fstream>
 #include <iomanip>
 #include <limits>
 #include <string>
@@ -52,8 +53,17 @@ inline bool IsAligned(const void* ptr, size_t align_byte_size)
 template <class T>
 bool IsEqual(T first, T second)
 {
-    return std::abs(first-second) < std::abs(first+second)*std::numeric_limits<T>::epsilon()*10 ||
-        std::abs(first-second) < std::numeric_limits<T>::min();
+    bool normal_test = std::abs(first-second) < std::abs(first+second)*std::numeric_limits<T>::epsilon()*100;
+    bool subnormal_test = std::abs(first-second) < std::numeric_limits<T>::min();
+
+#ifdef DEBUG
+    std::stringstream buffer;
+    buffer << std::endl << first << " ?= " << second << " ? ";
+    buffer << (normal_test || subnormal_test);
+    std::cerr << buffer.str();
+#endif // DEBUG
+
+    return normal_test || subnormal_test;
 }
 template <>
 inline bool IsEqual(int first, int second)
@@ -151,6 +161,20 @@ public:
         }
 #ifdef DEBUG
         std::cout << "Matrix : Full member constructor called" << std::endl;
+#endif // DEBUG
+    }
+
+    /** File constructor
+     *  \param filename Path of the binary file to read the matrix data from
+     *  \param height Height of the data
+     *  \param width Width of the data
+     */
+    Matrix( const std::string filename, size_t height, size_t width)
+        : Matrix(height, width)
+    {
+        filename >> *this;
+#ifdef DEBUG
+        std::cout << "Matrix : File constructor called" << std::endl;
 #endif // DEBUG
     }
 
@@ -401,6 +425,11 @@ public:
      */
     Matrix& operator+=(const Matrix& other)
     {
+        if( IsEmpty() )
+            return *this = other;
+        if( other.IsEmpty() )
+            return *this;
+
 #ifdef DO_ARGCHECKS
         try
         {
@@ -427,6 +456,11 @@ public:
      */
     Matrix& operator-=(const Matrix& other)
     {
+        if( IsEmpty() )
+            return *this = other;
+        if( other.IsEmpty() )
+            return *this;
+
 #ifdef DO_ARGCHECKS
         try
         {
@@ -463,6 +497,11 @@ public:
      */
     Matrix operator*(const Matrix& other) const
     {
+        if( IsEmpty() )
+            return Matrix(other);
+        if( other.IsEmpty() )
+            return *this;
+
 #ifdef DO_ARGCHECKS
         try
         {
@@ -541,10 +580,15 @@ public:
      */
     Matrix& operator&=(const Matrix& other)
     {
+        if( IsEmpty() )
+            return *this = other;
+        if( other.IsEmpty() )
+            return *this;
+
 #ifdef DO_ARGCHECKS
         try
         {
-            this->ArgTest(other, add);
+            this->ArgTest(other, element_wise);
         }
         catch (const std::exception&)
         {
@@ -593,10 +637,14 @@ public:
      */
     Matrix& operator/=(const Matrix& other)
     {
+        if( IsEmpty() )
+            return *this = other;
+        if( other.IsEmpty() )
+            return *this;
 #ifdef DO_ARGCHECKS
         try
         {
-            this->ArgTest(other, add);
+            this->ArgTest(other, element_wise);
         }
         catch (const std::exception&)
         {
@@ -1025,38 +1073,27 @@ bool operator!=(const Matrix<T>& first, const Matrix<T>& second)
 template <class T>
 bool Compare(const Matrix<T>& first, const Matrix<T>& second)
 {
-    bool local_result[omp_get_max_threads()];
-    for(size_t i = 0; i < omp_get_max_threads(); ++i)
-    {
-        local_result[i] = true;
-    }
+    bool result = true;
+    size_t amount_wrong = 0;
 
-    #pragma omp parallel
+    for(size_t i = 0; i < first.Length(); ++i)
     {
-        size_t my_num = omp_get_thread_num();
-        #pragma omp for
-        for(size_t i = 0; i < first.Length(); ++i)
+        if( !IsEqual(first[i], second[i]) )
         {
-            if( !IsEqual(first[i], second[i]) )
             {
-                {
-                    local_result[my_num] = false;
-                    #pragma omp cancel for
-                }
+                result = false;
+                ++amount_wrong;
+#ifdef VERBOSE
+                std::cout << std::setprecision(16) << i << " : " << first[i] << " != " << second[i] << std::endl;
+#endif // VERBOSE
             }
         }
     }
 
-    bool are_they_equal = true;
-    for(size_t i = 0; i < omp_get_max_threads(); ++i)
-    {
-        are_they_equal = are_they_equal && local_result[i];
-    }
-    return are_they_equal;
+    std::cout << "Amount wrong : " << amount_wrong << " / " << first.Length();
+    std::cout << std::defaultfloat << " ~= " << 100.0 * (double)amount_wrong/(double)first.Length() << "%" << std::endl;
 
-//    TODO std::equal not yet parallelized : change as soon as available
-//    std::equal(data_, data_+(this->length_), other.data_);
-
+    return result;
 }
 
 /** Additive operator, both Matrix are lvalues
@@ -1300,6 +1337,109 @@ std::ostream& operator<<(std::ostream& os, const Matrix<T>& mat)
     }
     os << std::endl;
     return os;
+}
+
+/** Output file operator
+ *  \param filename The name of the file to write to
+ *  \param mat Matrix to read from
+ */
+template <class T>
+void operator<<(std::string filename, Matrix<T>& mat)
+{
+#ifdef DO_ARGCHECKS
+    try
+    {
+        mat.IsValid();
+    }
+    catch (const std::exception&)
+    {
+        throw;
+    }
+#endif // DO_ARGCHECKS
+
+    std::ofstream file(filename, std::ios::binary | std::ios::out);
+
+    T* memblock = new T[mat.Length()];
+
+    for(size_t i = 0; i < mat.Length(); ++i)
+    {
+        memblock[i] = mat[i];
+    }
+
+    char* reinterpret_memblock = (char*) memblock;
+
+    file.write(reinterpret_memblock, mat.Length()*sizeof(T));
+
+    file.close();
+
+    delete[] memblock;
+}
+
+/** Input stream operator
+ *  \param is The input stream to read from, currently only supports istream opened with `std::ios::binary | std::ios::in | std::ios::ate` flags
+ *  \param mat Matrix to write to
+ *  \return A reference to is
+ */
+template <class T>
+std::istream& operator>>(std::istream& is, Matrix<T>& mat)
+{
+#ifdef DO_ARGCHECKS
+    try
+    {
+        mat.IsValid();
+    }
+    catch (const std::exception&)
+    {
+        throw;
+    }
+#endif // DO_ARGCHECKS
+
+    size_t file_size = is.tellg();
+    if(file_size == 0)
+    {
+        std::cerr << "Input file is empty";
+        throw;
+    }
+    char* memblock = new char [file_size];
+    is.seekg(0, std::ios::beg);
+    is.read(memblock, file_size);
+
+    T* reinterpret_memblock = (T*) memblock;
+
+    for(size_t i = 0; i < mat.Length(); ++i)
+    {
+        mat[i] = reinterpret_memblock[i];
+    }
+
+    delete[] memblock;
+
+    return is;
+}
+
+/** Input file operator
+ *  \param filename The name of the file to read from
+ *  \param mat Matrix to write to
+ *  \return A reference to mat
+ */
+template <class T>
+Matrix<T>& operator>>(std::string filename, Matrix<T>& mat)
+{
+#ifdef DO_ARGCHECKS
+    try
+    {
+        mat.IsValid();
+    }
+    catch (const std::exception&)
+    {
+        throw;
+    }
+#endif // DO_ARGCHECKS
+
+    std::ifstream file(filename, std::ios::binary | std::ios::in | std::ios::ate);
+    file >> mat;
+    file.close();
+
+    return mat;
 }
 
 /** Inner product

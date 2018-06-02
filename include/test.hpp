@@ -2,7 +2,7 @@
 /// \file include/test.hpp
 /// \brief Test suites to validate the project code
 /// \author Philippe Ganz <philippe.ganz@gmail.com>
-/// \version 0.3.0
+/// \version 0.4.0
 /// \date 2018-03-30
 /// \copyright GPL-3.0
 ///
@@ -13,6 +13,7 @@
 #include "test/fista.hpp"
 #include "test/matrix.hpp"
 #include "test/operator.hpp"
+#include "test/WS.hpp"
 
 #include <chrono>
 #include <iostream>
@@ -22,11 +23,15 @@ namespace astroqut{
 namespace test{
 
 template <class T>
-bool PerfTest(size_t length)
+void PerfTest(size_t length)
+{
+    matrix::Time<T>(length);
+}
+
+template <class T>
+bool MatrixTest()
 {
     using namespace matrix;
-
-    Time<T>(length);
 
     bool transpose_square = TransposeSquare<T>();
     bool transpose_rect = TransposeRect<T>();
@@ -46,15 +51,15 @@ bool PerfTest(size_t length)
 
     bool shrink = Shrink<T>();
 
-    return transpose_square && transpose_rect && add && sub && mult_square && mult_rect && vect_mat && mat_vect && norm_one && norm_two && norm_inf && sum && shrink;
+    bool input = Input();
+
+    return transpose_square && transpose_rect && add && sub && mult_square && mult_rect && vect_mat && mat_vect && norm_one && norm_two && norm_inf && sum && shrink && input;
 }
 
 template <class T>
 void PerfTestOptional(size_t length)
 {
-    using namespace matrix;
-
-    Optimizations<T>(length);
+    matrix::Optimizations<T>(length);
 }
 
 bool OperatorTest();

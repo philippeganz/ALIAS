@@ -2,8 +2,8 @@
 /// \file include/const.hpp
 /// \brief Constant values used throughout the whole project
 /// \author Philippe Ganz <philippe.ganz@gmail.com>
-/// \version 0.3.0
-/// \date 2018-03-30
+/// \version 0.4.0
+/// \date 2018-06-02
 /// \copyright GPL-3.0
 ///
 
@@ -12,6 +12,6 @@
 
 //#define DEBUG
 //#define VERBOSE
-#define DO_ARGCHECKS
+//#define DO_ARGCHECKS
 
 #endif // ASTROQUT_CONST_HPP

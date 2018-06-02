@@ -3,8 +3,8 @@
 /// \brief LinearOp class header
 /// \details Provide generic linear operator base class.
 /// \author Philippe Ganz <philippe.ganz@gmail.com> 2017-2018
-/// \version 0.3.0
-/// \date 2018-01-12
+/// \version 0.3.1
+/// \date 2018-06-02
 /// \copyright GPL-3.0
 ///
 
@@ -22,7 +22,7 @@ namespace astroqut
 
 /** Types of argument tests
  */
-enum ArgTestType {mult, add};
+enum ArgTestType {mult, add, element_wise};
 
 class LinearOp
 {
@@ -137,6 +137,15 @@ public:
                 if( IsValid() && other.IsValid() &&
                     this->height_ == other.height_ &&
                     this->width_ == other.width_ )
+                {
+                    test_result = true;
+                }
+                break;
+            }
+        case element_wise:
+            {
+                if( IsValid() && other.IsValid() &&
+                    this->length_ == other.length_ )
                 {
                     test_result = true;
                 }
