@@ -3,8 +3,8 @@
 /// \brief Launcher for the ASTROQUT solver.
 /// \details Handle the user input, calls the preparation tools and the solver.
 /// \author Philippe Ganz <philippe.ganz@gmail.com>
-/// \version 0.3.1
-/// \date 2018-05-21
+/// \version 0.4.0
+/// \date 2018-06-02
 /// \copyright GPL-3.0
 ///
 
@@ -64,7 +64,7 @@ int main( int argc, char **argv )
         return EXIT_FAILURE;
     }
 
-//    astroqut::test::astro::Chandra();
+    astroqut::test::astro::Chandra();
 
 
 //    if( argc != 6 )

@@ -3,7 +3,7 @@
 /// \brief Discrete wavelet transform functions
 /// \details Provides forward and inverse DWT
 /// \author Philippe Ganz <philippe.ganz@gmail.com> 2017-2018
-/// \version 0.3.0
+/// \version 0.4.0
 /// \date 2018-04-21
 /// \copyright GPL-3.0
 ///
