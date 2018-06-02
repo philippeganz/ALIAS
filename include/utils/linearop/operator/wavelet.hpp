@@ -3,8 +3,8 @@
 /// \brief Wavelet transform class header
 /// \details Provide the Wavelet transform operator
 /// \author Philippe Ganz <philippe.ganz@gmail.com> 2017-2018
-/// \version 0.3.1
-/// \date 2018-05-21
+/// \version 0.4.0
+/// \date 2018-06-02
 /// \copyright GPL-3.0
 ///
 
@@ -42,11 +42,12 @@ public:
     /** Full member constructor
      *  \param low_pass_filter QMF matrix for low pass filtering
      *  \param low_pass_filter Mirrored QMF matrix for high pass filtering
-     *  \param height Height of the full Abel matrix
-     *  \param width Width of the full Abel matrix
+     *  \param wavelet_type Wavelet type, can be one of haar, beylkin, coiflet, daubechies, symmlet, vaidyanathan, battle
+     *  \param parameter Integer parameter specific to each wavelet type
+     *  \param transposed Transposition state of the operator
      */
-    Wavelet(Matrix<double>&& low_pass_filter, Matrix<double>&& high_pass_filter, WaveletType wavelet_type, int parameter)
-        : Operator<double>(1, 1)
+    Wavelet(Matrix<double>&& low_pass_filter, Matrix<double>&& high_pass_filter, WaveletType wavelet_type, int parameter, bool transposed = false)
+        : Operator<double>(Matrix<double>(), 1, 1, transposed)
         , wavelet_type_(wavelet_type)
         , parameter_(parameter)
         , low_pass_filter_(low_pass_filter)
@@ -57,9 +58,10 @@ public:
      *  \brief Builds the Wavelet operator with the qmf matrix corresponding to type and parameter
      *  \param wavelet_type Wavelet type, can be one of haar, beylkin, coiflet, daubechies, symmlet, vaidyanathan, battle
      *  \param parameter Integer parameter specific to each wavelet type
+     *  \param transposed Transposition state of the operator
      */
-    Wavelet(WaveletType wavelet_type, int parameter)
-        : Operator<double>(1, 1)
+    Wavelet(WaveletType wavelet_type, int parameter, bool transposed = false)
+        : Operator<double>(Matrix<double>(), 1, 1, transposed)
         , wavelet_type_(wavelet_type)
         , parameter_(parameter)
         , low_pass_filter_(MakeONFilter(wavelet_type, parameter, low))
