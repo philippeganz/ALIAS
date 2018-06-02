@@ -4,7 +4,7 @@
 /// \details Provide operator container with operator-vector operations
 /// \author Philippe Ganz <philippe.ganz@gmail.com> 2017-2018
 /// \version 0.3.0
-/// \date 2018-02-25
+/// \date 2018-06-02
 /// \copyright GPL-3.0
 ///
 
@@ -97,10 +97,7 @@ public:
     /** Clone function
      *  \return A copy of the current instance
      */
-    virtual Operator* Clone() const
-    {
-        return new Operator(*this);
-    }
+    virtual Operator* Clone() const = 0;
 
     /** Default destructor
      */
@@ -140,6 +137,17 @@ public:
         {
             throw std::invalid_argument("Operator dimensions must be non-zero!");
         }
+    }
+
+
+    /** Transpose in-place
+     *   \return A reference to this
+     */
+    virtual Operator& Transpose()
+    {
+        std::swap(this->height_, this->width_);
+        transposed_ = !transposed_;
+        return *this;
     }
 
     /** Access transposed_
@@ -211,22 +219,7 @@ public:
         return *this;
     }
 
-    virtual Matrix<T> operator*(const Matrix<T>& other) const
-    {
-        std::cerr << "Do not use the Operator class directly, please use one of its derived classes." << std::endl;
-
-        return std::move(Matrix(other));
-    }
-
-    /** Transpose in-place
-     *   \return A reference to this
-     */
-    virtual Operator& Transpose()
-    {
-        std::swap(this->height_, this->width_);
-        transposed_ = !transposed_;
-        return *this;
-    }
+    virtual Matrix<T> operator*(const Matrix<T>& other) const = 0;
 };
 
 } // namespace astroqut
