@@ -2,8 +2,8 @@
 /// \file include/test/operator.hpp
 /// \brief Test suite to validate the Operator class.
 /// \author Philippe Ganz <philippe.ganz@gmail.com>
-/// \version 0.3.1
-/// \date 2018-05-21
+/// \version 0.4.0
+/// \date 2018-06-02
 /// \copyright GPL-3.0
 ///
 
