@@ -29,6 +29,9 @@
 namespace astroqut
 {
 
+template<class T> struct is_complex : std::false_type {};
+template<class T> struct is_complex<std::complex<T>> : std::true_type {};
+
 /** Types of norm currently implemented
  */
 enum NormType {one, two, two_squared, inf};
@@ -50,32 +53,24 @@ inline bool IsAligned(const void* ptr, size_t align_byte_size)
  *  \author mch from https://stackoverflow.com/a/253874/8141262
  *  \author Philippe Ganz <philippe.ganz@gmail.com> 2017-2018
  */
-template <class T>
-bool IsEqual(T first, T second)
+template <class T, typename std::enable_if_t<std::is_floating_point<T>::value>* = nullptr>
+inline bool IsEqual(T first, T second)
 {
-    bool normal_test = std::abs(first-second) < std::abs(first+second)*std::numeric_limits<T>::epsilon()*100;
-    bool subnormal_test = std::abs(first-second) < std::numeric_limits<T>::min();
-
-#ifdef DEBUG
-    std::stringstream buffer;
-    buffer << std::endl << first << " ?= " << second << " ? ";
-    buffer << (normal_test || subnormal_test);
-    std::cerr << buffer.str();
-#endif // DEBUG
+    bool normal_test = std::abs(first-second) < std::abs(first+second)*std::numeric_limits<double>::epsilon()*10;
+    bool subnormal_test = std::abs(first-second) < std::numeric_limits<double>::min();
 
     return normal_test || subnormal_test;
 }
-template <>
-inline bool IsEqual(int first, int second)
+template <class T, typename std::enable_if_t<std::is_integral<T>::value>* = nullptr>
+inline bool IsEqual(T first, T second)
 {
     return first == second;
 }
-template <>
-inline bool IsEqual(std::complex<double> first, std::complex<double> second)
+template <class T, typename std::enable_if_t<is_complex<T>{}>* = nullptr>
+inline bool IsEqual(T first, T second)
 {
     return IsEqual(std::real(first), std::real(second)) && IsEqual(std::imag(first), std::imag(second));
 }
-
 
 
 template <class T>
@@ -151,13 +146,14 @@ public:
      *  \param height Height of the data
      *  \param width Width of the data
      */
-    Matrix( const T data[], size_t length, size_t height, size_t width)
+    template <class U, typename std::enable_if_t<std::is_arithmetic<U>::value || std::is_same<T, U>{}>* = nullptr>
+    Matrix( const U data[], size_t length, size_t height, size_t width)
         : Matrix(height, width)
     {
         #pragma omp parallel for simd
         for(size_t i = 0; i < this->length_; ++i)
         {
-            data_[i] = data[i];
+            data_[i] = (T) data[i];
         }
 #ifdef DEBUG
         std::cout << "Matrix : Full member constructor called" << std::endl;
@@ -169,10 +165,33 @@ public:
      *  \param height Height of the data
      *  \param width Width of the data
      */
-    Matrix( const std::string filename, size_t height, size_t width)
+    template <class U = T, typename std::enable_if_t<std::is_arithmetic<U>::value>* = nullptr>
+    Matrix( const std::string filename, size_t height, size_t width, U dummy = 0)
         : Matrix(height, width)
     {
-        filename >> *this;
+        std::ifstream file(filename, std::ios::binary | std::ios::in | std::ios::ate);
+
+        size_t file_size = file.tellg();
+        if(file_size == 0)
+        {
+            std::cerr << "Input file is empty";
+            throw;
+        }
+        char* memblock = new char [file_size];
+        file.seekg(0, std::ios::beg);
+        file.read(memblock, file_size);
+
+        U* reinterpret_memblock = (U*) memblock;
+
+        for(size_t i = 0; i < this->length_; ++i)
+        {
+            data_[i] = (T) reinterpret_memblock[i];
+        }
+
+        delete[] memblock;
+
+        file.close();
+
 #ifdef DEBUG
         std::cout << "Matrix : File constructor called" << std::endl;
 #endif // DEBUG
@@ -183,7 +202,8 @@ public:
      *  \param height Height of the data
      *  \param width Width of the data
      */
-    Matrix( T number, size_t height, size_t width)
+    template <class U, typename std::enable_if_t<std::is_arithmetic<U>::value || std::is_same<T, U>{}>* = nullptr>
+    Matrix( U number, size_t height, size_t width)
         : Matrix(height, width)
     {
 #ifdef DEBUG
@@ -194,7 +214,7 @@ public:
         #pragma omp parallel for simd
         for(size_t i = 0; i < this->length_; ++i)
         {
-            data_[i] = number;
+            data_[i] = (T) number;
         }
     }
 
@@ -395,6 +415,20 @@ public:
         return *this;
     }
 
+    /** Cast operator
+     *  \return A casted copy of this
+     */
+    template <class U, typename std::enable_if_t<std::is_arithmetic<U>::value>* = nullptr>
+    operator Matrix<U>() const
+    {
+        Matrix<U> result(this->height_, this->width_);
+
+        for(size_t i = 0; i < this->length_; ++i)
+            result[i] = (U) data_[i];
+
+        return result;
+    }
+
     /** Array subscript setter operator
      *  \param index Array subscript
      *  \return A reference to the array element at index
@@ -408,12 +442,12 @@ public:
      *  \param index Array subscript
      *  \return A reference to the array element at index
      */
-    template <class S = T, typename std::enable_if<std::is_arithmetic<S>::value>::type* = nullptr>
+    template <class S = T, typename std::enable_if_t<std::is_arithmetic<S>::value>* = nullptr>
     const S operator[](size_t index) const noexcept
     {
         return data_[index];
     }
-    template <class S = T, typename std::enable_if<std::is_same<S, std::complex<double>>::value>::type* = nullptr>
+    template <class S = T, typename std::enable_if_t<is_complex<S>{}>* = nullptr>
     const S& operator[](size_t index) const noexcept
     {
         return data_[index];
@@ -552,7 +586,8 @@ public:
      *  \param number Number to multiply current object with
      *  \return A reference to this
      */
-    Matrix& operator*=(T number)
+    template <class U, typename std::enable_if_t<std::is_arithmetic<U>::value || is_complex<U>{}>* = nullptr>
+    Matrix& operator*=(U number)
     {
 #ifdef DO_ARGCHECKS
         try
@@ -609,7 +644,8 @@ public:
      *  \param number Number to divide the current object with
      *  \return A reference to this
      */
-    Matrix& operator/=(T number)
+    template <class U, typename std::enable_if_t<std::is_arithmetic<U>::value || is_complex<U>{}>* = nullptr>
+    Matrix& operator/=(U number)
     {
 #ifdef DO_ARGCHECKS
         try
@@ -1222,8 +1258,8 @@ Matrix<T>&& operator&(const Matrix<T>& first, Matrix<T>&& second)
  *  \param number Number to multiply the current object with
  *  \return A new instance containing the result
  */
-template<class T>
-Matrix<T> operator*(const Matrix<T>& mat, T number)
+template <class T, class U, typename std::enable_if_t<std::is_arithmetic<U>::value || is_complex<U>{}>* = nullptr>
+Matrix<T> operator*(const Matrix<T>& mat, U number)
 {
     Matrix<T> result(mat);
     return result *= number;
@@ -1234,8 +1270,8 @@ Matrix<T> operator*(const Matrix<T>& mat, T number)
  *  \param number Number to multiply the current object with
  *  \return A reference to this
  */
-template<class T>
-Matrix<T>&& operator*(Matrix<T>&& mat, T number)
+template <class T, class U, typename std::enable_if_t<std::is_arithmetic<U>::value || is_complex<U>{}>* = nullptr>
+Matrix<T>&& operator*(Matrix<T>&& mat, U number)
 {
     return std::move(mat *= number);
 }
@@ -1245,8 +1281,8 @@ Matrix<T>&& operator*(Matrix<T>&& mat, T number)
  *  \param mat Matrix, lvalue ref
  *  \return A new instance containing the result
  */
-template<class T>
-Matrix<T> operator*(T number, const Matrix<T>& mat)
+template <class T, class U, typename std::enable_if_t<std::is_arithmetic<U>::value || is_complex<U>{}>* = nullptr>
+Matrix<T> operator*(U number, const Matrix<T>& mat)
 {
     return mat * number;
 }
@@ -1256,8 +1292,8 @@ Matrix<T> operator*(T number, const Matrix<T>& mat)
  *  \param mat Matrix, rvalue ref
  *  \return A reference to this
  */
-template<class T>
-Matrix<T>&& operator*(T number, Matrix<T>&& mat)
+template <class T, class U, typename std::enable_if_t<std::is_arithmetic<U>::value || is_complex<U>{}>* = nullptr>
+Matrix<T>&& operator*(U number, Matrix<T>&& mat)
 {
     return mat * number;
 }
@@ -1267,8 +1303,8 @@ Matrix<T>&& operator*(T number, Matrix<T>&& mat)
  *  \param number Number to divide the current object with
  *  \return A new instance containing the result
  */
-template <class T>
-Matrix<T> operator/(const Matrix<T>& mat, T number)
+template <class T, class U, typename std::enable_if_t<std::is_arithmetic<U>::value || is_complex<U>{}>* = nullptr>
+Matrix<T> operator/(const Matrix<T>& mat, U number)
 {
     Matrix<T> result(mat);
     return result /= number;
@@ -1279,8 +1315,8 @@ Matrix<T> operator/(const Matrix<T>& mat, T number)
  *  \param number Number to divide the current object with
  *  \return A reference to mat
  */
-template <class T>
-Matrix<T>&& operator/(const Matrix<T>&& first, T number)
+template <class T, class U, typename std::enable_if_t<std::is_arithmetic<U>::value || is_complex<U>{}>* = nullptr>
+Matrix<T>&& operator/(const Matrix<T>&& first, U number)
 {
     return std::move(first /= number);
 }
@@ -1375,73 +1411,6 @@ void operator<<(std::string filename, Matrix<T>& mat)
     delete[] memblock;
 }
 
-/** Input stream operator
- *  \param is The input stream to read from, currently only supports istream opened with `std::ios::binary | std::ios::in | std::ios::ate` flags
- *  \param mat Matrix to write to
- *  \return A reference to is
- */
-template <class T>
-std::istream& operator>>(std::istream& is, Matrix<T>& mat)
-{
-#ifdef DO_ARGCHECKS
-    try
-    {
-        mat.IsValid();
-    }
-    catch (const std::exception&)
-    {
-        throw;
-    }
-#endif // DO_ARGCHECKS
-
-    size_t file_size = is.tellg();
-    if(file_size == 0)
-    {
-        std::cerr << "Input file is empty";
-        throw;
-    }
-    char* memblock = new char [file_size];
-    is.seekg(0, std::ios::beg);
-    is.read(memblock, file_size);
-
-    T* reinterpret_memblock = (T*) memblock;
-
-    for(size_t i = 0; i < mat.Length(); ++i)
-    {
-        mat[i] = reinterpret_memblock[i];
-    }
-
-    delete[] memblock;
-
-    return is;
-}
-
-/** Input file operator
- *  \param filename The name of the file to read from
- *  \param mat Matrix to write to
- *  \return A reference to mat
- */
-template <class T>
-Matrix<T>& operator>>(std::string filename, Matrix<T>& mat)
-{
-#ifdef DO_ARGCHECKS
-    try
-    {
-        mat.IsValid();
-    }
-    catch (const std::exception&)
-    {
-        throw;
-    }
-#endif // DO_ARGCHECKS
-
-    std::ifstream file(filename, std::ios::binary | std::ios::in | std::ios::ate);
-    file >> mat;
-    file.close();
-
-    return mat;
-}
-
 /** Inner product
  *  \brief The inner product of two vectors, i.e. first^T * second
  *  \param first Vector
@@ -1483,7 +1452,6 @@ T Inner(const Matrix<T>& first, const Matrix<T>& second)
     // TODO std::inner_product not yet parallelized : change as soon as available
     // std::inner_product( first.Data(), first.Data() + first.Length(), other.Data(), (T) 0 );
 }
-template <>
 inline std::complex<double> Inner(const Matrix<std::complex<double>>& first, const Matrix<std::complex<double>>& second)
 {
 #ifdef DO_ARGCHECKS
@@ -1518,6 +1486,52 @@ inline std::complex<double> Inner(const Matrix<std::complex<double>>& first, con
 
 
 using namespace settings;
+
+/** Matrix Matrix multiplication using the Eigen library
+ *  \param first First matrix of size l by m
+ *  \param second Second matrix of size m by n
+ *  \param result Resulting matrix of size l by n
+ */
+template <class T>
+void MatrixMatrixMultEigen(const Matrix<T>& first, const Matrix<T>& second, Matrix<T>& result)
+{
+    Eigen::Map<Eigen::Matrix<T, Eigen::Dynamic, Eigen::Dynamic, Eigen::RowMajor>> eigenMat(first.Data(), first.Height(), first.Width());
+    Eigen::Map<Eigen::Matrix<T, Eigen::Dynamic, Eigen::Dynamic, Eigen::RowMajor>> eigenVect(second.Data(), second.Height(), second.Width());
+    Eigen::Map<Eigen::Matrix<T, Eigen::Dynamic, Eigen::Dynamic, Eigen::RowMajor>> eigenResult(result.Data(), result.Height(), result.Width());
+    eigenResult = eigenMat * eigenVect;
+}
+inline void MatrixMatrixMultEigen(const Matrix<double>& first, const Matrix<double>& second, Matrix<double>& result)
+{
+    // loading the data with 8 bytes alignment
+    Eigen::Map<Eigen::Matrix<double, Eigen::Dynamic, Eigen::Dynamic, Eigen::RowMajor>, Eigen::Aligned8> eigenMat(first.Data(), first.Height(), first.Width());
+    Eigen::Map<Eigen::Matrix<double, Eigen::Dynamic, Eigen::Dynamic, Eigen::RowMajor>, Eigen::Aligned8> eigenVect(second.Data(), second.Height(), second.Width());
+    Eigen::Map<Eigen::Matrix<double, Eigen::Dynamic, Eigen::Dynamic, Eigen::RowMajor>, Eigen::Aligned8> eigenResult(result.Data(), result.Height(), result.Width());
+    eigenResult = eigenMat * eigenVect;
+}
+inline void MatrixMatrixMultEigen(const Matrix<long long>& first, const Matrix<long long>& second, Matrix<long long>& result)
+{
+    // loading the data with 8 bytes alignment
+    Eigen::Map<Eigen::Matrix<long long, Eigen::Dynamic, Eigen::Dynamic, Eigen::RowMajor>, Eigen::Aligned8> eigenMat(first.Data(), first.Height(), first.Width());
+    Eigen::Map<Eigen::Matrix<long long, Eigen::Dynamic, Eigen::Dynamic, Eigen::RowMajor>, Eigen::Aligned8> eigenVect(second.Data(), second.Height(), second.Width());
+    Eigen::Map<Eigen::Matrix<long long, Eigen::Dynamic, Eigen::Dynamic, Eigen::RowMajor>, Eigen::Aligned8> eigenResult(result.Data(), result.Height(), result.Width());
+    eigenResult = eigenMat * eigenVect;
+}
+inline void MatrixMatrixMultEigen(const Matrix<long double>& first, const Matrix<long double>& second, Matrix<long double>& result)
+{
+    // loading the data with 8 bytes alignment
+    Eigen::Map<Eigen::Matrix<long double, Eigen::Dynamic, Eigen::Dynamic, Eigen::RowMajor>, Eigen::Aligned16> eigenMat(first.Data(), first.Height(), first.Width());
+    Eigen::Map<Eigen::Matrix<long double, Eigen::Dynamic, Eigen::Dynamic, Eigen::RowMajor>, Eigen::Aligned16> eigenVect(second.Data(), second.Height(), second.Width());
+    Eigen::Map<Eigen::Matrix<long double, Eigen::Dynamic, Eigen::Dynamic, Eigen::RowMajor>, Eigen::Aligned16> eigenResult(result.Data(), result.Height(), result.Width());
+    eigenResult = eigenMat * eigenVect;
+}
+inline void MatrixMatrixMultEigen(const Matrix<std::complex<double>>& first, const Matrix<std::complex<double>>& second, Matrix<std::complex<double>>& result)
+{
+    // loading the data with 8 bytes alignment
+    Eigen::Map<Eigen::Matrix<std::complex<double>, Eigen::Dynamic, Eigen::Dynamic, Eigen::RowMajor>, Eigen::Aligned16> eigenMat(first.Data(), first.Height(), first.Width());
+    Eigen::Map<Eigen::Matrix<std::complex<double>, Eigen::Dynamic, Eigen::Dynamic, Eigen::RowMajor>, Eigen::Aligned16> eigenVect(second.Data(), second.Height(), second.Width());
+    Eigen::Map<Eigen::Matrix<std::complex<double>, Eigen::Dynamic, Eigen::Dynamic, Eigen::RowMajor>, Eigen::Aligned16> eigenResult(result.Data(), result.Height(), result.Width());
+    eigenResult = eigenMat * eigenVect;
+}
 
 /** Matrix Matrix multiplication
  *  Performs a matrix-matrix multiplication : result = first * second
@@ -1563,54 +1577,61 @@ void MatrixMatrixMult(const Matrix<T>& first, const Matrix<T>& second, Matrix<T>
     }
 }
 
-/** Matrix Matrix multiplication using the Eigen library
- *  \param first First matrix of size l by m
- *  \param second Second matrix of size m by n
- *  \param result Resulting matrix of size l by n
+/** Matrix Vector multiplication using the Eigen library
+ *  \param mat Matrix of size m by n
+ *  \param vect Vector of size n by 1
+ *  \param result Resulting vector of size m by 1
  */
 template <class T>
-void MatrixMatrixMultEigen(const Matrix<T>& first, const Matrix<T>& second, Matrix<T>& result)
+void MatrixVectMultEigen(const Matrix<T>& mat, const Matrix<T>& vect, Matrix<T>& result)
 {
-    Eigen::Map<Eigen::Matrix<T, Eigen::Dynamic, Eigen::Dynamic, Eigen::RowMajor>> eigenMat(first.Data(), first.Height(), first.Width());
-    Eigen::Map<Eigen::Matrix<T, Eigen::Dynamic, Eigen::Dynamic, Eigen::RowMajor>> eigenVect(second.Data(), second.Height(), second.Width());
-    Eigen::Map<Eigen::Matrix<T, Eigen::Dynamic, Eigen::Dynamic, Eigen::RowMajor>> eigenResult(result.Data(), result.Height(), result.Width());
-    eigenResult = eigenMat * eigenVect;
+    Eigen::Map<Eigen::Matrix<T, 1, Eigen::Dynamic, Eigen::RowMajor>> eigenVect(vect.Data(), vect.Height());
+    #pragma omp parallel for
+    for(size_t i = 0; i < mat.Height(); ++i)
+    {
+        Eigen::Map<Eigen::Matrix<T, 1, Eigen::Dynamic, Eigen::RowMajor>> eigenMat(mat.Data() + i*mat.Width(), mat.Width());
+        result[i] = eigenMat.dot(eigenVect);
+    }
 }
-template <>
-inline void MatrixMatrixMultEigen(const Matrix<double>& first, const Matrix<double>& second, Matrix<double>& result)
+inline void MatrixVectMultEigen(const Matrix<double>& mat, const Matrix<double>& vect, Matrix<double>& result)
 {
-    // loading the data with 8 bytes alignment
-    Eigen::Map<Eigen::Matrix<double, Eigen::Dynamic, Eigen::Dynamic, Eigen::RowMajor>, Eigen::Aligned8> eigenMat(first.Data(), first.Height(), first.Width());
-    Eigen::Map<Eigen::Matrix<double, Eigen::Dynamic, Eigen::Dynamic, Eigen::RowMajor>, Eigen::Aligned8> eigenVect(second.Data(), second.Height(), second.Width());
-    Eigen::Map<Eigen::Matrix<double, Eigen::Dynamic, Eigen::Dynamic, Eigen::RowMajor>, Eigen::Aligned8> eigenResult(result.Data(), result.Height(), result.Width());
-    eigenResult = eigenMat * eigenVect;
+    Eigen::Map<Eigen::Matrix<double, 1, Eigen::Dynamic, Eigen::RowMajor>, Eigen::Aligned8> eigenVect(vect.Data(), vect.Height());
+    #pragma omp parallel for
+    for(size_t i = 0; i < mat.Height(); ++i)
+    {
+        Eigen::Map<Eigen::Matrix<double, 1, Eigen::Dynamic, Eigen::RowMajor>, Eigen::Aligned8> eigenMat(mat.Data() + i*mat.Width(), mat.Width());
+        result[i] = eigenMat.dot(eigenVect);
+    }
 }
-template <>
-inline void MatrixMatrixMultEigen(const Matrix<long long>& first, const Matrix<long long>& second, Matrix<long long>& result)
+inline void MatrixVectMultEigen(const Matrix<long long>& mat, const Matrix<long long>& vect, Matrix<long long>& result)
 {
-    // loading the data with 8 bytes alignment
-    Eigen::Map<Eigen::Matrix<long long, Eigen::Dynamic, Eigen::Dynamic, Eigen::RowMajor>, Eigen::Aligned8> eigenMat(first.Data(), first.Height(), first.Width());
-    Eigen::Map<Eigen::Matrix<long long, Eigen::Dynamic, Eigen::Dynamic, Eigen::RowMajor>, Eigen::Aligned8> eigenVect(second.Data(), second.Height(), second.Width());
-    Eigen::Map<Eigen::Matrix<long long, Eigen::Dynamic, Eigen::Dynamic, Eigen::RowMajor>, Eigen::Aligned8> eigenResult(result.Data(), result.Height(), result.Width());
-    eigenResult = eigenMat * eigenVect;
+    Eigen::Map<Eigen::Matrix<long long, 1, Eigen::Dynamic, Eigen::RowMajor>, Eigen::Aligned8> eigenVect(vect.Data(), vect.Height());
+    #pragma omp parallel for
+    for(size_t i = 0; i < mat.Height(); ++i)
+    {
+        Eigen::Map<Eigen::Matrix<long long, 1, Eigen::Dynamic, Eigen::RowMajor>, Eigen::Aligned8> eigenMat(mat.Data() + i*mat.Width(), mat.Width());
+        result[i] = eigenMat.dot(eigenVect);
+    }
 }
-template <>
-inline void MatrixMatrixMultEigen(const Matrix<long double>& first, const Matrix<long double>& second, Matrix<long double>& result)
+inline void MatrixVectMultEigen(const Matrix<long double>& mat, const Matrix<long double>& vect, Matrix<long double>& result)
 {
-    // loading the data with 8 bytes alignment
-    Eigen::Map<Eigen::Matrix<long double, Eigen::Dynamic, Eigen::Dynamic, Eigen::RowMajor>, Eigen::Aligned16> eigenMat(first.Data(), first.Height(), first.Width());
-    Eigen::Map<Eigen::Matrix<long double, Eigen::Dynamic, Eigen::Dynamic, Eigen::RowMajor>, Eigen::Aligned16> eigenVect(second.Data(), second.Height(), second.Width());
-    Eigen::Map<Eigen::Matrix<long double, Eigen::Dynamic, Eigen::Dynamic, Eigen::RowMajor>, Eigen::Aligned16> eigenResult(result.Data(), result.Height(), result.Width());
-    eigenResult = eigenMat * eigenVect;
+    Eigen::Map<Eigen::Matrix<long double, 1, Eigen::Dynamic, Eigen::RowMajor>, Eigen::Aligned16> eigenVect(vect.Data(), vect.Height());
+    #pragma omp parallel for
+    for(size_t i = 0; i < mat.Height(); ++i)
+    {
+        Eigen::Map<Eigen::Matrix<long double, 1, Eigen::Dynamic, Eigen::RowMajor>, Eigen::Aligned16> eigenMat(mat.Data() + i*mat.Width(), mat.Width());
+        result[i] = eigenMat.dot(eigenVect);
+    }
 }
-template <>
-inline void MatrixMatrixMultEigen(const Matrix<std::complex<double>>& first, const Matrix<std::complex<double>>& second, Matrix<std::complex<double>>& result)
+inline void MatrixVectMultEigen(const Matrix<std::complex<double>>& mat, const Matrix<std::complex<double>>& vect, Matrix<std::complex<double>>& result)
 {
-    // loading the data with 8 bytes alignment
-    Eigen::Map<Eigen::Matrix<std::complex<double>, Eigen::Dynamic, Eigen::Dynamic, Eigen::RowMajor>, Eigen::Aligned16> eigenMat(first.Data(), first.Height(), first.Width());
-    Eigen::Map<Eigen::Matrix<std::complex<double>, Eigen::Dynamic, Eigen::Dynamic, Eigen::RowMajor>, Eigen::Aligned16> eigenVect(second.Data(), second.Height(), second.Width());
-    Eigen::Map<Eigen::Matrix<std::complex<double>, Eigen::Dynamic, Eigen::Dynamic, Eigen::RowMajor>, Eigen::Aligned16> eigenResult(result.Data(), result.Height(), result.Width());
-    eigenResult = eigenMat * eigenVect;
+    Eigen::Map<Eigen::Matrix<std::complex<double>, 1, Eigen::Dynamic, Eigen::RowMajor>, Eigen::Aligned16> eigenVect(vect.Data(), vect.Height());
+    #pragma omp parallel for
+    for(size_t i = 0; i < mat.Height(); ++i)
+    {
+        Eigen::Map<Eigen::Matrix<std::complex<double>, 1, Eigen::Dynamic, Eigen::RowMajor>, Eigen::Aligned16> eigenMat(mat.Data() + i*mat.Width(), mat.Width());
+        result[i] = eigenMat.conjugate().dot(eigenVect);
+    }
 }
 
 /** Matrix Vector multiplication
@@ -1656,67 +1677,6 @@ void MatrixVectorMult(const Matrix<T>& mat, const Matrix<T>& vect, Matrix<T>& re
         }
     default:
         {}
-    }
-}
-
-/** Matrix Vector multiplication using the Eigen library
- *  \param mat Matrix of size m by n
- *  \param vect Vector of size n by 1
- *  \param result Resulting vector of size m by 1
- */
-template <class T>
-void MatrixVectMultEigen(const Matrix<T>& mat, const Matrix<T>& vect, Matrix<T>& result)
-{
-    Eigen::Map<Eigen::Matrix<T, 1, Eigen::Dynamic, Eigen::RowMajor>> eigenVect(vect.Data(), vect.Height());
-    #pragma omp parallel for
-    for(size_t i = 0; i < mat.Height(); ++i)
-    {
-        Eigen::Map<Eigen::Matrix<T, 1, Eigen::Dynamic, Eigen::RowMajor>> eigenMat(mat.Data() + i*mat.Width(), mat.Width());
-        result[i] = eigenMat.dot(eigenVect);
-    }
-}
-template <>
-inline void MatrixVectMultEigen(const Matrix<double>& mat, const Matrix<double>& vect, Matrix<double>& result)
-{
-    Eigen::Map<Eigen::Matrix<double, 1, Eigen::Dynamic, Eigen::RowMajor>, Eigen::Aligned8> eigenVect(vect.Data(), vect.Height());
-    #pragma omp parallel for
-    for(size_t i = 0; i < mat.Height(); ++i)
-    {
-        Eigen::Map<Eigen::Matrix<double, 1, Eigen::Dynamic, Eigen::RowMajor>, Eigen::Aligned8> eigenMat(mat.Data() + i*mat.Width(), mat.Width());
-        result[i] = eigenMat.dot(eigenVect);
-    }
-}
-template <>
-inline void MatrixVectMultEigen(const Matrix<long long>& mat, const Matrix<long long>& vect, Matrix<long long>& result)
-{
-    Eigen::Map<Eigen::Matrix<long long, 1, Eigen::Dynamic, Eigen::RowMajor>, Eigen::Aligned8> eigenVect(vect.Data(), vect.Height());
-    #pragma omp parallel for
-    for(size_t i = 0; i < mat.Height(); ++i)
-    {
-        Eigen::Map<Eigen::Matrix<long long, 1, Eigen::Dynamic, Eigen::RowMajor>, Eigen::Aligned8> eigenMat(mat.Data() + i*mat.Width(), mat.Width());
-        result[i] = eigenMat.dot(eigenVect);
-    }
-}
-template <>
-inline void MatrixVectMultEigen(const Matrix<long double>& mat, const Matrix<long double>& vect, Matrix<long double>& result)
-{
-    Eigen::Map<Eigen::Matrix<long double, 1, Eigen::Dynamic, Eigen::RowMajor>, Eigen::Aligned16> eigenVect(vect.Data(), vect.Height());
-    #pragma omp parallel for
-    for(size_t i = 0; i < mat.Height(); ++i)
-    {
-        Eigen::Map<Eigen::Matrix<long double, 1, Eigen::Dynamic, Eigen::RowMajor>, Eigen::Aligned16> eigenMat(mat.Data() + i*mat.Width(), mat.Width());
-        result[i] = eigenMat.dot(eigenVect);
-    }
-}
-template <>
-inline void MatrixVectMultEigen(const Matrix<std::complex<double>>& mat, const Matrix<std::complex<double>>& vect, Matrix<std::complex<double>>& result)
-{
-    Eigen::Map<Eigen::Matrix<std::complex<double>, 1, Eigen::Dynamic, Eigen::RowMajor>, Eigen::Aligned16> eigenVect(vect.Data(), vect.Height());
-    #pragma omp parallel for
-    for(size_t i = 0; i < mat.Height(); ++i)
-    {
-        Eigen::Map<Eigen::Matrix<std::complex<double>, 1, Eigen::Dynamic, Eigen::RowMajor>, Eigen::Aligned16> eigenMat(mat.Data() + i*mat.Width(), mat.Width());
-        result[i] = eigenMat.conjugate().dot(eigenVect);
     }
 }
 
