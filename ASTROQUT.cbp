@@ -74,7 +74,7 @@
 			<Add option="-Wextra" />
 			<Add option="-Wall" />
 			<Add option="-m64" />
-			<Add option="-fopenmp -std=c++17 -march=native -mno-sse5 --param inline-unit-growth=100" />
+			<Add option="-fopenmp -std=c++17 -march=native -mno-sse5" />
 			<Add directory="include" />
 			<Add directory="extern_include/eigen-eigen-5a0156e40feb" />
 		</Compiler>
@@ -105,7 +105,6 @@
 		<Unit filename="include/utils/linearop/operator/wavelet.hpp" />
 		<Unit filename="include/utils/settings.hpp" />
 		<Unit filename="src/WS/astroQUT.cpp" />
-		<Unit filename="src/fista/poisson.cpp" />
 		<Unit filename="src/main.cpp" />
 		<Unit filename="src/test.cpp" />
 		<Unit filename="src/test/WS.cpp" />
