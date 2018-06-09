@@ -18,10 +18,10 @@ namespace astroqut
 namespace WS
 {
 
-Matrix<double> Solve(   const Matrix<double>& image,
-                        const Matrix<double>& sensitivity,
-                        const Matrix<double>& background,
-                        const Parameters& options = WS::Parameters() );
+Matrix<long double> Solve(const Matrix<long double>& image,
+                          const Matrix<long double>& sensitivity,
+                          const Matrix<long double>& background,
+                          const Parameters& options = WS::Parameters() );
 
 } // namespace WS
 } // namespace astroqut

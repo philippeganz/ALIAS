@@ -17,8 +17,8 @@ namespace astroqut
  *  \param signal Signal to apply the Abel transform to. Currently only accepts double type matrix
  *  \param result Resulting matrix of size pixel_amount * wavelets_amount. Currently only accepts double type matrix
  */
-void AbelTransform::Forward(const Matrix<double>& signal,
-                            Matrix<double>& result ) const
+void AbelTransform::Forward(const Matrix<long double>& signal,
+                            Matrix<long double>& result ) const
 {
     size_t pic_side_half = pic_side_/2;
     size_t wavelet_amount_half = wavelet_amount_/2;
@@ -48,7 +48,7 @@ void AbelTransform::Forward(const Matrix<double>& signal,
             // iterating over matrix multiplication vectors
             for( size_t k = 0; k < wavelet_amount_half; ++k )
             {
-                double abel_value = this->data_[(block*pic_side_half + i)*pic_side_half + k];
+                long double abel_value = this->data_[(block*pic_side_half + i)*pic_side_half + k];
 
                 // iterating over signal columns
                 for( size_t j = 0; j < signal.Width(); ++j )
@@ -57,7 +57,7 @@ void AbelTransform::Forward(const Matrix<double>& signal,
                     // left part
                     size_t target_left_index = k*signal.Width() + j;
 
-                    double left_temp = abel_value * signal[target_left_index];
+                    long double left_temp = abel_value * signal[target_left_index];
 
                     size_t result_left_upper_index = (block*pic_side_ + i)*signal.Width() + j;
                     result[result_left_upper_index] += left_temp;
@@ -69,7 +69,7 @@ void AbelTransform::Forward(const Matrix<double>& signal,
                     // right part
                     size_t target_right_index = (pic_side_ - k - 1)*signal.Width() + j;
 
-                    double right_temp = abel_value * signal[target_right_index];
+                    long double right_temp = abel_value * signal[target_right_index];
 
                     size_t result_right_upper_index = ((pic_side_ - block -1)*pic_side_ + i)*signal.Width() + j;
                     result[result_right_upper_index] += right_temp;

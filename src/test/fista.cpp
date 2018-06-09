@@ -18,12 +18,12 @@ bool SmallExample()
     std::cout << "FISTA test with small data : " << std::endl << std::endl;
 
     double A_data[12] = {1.0,2.0,3.0,4.0,5.0,6.0,7.0,8.0,9.0,10.0,11.0,12.0};
-    const astroqut::MatMult<double> A(Matrix<double>(A_data, 12, 3, 4), 3, 4);
+    const astroqut::MatMult<long double> A(Matrix<long double>(A_data, 12, 3, 4), 3, 4);
     double u_data[3] = {3.0,2.0,1.0};
-    const astroqut::Matrix<double> u(u_data, 3, 3, 1);
+    const astroqut::Matrix<long double> u(u_data, 3, 3, 1);
     double b_data[3] = {1.0,1.0,2.0};
-    const astroqut::Matrix<double> b(b_data, 3, 3, 1);
-    astroqut::fista::poisson::Parameters options;
+    const astroqut::Matrix<long double> b(b_data, 3, 3, 1);
+    astroqut::fista::poisson::Parameters<long double> options;
     options.log_period = 50;
     double tols[3] = {1e-4, 1e-8, 1e-12};
 
@@ -31,7 +31,7 @@ bool SmallExample()
     double expected_data2[4] = {0.973320232506235, 0.0, 0.0, -0.674615621567228};
     double expected_data3[4] = {0.973633428618360, 0.0, 0.0, -0.674833246032450};
 
-    const astroqut::Matrix<double> expected_result[3] = {{expected_data1, 4, 4, 1},{expected_data2, 4, 4, 1},{expected_data3, 4, 4, 1}};
+    const astroqut::Matrix<long double> expected_result[3] = {{expected_data1, 4, 4, 1},{expected_data2, 4, 4, 1},{expected_data3, 4, 4, 1}};
 
     bool fista_test = true;
 
@@ -42,7 +42,7 @@ bool SmallExample()
         std::cout << "and u = " << u;
 
         options.tol = tols[i];
-        astroqut::Matrix<double> actual_result = astroqut::fista::poisson::Solve(A, u, b, 1, options);
+        astroqut::Matrix<long double> actual_result = astroqut::fista::poisson::Solve(A, u, b, 1.0L, options);
 
         std::cout << "Result from MATLAB computation" << expected_result[i];
         std::cout << "Result from this computation" << actual_result;
@@ -65,42 +65,42 @@ void Time(size_t length)
 
     std::default_random_engine generator;
     generator.seed(123456789);
-    std::normal_distribution<double> distribution(100.0,10.0);
+    std::normal_distribution<long double> distribution(100.0,10.0);
     size_t test_height = length*length;
     size_t test_width = length;
 
-    Matrix<double>::matrix_t * A_data = (double*) _mm_malloc(sizeof(double)*test_height*test_width, sizeof(double)); // destroyed when A is destroyed
+    Matrix<long double>::matrix_t * A_data = (long double*) _mm_malloc(sizeof(long double)*test_height*test_width, sizeof(long double)); // destroyed when A is destroyed
     #pragma omp parallel for simd
     for( size_t i = 0; i < test_height*test_width; ++i )
     {
         A_data[i] = distribution(generator);
     }
-    astroqut::MatMult<double> A(astroqut::Matrix<double>(A_data, test_height, test_width), test_height, test_width);
+    astroqut::MatMult<long double> A(astroqut::Matrix<long double>(A_data, test_height, test_width), test_height, test_width);
 
-    Matrix<double>::matrix_t * u_data = (double*) _mm_malloc(sizeof(double)*test_height, sizeof(double));; // destroyed when u is destroyed
+    Matrix<long double>::matrix_t * u_data = (long double*) _mm_malloc(sizeof(long double)*test_height, sizeof(long double));; // destroyed when u is destroyed
     #pragma omp parallel for simd
     for( size_t i = 0; i < test_height; ++i )
     {
         u_data[i] = distribution(generator);
     }
-    astroqut::Matrix<double> u(u_data, test_height, 1);
+    astroqut::Matrix<long double> u(u_data, test_height, 1);
 
-    Matrix<double>::matrix_t * b_data = (double*) _mm_malloc(sizeof(double)*test_height, sizeof(double)); // destroyed when b is destroyed
+    Matrix<long double>::matrix_t * b_data = (long double*) _mm_malloc(sizeof(long double)*test_height, sizeof(long double)); // destroyed when b is destroyed
     #pragma omp parallel for simd
     for( size_t i = 0; i < test_height; ++i )
     {
         b_data[i] = distribution(generator);
     }
-    astroqut::Matrix<double> b(b_data, test_height, 1);
+    astroqut::Matrix<long double> b(b_data, test_height, 1);
 
-    astroqut::fista::poisson::Parameters options;
+    astroqut::fista::poisson::Parameters<long double> options;
     options.tol = 1e-8;
     options.log_period = 1;
 
     std::chrono::time_point<std::chrono::high_resolution_clock> start, end;
     start = std::chrono::high_resolution_clock::now();
 
-    astroqut::fista::poisson::Solve(A, u, b, 1, options);
+    astroqut::fista::poisson::Solve(A, u, b, 1.0L, options);
 
     end = std::chrono::high_resolution_clock::now();
     std::chrono::duration<double> elapsed_time = end-start;

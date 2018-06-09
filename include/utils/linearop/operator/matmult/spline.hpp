@@ -15,7 +15,7 @@
 namespace astroqut
 {
 
-class Spline : public MatMult<double>
+class Spline : public MatMult<long double>
 {
 private:
 
@@ -32,8 +32,8 @@ public:
      *  \param height Height of the full Abel matrix
      *  \param width Width of the full Abel matrix
      */
-    Spline(Matrix<double>&& data, size_t height, size_t width)
-        : MatMult<double>(std::forward<Matrix<double>>(data), height, width)
+    Spline(Matrix<long double>&& data, size_t height, size_t width)
+        : MatMult<long double>(std::forward<Matrix<long double>>(data), height, width)
     {}
 
     /** Build constructor
@@ -41,7 +41,7 @@ public:
      *  \param pic_size Side size of the picture in pixel
      */
     Spline(size_t pic_size)
-        : MatMult<double>(Generate(pic_size), pic_size, pic_size)
+        : MatMult<long double>(Generate(pic_size), pic_size, pic_size)
     {}
 
     /** Clone function
@@ -68,7 +68,7 @@ public:
         return *this;
     }
 
-    Matrix<double> Generate(size_t pic_side);
+    Matrix<long double> Generate(size_t pic_side);
 };
 
 } // namespace astroqut

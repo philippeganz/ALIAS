@@ -17,8 +17,8 @@ namespace astroqut
  *  \param signal Signal to apply the Abel transform to. Currently only accepts double type matrix
  *  \param result Resulting matrix of size pixel_amount * wavelets_amount. Currently only accepts double type matrix
  */
-void AbelTransform::Transposed(const Matrix<double>& signal,
-                               Matrix<double>& result ) const
+void AbelTransform::Transposed(const Matrix<long double>& signal,
+                               Matrix<long double>& result ) const
 {
     size_t pic_side_half = pic_side_/2;
     size_t wavelet_amount_half = wavelet_amount_/2;
@@ -35,7 +35,7 @@ void AbelTransform::Transposed(const Matrix<double>& signal,
             // iterating over matrix multiplication vectors
             for( size_t k = 0; k < pic_side_half; ++k )
             {
-                double abel_value = this->data_[i*pic_side_half*pic_side_half + block*pic_side_half + k];
+                long double abel_value = this->data_[i*pic_side_half*pic_side_half + block*pic_side_half + k];
 
                 // iterating over signal columns
                 for( size_t j = 0; j < signal.Width(); ++j )

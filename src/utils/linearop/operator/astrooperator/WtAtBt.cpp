@@ -12,20 +12,20 @@
 namespace astroqut
 {
 
-Matrix<double> AstroOperator::WtAtBt(const Matrix<double> source,
-                                  bool apply_wavelet,
-                                  bool apply_spline,
-                                  bool ps ) const
+Matrix<long double> AstroOperator::WtAtBt(const Matrix<long double> source,
+                                          bool apply_wavelet,
+                                          bool apply_spline,
+                                          bool ps ) const
 {
     // result matrix
-    Matrix<double> result((pic_size_+2)*pic_size_, 1);
+    Matrix<long double> result((pic_size_+2)*pic_size_, 1);
     // result components pointers
-    Matrix<double> result_wavelet(&result[0], pic_size_, 1);
-    Matrix<double> result_spline(&result[pic_size_], pic_size_, 1);
-    Matrix<double> result_ps(&result[2*pic_size_], pic_size_, pic_size_);
+    Matrix<long double> result_wavelet(&result[0], pic_size_, 1);
+    Matrix<long double> result_spline(&result[pic_size_], pic_size_, 1);
+    Matrix<long double> result_ps(&result[2*pic_size_], pic_size_, pic_size_);
 
     // E' .* x
-    Matrix<double> BEtx = source & sensitivity_;
+    Matrix<long double> BEtx = source & sensitivity_;
     BEtx.Height(pic_size_);
     BEtx.Width(pic_size_);
 
@@ -38,19 +38,19 @@ Matrix<double> AstroOperator::WtAtBt(const Matrix<double> source,
         result_ps = BEtx;
 
     // A' * BEtx
-    Matrix<double> AtBEtx = abel_ * BEtx;
+    Matrix<long double> AtBEtx = abel_ * BEtx;
 
     // W' * AtBEtx
     if( apply_wavelet )
     {
-        Matrix<double> wavelet = wavelet_ * AtBEtx;
+        Matrix<long double> wavelet = wavelet_ * AtBEtx;
         result_wavelet = wavelet;
     }
 
     // S' * AtBEtx
     if( apply_spline )
     {
-        Matrix<double> spline = spline_ * AtBEtx;
+        Matrix<long double> spline = spline_ * AtBEtx;
         result_spline = spline;
     }
 

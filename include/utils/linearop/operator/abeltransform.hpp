@@ -20,7 +20,7 @@
 namespace astroqut
 {
 
-class AbelTransform : public Operator<double>
+class AbelTransform : public Operator<long double>
 {
 private:
     size_t pic_side_;
@@ -31,7 +31,7 @@ public:
     /** Default constructor
      */
     AbelTransform()
-        : Operator<double>(0, 0)
+        : Operator<long double>(0, 0)
         , pic_side_(0)
         , wavelet_amount_(0)
     {}
@@ -41,8 +41,8 @@ public:
      *  \param height Height of the full Abel matrix
      *  \param width Width of the full Abel matrix
      */
-    AbelTransform(Matrix<double>&& data, size_t height, size_t width)
-        : Operator<double>(std::forward<Matrix<double>>(data), height, width, false)
+    AbelTransform(Matrix<long double>&& data, size_t height, size_t width)
+        : Operator<long double>(std::forward<Matrix<long double>>(data), height, width, false)
         , pic_side_(height)
         , wavelet_amount_(height)
     {}
@@ -54,7 +54,7 @@ public:
      *  \param radius Amount of pixels from centre to border of galaxy, typically pixel_amount/2
      */
     AbelTransform(unsigned int wavelets_amount, unsigned int pixel_amount, unsigned int radius)
-        : Operator<double>(Matrix<double>((double) 0, pixel_amount/4, wavelets_amount/2), pixel_amount, wavelets_amount, false)
+        : Operator<long double>(Matrix<long double>((long double) 0, pixel_amount/4, wavelets_amount/2), pixel_amount, wavelets_amount, false)
         , pic_side_(std::sqrt(pixel_amount))
         , wavelet_amount_(wavelets_amount)
     {
@@ -90,7 +90,7 @@ public:
         }
     }
 
-    Matrix<double> operator*(const Matrix<double>& other) const override final
+    Matrix<long double> operator*(const Matrix<long double>& other) const override final
     {
 #ifdef DO_ARGCHECKS
         try
@@ -103,7 +103,7 @@ public:
         }
 #endif // DO_ARGCHECKS
 
-        Matrix<double> result( 0.0, this->Height(), other.Width() );
+        Matrix<long double> result( 0.0, this->Height(), other.Width() );
 
         if(!this->transposed_)
         {
@@ -128,11 +128,11 @@ public:
         return *this;
     }
 
-    void Generate(Matrix<double>& result, unsigned int radius) const;
+    void Generate(Matrix<long double>& result, unsigned int radius) const;
 
-    void Forward(const Matrix<double>& signal, Matrix<double>& result ) const;
+    void Forward(const Matrix<long double>& signal, Matrix<long double>& result ) const;
 
-    void Transposed(const Matrix<double>& signal, Matrix<double>& result ) const;
+    void Transposed(const Matrix<long double>& signal, Matrix<long double>& result ) const;
 };
 
 } // namespace astroqut

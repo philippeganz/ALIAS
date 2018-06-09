@@ -15,8 +15,8 @@ namespace astroqut
 
 /** Inverse Wavelet Transform (periodized, orthogonal)
  *  \brief Applies a periodized and orthogonal inverse discrete wavelet transform.
- *  \param wcoef Wavelet coefficients to transform back, must be length a power of 2. Currently only accepts double type matrix
- *  \param signal Result array, must be the same size as wcoef. Currently only accepts double type matrix
+ *  \param wcoef Wavelet coefficients to transform back, must be length a power of 2. Currently only accepts long double type matrix
+ *  \param signal Result array, must be the same size as wcoef. Currently only accepts long double type matrix
  *  \param column Column to transform, -1 to transform all
  *  \param coarsest_level Coarsest level of the wavelet transform
  *  \param intermediate Temporary array of size 1 x Height of signal
@@ -24,12 +24,12 @@ namespace astroqut
  *  \author David Donoho <donoho@stat.stanford.edu> 1993
  *  \author Philippe Ganz <philippe.ganz@gmail.com> 2018
  */
-void Wavelet::IWT_PO(const Matrix<double>& wcoef,
-                     Matrix<double>& signal,
+void Wavelet::IWT_PO(const Matrix<long double>& wcoef,
+                     Matrix<long double>& signal,
                      unsigned int column,
                      unsigned int coarsest_level,
-                     double* intermediate,
-                     double* intermediate_temp ) const
+                     long double* intermediate,
+                     long double* intermediate_temp ) const
 {
     size_t level_max = (size_t) std::ceil(std::log2(signal.Height()));
     size_t level_offset = 1;
@@ -66,9 +66,9 @@ void Wavelet::IWT_PO(const Matrix<double>& wcoef,
     {
         for( size_t pass_index = 0; pass_index < level_offset; ++pass_index )
         {
-            double even_local_coef = 0.0;
+            long double even_local_coef = 0.0;
             int low_pass_offset = pass_index;
-            double odd_local_coef = 0.0;
+            long double odd_local_coef = 0.0;
             size_t high_pass_offset = pass_index;
 
             for( size_t filter_index = 0; filter_index < filter_length_half_even; ++filter_index )

@@ -17,18 +17,18 @@ void Chandra()
 {
     std::cout << "WS test with 512x512 Chandra data." << std::endl;
 
-    Matrix<double> picture("data/512_chandra/F.data", 262144, 1);
+    Matrix<long double> picture(std::string("data/512_chandra/F.data"), 262144, 1, double());
 
-    Matrix<double> sensitivity("data/512_chandra/E.data", 262144, 1);
+    Matrix<long double> sensitivity(std::string("data/512_chandra/E.data"), 262144, 1, double());
 
-    Matrix<double> background("data/512_chandra/O.data", 262144, 1);
+    Matrix<long double> background(std::string("data/512_chandra/O.data"), 262144, 1, double());
 
-    Matrix<double> expected_result("data/512_chandra/solstatic.data", 263168, 1);
+    Matrix<long double> expected_result(std::string("data/512_chandra/solstatic.data"), 263168, 1, double());
 
     std::chrono::time_point<std::chrono::high_resolution_clock> start, end;
     start = std::chrono::high_resolution_clock::now();
 
-    Matrix<double> solution = WS::Solve(picture, sensitivity, background, WS::Parameters());
+    Matrix<long double> solution = WS::Solve(picture, sensitivity, background, WS::Parameters());
 
     end = std::chrono::high_resolution_clock::now();
 

@@ -17,21 +17,22 @@ namespace astroqut
 namespace WS
 {
 
-Matrix<double> Solve( const Matrix<double>& image,
-                      const Matrix<double>& sensitivity,
-                      const Matrix<double>& background,
-                      const Parameters& options )
+Matrix<long double> Solve(const Matrix<long double>& image,
+                          const Matrix<long double>& sensitivity,
+                          const Matrix<long double>& background,
+                          const Parameters& options )
 {
-    Matrix<double> divX("data/512_chandra/divx.data", 263168, 1);
+    Matrix<long double> divX(std::string("data/512_chandra/divx.data"), 263168, 1, double());
 
-    double lambda = 1.832689883157505;
+    long double lambda = 1.832689883157505;
 
     AstroOperator astro(512, 512, 256, sensitivity, divX, false, options);
 
-    fista::poisson::Parameters params;
+    fista::poisson::Parameters<long double> params;
     params.log_period = 1;
+    params.tol = 1.0e-10;
 
-    Matrix<double> solution = fista::poisson::Solve(astro, background, image, lambda, params);
+    Matrix<long double> solution = fista::poisson::Solve(astro, background, image, lambda, params);
 
     return solution;
 }

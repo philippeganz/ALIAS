@@ -11,8 +11,6 @@
 
 namespace astroqut
 {
-namespace blur
-{
 
 /** Generate a blurring filter
  *  \brief Builds a blurring filter to be used in a convolution
@@ -20,18 +18,18 @@ namespace blur
  *  \param R0 Core radius of the PSF
  *  \param alpha Decrease speed of the PSF
  */
-Matrix<double> Generate( double threshold, double R0, double alpha )
+Matrix<long double> Blur::Generate(long double threshold, long double R0, long double alpha )
 {
-    double radius_squared = R0*R0;
+    long double radius_squared = R0*R0;
     int mask_size = std::ceil(std::sqrt((std::pow(threshold, -1.0/alpha)-1.0)*radius_squared));
     Matrix<double> result(2*mask_size+1, 2*mask_size+1);
 
     for(int i = -mask_size; i <= mask_size; ++i)
     {
-        double i_squared = i*i;
+        long double i_squared = i*i;
         for(int j = -mask_size; j <= mask_size; ++j)
         {
-            double j_squared = j*j;
+            long double j_squared = j*j;
             result[(i+mask_size)*(2*mask_size+1) + (j+mask_size)] = std::pow(1 + (i_squared + j_squared)/radius_squared, -alpha);
 #ifdef DEBUG
             std::cout << result.Data()[(i+mask_size)*(2*mask_size+1) + (j+mask_size)] << std::endl;
@@ -41,5 +39,4 @@ Matrix<double> Generate( double threshold, double R0, double alpha )
     return result/result.Sum();
 }
 
-} // namespace blur
 } // namespace astroqut

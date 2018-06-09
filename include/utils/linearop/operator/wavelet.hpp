@@ -19,24 +19,24 @@ namespace astroqut
 enum WaveletType{haar, beylkin, coiflet, daubechies, symmlet, vaidyanathan, battle};
 enum FilterType{low, high};
 
-class Wavelet : public Operator<double>
+class Wavelet : public Operator<long double>
 {
 private:
     WaveletType wavelet_type_;
     int parameter_;
-    Matrix<double> low_pass_filter_;
-    Matrix<double> high_pass_filter_;
+    Matrix<long double> low_pass_filter_;
+    Matrix<long double> high_pass_filter_;
 
 public:
 
     /** Default constructor
      */
     Wavelet()
-        : Operator<double>(0, 0)
+        : Operator<long double>(0, 0)
         , wavelet_type_((WaveletType) 0)
         , parameter_(0)
-        , low_pass_filter_(Matrix<double>())
-        , high_pass_filter_(Matrix<double>())
+        , low_pass_filter_(Matrix<long double>())
+        , high_pass_filter_(Matrix<long double>())
     {}
 
     /** Full member constructor
@@ -46,8 +46,8 @@ public:
      *  \param parameter Integer parameter specific to each wavelet type
      *  \param transposed Transposition state of the operator
      */
-    Wavelet(Matrix<double>&& low_pass_filter, Matrix<double>&& high_pass_filter, WaveletType wavelet_type, int parameter, bool transposed = false)
-        : Operator<double>(Matrix<double>(), 1, 1, transposed)
+    Wavelet(Matrix<long double>&& low_pass_filter, Matrix<long double>&& high_pass_filter, WaveletType wavelet_type, int parameter, bool transposed = false)
+        : Operator<long double>(Matrix<long double>(), 1, 1, transposed)
         , wavelet_type_(wavelet_type)
         , parameter_(parameter)
         , low_pass_filter_(low_pass_filter)
@@ -61,7 +61,7 @@ public:
      *  \param transposed Transposition state of the operator
      */
     Wavelet(WaveletType wavelet_type, int parameter, bool transposed = false)
-        : Operator<double>(Matrix<double>(), 1, 1, transposed)
+        : Operator<long double>(Matrix<long double>(), 1, 1, transposed)
         , wavelet_type_(wavelet_type)
         , parameter_(parameter)
         , low_pass_filter_(MakeONFilter(wavelet_type, parameter, low))
@@ -101,7 +101,7 @@ public:
         }
     }
 
-    Matrix<double> operator*(const Matrix<double>& other) const override final
+    Matrix<long double> operator*(const Matrix<long double>& other) const override final
     {
 #ifdef DO_ARGCHECKS
     if( !this->IsValid() || !other.IsValid() )
@@ -111,9 +111,9 @@ public:
 
 #endif // DO_ARGCHECKS
 
-        Matrix<double> result( other.Height(), other.Width() );
-        double* temp_1 = new double[other.Height()];
-        double* temp_2 = new double[other.Height()];
+        Matrix<long double> result( other.Height(), other.Width() );
+        long double* temp_1 = new long double[other.Height()];
+        long double* temp_2 = new long double[other.Height()];
 
         if(!this->transposed_)
         {
@@ -148,23 +148,23 @@ public:
         return *this;
     }
 
-    Matrix<double> MakeONFilter(WaveletType wavelet_type,
+    Matrix<long double> MakeONFilter(WaveletType wavelet_type,
                                 int parameter,
                                 FilterType filter_type) const;
 
-    void FWT_PO(const Matrix<double>& signal,
-                Matrix<double>& wcoef,
+    void FWT_PO(const Matrix<long double>& signal,
+                Matrix<long double>& wcoef,
                 unsigned int column,
                 unsigned int coarsest_level,
-                double* intermediate,
-                double* intermediate_temp ) const;
+                long double* intermediate,
+                long double* intermediate_temp ) const;
 
-    void IWT_PO(const Matrix<double>& wcoef,
-                Matrix<double>& signal,
+    void IWT_PO(const Matrix<long double>& wcoef,
+                Matrix<long double>& signal,
                 unsigned int column,
                 unsigned int coarsest_level,
-                double* intermediate,
-                double* intermediate_temp ) const;
+                long double* intermediate,
+                long double* intermediate_temp ) const;
 
 };
 

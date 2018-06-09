@@ -15,8 +15,8 @@ namespace astroqut
 
 /** Forward Wavelet Transform (periodized, orthogonal)
  *  \brief Applies a periodized and orthogonal discrete wavelet transform.
- *  \param signal Signal to transform, must be length a power of 2. Currently only accepts double type matrix
- *  \param wcoef Result array, must be the same size as signal. Currently only accepts double type matrix
+ *  \param signal Signal to transform, must be length a power of 2. Currently only accepts long double type matrix
+ *  \param wcoef Result array, must be the same size as signal. Currently only accepts long double type matrix
  *  \param column Column to transform
  *  \param coarsest_level Coarsest level of the wavelet transform
  *  \param intermediate Temporary array of size 1 x Height of signal
@@ -24,12 +24,12 @@ namespace astroqut
  *  \author David Donoho <donoho@stat.stanford.edu> 1993
  *  \author Philippe Ganz <philippe.ganz@gmail.com> 2018
  */
-void Wavelet::FWT_PO(const Matrix<double>& signal,
-                     Matrix<double>& wcoef,
+void Wavelet::FWT_PO(const Matrix<long double>& signal,
+                     Matrix<long double>& wcoef,
                      unsigned int column,
                      unsigned int coarsest_level,
-                     double* intermediate,
-                     double* intermediate_temp ) const
+                     long double* intermediate,
+                     long double* intermediate_temp ) const
 {
     size_t level_max = (size_t) std::ceil(std::log2(signal.Height()));
     size_t level_offset = signal.Height();
@@ -63,9 +63,9 @@ void Wavelet::FWT_PO(const Matrix<double>& signal,
     {
         for( size_t pass_index = 0; pass_index < level_offset/2; ++pass_index )
         {
-            double low_pass_local_coef = 0.0;
+            long double low_pass_local_coef = 0.0;
             size_t low_pass_offset = 2*pass_index;
-            double high_pass_local_coef = 0.0;
+            long double high_pass_local_coef = 0.0;
             int high_pass_offset = 2*pass_index+1;
 
             for( size_t filter_index = 0; filter_index < low_pass_filter_.Length(); ++filter_index )

@@ -18,11 +18,11 @@ namespace astroqut
 namespace blur
 {
 
-Matrix<double> Generate( double threshold, double R0, double alpha );
+Matrix<long double> Generate( long double threshold, long double R0, long double alpha );
 
 } // namespace blur
 
-class Blur : public Convolution<double>
+class Blur : public Convolution<long double>
 {
 private:
 
@@ -36,8 +36,8 @@ public:
     /** Full member constructor
      *  \param data Blurring filter matrix
      */
-    Blur(Matrix<double>&& data)
-        : Convolution<double>(std::forward<Matrix<double>>(data))
+    Blur(Matrix<long double>&& data)
+        : Convolution<long double>(std::forward<Matrix<long double>>(data))
     {}
 
     /** Build constructor
@@ -46,14 +46,16 @@ public:
      *  \param R0 Core radius of the PSF
      *  \param alpha Decrease speed of the PSF
      */
-    Blur(double threshold, double R0, double alpha)
-        : Convolution<double>(blur::Generate(threshold, R0, alpha))
+    Blur(long double threshold, long double R0, long double alpha)
+        : Convolution<long double>(Generate(threshold, R0, alpha))
     {}
 
     /** Default destructor
      */
     virtual ~Blur()
     {}
+
+    Matrix<long double> Generate(long double threshold, long double R0, long double alpha);
 };
 
 } // namespace astroqut

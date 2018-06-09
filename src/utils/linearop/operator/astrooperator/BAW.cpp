@@ -12,30 +12,30 @@
 namespace astroqut
 {
 
-Matrix<double> AstroOperator::BAW(const Matrix<double> source,
-                                  bool apply_wavelet,
-                                  bool apply_spline,
-                                  bool ps ) const
+Matrix<long double> AstroOperator::BAW(const Matrix<long double> source,
+                                       bool apply_wavelet,
+                                       bool apply_spline,
+                                       bool ps ) const
 {
-    Matrix<double> normalized_source = source / standardise_;
+    Matrix<long double> normalized_source = source / standardise_;
 
     // split the normalized source into wavelet, spline and ps components
-    Matrix<double> source_wavelet(&normalized_source[0], pic_size_, 1);
-    Matrix<double> source_spline(&normalized_source[pic_size_], pic_size_, 1);
-    Matrix<double> source_ps(&normalized_source[2*pic_size_], pic_size_, pic_size_);
+    Matrix<long double> source_wavelet(&normalized_source[0], pic_size_, 1);
+    Matrix<long double> source_spline(&normalized_source[pic_size_], pic_size_, 1);
+    Matrix<long double> source_ps(&normalized_source[2*pic_size_], pic_size_, pic_size_);
 
     // W * xw
-    Matrix<double> result_wavelet;
+    Matrix<long double> result_wavelet;
     if( apply_wavelet )
         result_wavelet = wavelet_ * source_wavelet;
 
     // W * xs
-    Matrix<double> result_spline;
+    Matrix<long double> result_spline;
     if( apply_spline )
         result_spline = spline_ * source_spline;
 
     // A * (Wxw + Wxs)
-    Matrix<double> result = abel_ * (result_wavelet + result_spline);
+    Matrix<long double> result = abel_ * (result_wavelet + result_spline);
     result.Height(pic_size_);
     result.Width(pic_size_);
 

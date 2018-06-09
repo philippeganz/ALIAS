@@ -204,8 +204,7 @@ bool Input()
     std::cout << std::endl << "Expected result :" << expected_result;
 #endif // VERBOSE
 
-    Matrix<double> input_test(8, 8);
-    "data/test/test.data" >> input_test;
+    Matrix<double> input_test("data/test/test.data", 8, 8);
 
 #ifdef VERBOSE
     std::cout << std::endl << "Read data :" << input_test;

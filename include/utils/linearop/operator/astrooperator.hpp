@@ -19,14 +19,14 @@
 namespace astroqut
 {
 
-class AstroOperator : public Operator<double>
+class AstroOperator : public Operator<long double>
 {
 private:
     size_t pic_size_;
     AbelTransform abel_;
     Blur blur_;
-    Matrix<double> sensitivity_;
-    Matrix<double> standardise_;
+    Matrix<long double> sensitivity_;
+    Matrix<long double> standardise_;
     Spline spline_;
     Wavelet wavelet_;
 
@@ -56,14 +56,14 @@ public:
     AstroOperator(size_t pic_size,
                   size_t wavelet_amount,
                   size_t radius,
-                  const Matrix<double> sensitivity,
-                  const Matrix<double> standardise,
+                  const Matrix<long double> sensitivity,
+                  const Matrix<long double> standardise,
                   bool transposed = false,
                   WS::Parameters params = WS::Parameters() )
-        : Operator<double>(Matrix<double>(),
-                           transposed ? (pic_size+2)*pic_size : pic_size*pic_size,
-                           transposed ? pic_size*pic_size : (pic_size+2)*pic_size,
-                           transposed)
+        : Operator<long double>(Matrix<long double>(),
+                                transposed ? (pic_size+2)*pic_size : pic_size*pic_size,
+                                transposed ? pic_size*pic_size : (pic_size+2)*pic_size,
+                                transposed)
         , pic_size_(pic_size)
         , abel_(transposed ?
                 AbelTransform(wavelet_amount, pic_size*pic_size, radius).Transpose() :
@@ -92,15 +92,15 @@ public:
     AstroOperator(size_t pic_size,
                   const AbelTransform abel,
                   const Blur blur,
-                  const Matrix<double> sensitivity,
-                  const Matrix<double> standardise,
+                  const Matrix<long double> sensitivity,
+                  const Matrix<long double> standardise,
                   const Spline spline,
                   const Wavelet wavelet,
                   bool transposed = false )
-        : Operator<double>(Matrix<double>(),
-                           transposed ? (pic_size+2)*pic_size : pic_size*pic_size,
-                           transposed ? pic_size*pic_size : (pic_size+2)*pic_size,
-                           transposed)
+        : Operator<long double>(Matrix<long double>(),
+                                transposed ? (pic_size+2)*pic_size : pic_size*pic_size,
+                                transposed ? pic_size*pic_size : (pic_size+2)*pic_size,
+                                transposed)
         , pic_size_(pic_size)
         , abel_( transposed ? abel : abel.Clone()->Transpose() )
         , blur_(blur)
@@ -136,7 +136,7 @@ public:
         return *this;
     }
 
-    virtual Matrix<double> operator*(const Matrix<double>& other) const override final
+    virtual Matrix<long double> operator*(const Matrix<long double>& other) const override final
     {
 #ifdef DO_ARGCHECKS
         try
@@ -148,7 +148,7 @@ public:
             throw;
         }
 #endif // DO_ARGCHECKS
-        Matrix<double> result;
+        Matrix<long double> result;
         if(!this->transposed_)
         {
             result = BAW(other);
@@ -160,15 +160,15 @@ public:
         return result;
     }
 
-    Matrix<double> BAW(const Matrix<double> source,
-                       bool wavelet = true,
-                       bool spline = true,
-                       bool ps = true ) const;
+    Matrix<long double> BAW(const Matrix<long double> source,
+                            bool wavelet = true,
+                            bool spline = true,
+                            bool ps = true ) const;
 
-    Matrix<double> WtAtBt(const Matrix<double> source,
-                          bool wavelet = true,
-                          bool spline = true,
-                          bool ps = true ) const;
+    Matrix<long double> WtAtBt(const Matrix<long double> source,
+                               bool wavelet = true,
+                               bool spline = true,
+                               bool ps = true ) const;
 };
 
 } // namespace astroqut
