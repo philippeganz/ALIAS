@@ -111,16 +111,6 @@
 		<Unit filename="src/test/fista.cpp" />
 		<Unit filename="src/test/matrix.cpp" />
 		<Unit filename="src/test/operator.cpp" />
-		<Unit filename="src/utils/linearop/operator/abeltransform/forward.cpp" />
-		<Unit filename="src/utils/linearop/operator/abeltransform/generate.cpp" />
-		<Unit filename="src/utils/linearop/operator/abeltransform/transposed.cpp" />
-		<Unit filename="src/utils/linearop/operator/astrooperator/BAW.cpp" />
-		<Unit filename="src/utils/linearop/operator/astrooperator/WtAtBt.cpp" />
-		<Unit filename="src/utils/linearop/operator/convolution/blur.cpp" />
-		<Unit filename="src/utils/linearop/operator/matmult/spline.cpp" />
-		<Unit filename="src/utils/linearop/operator/wavelet/FWT_PO.cpp" />
-		<Unit filename="src/utils/linearop/operator/wavelet/IWT_PO.cpp" />
-		<Unit filename="src/utils/linearop/operator/wavelet/makeonfilter.cpp" />
 		<Unit filename="src/utils/settings.cpp" />
 		<Extensions>
 			<code_completion />
