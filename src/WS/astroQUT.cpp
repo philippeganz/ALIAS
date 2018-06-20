@@ -3,8 +3,8 @@
 /// \brief AstroQUT solver implementation.
 /// \author Jairo Diaz <jairo.diaz@unige.ch> 2016-2017
 /// \author Philippe Ganz <philippe.ganz@gmail.com> 2017-2018
-/// \version 0.4.0
-/// \date 2018-06-02
+/// \version 0.4.1
+/// \date 2018-06-16
 /// \copyright GPL-3.0
 ///
 
@@ -17,19 +17,22 @@ namespace astroqut
 namespace WS
 {
 
-Matrix<double> Solve( const Matrix<double>& image,
-                      const Matrix<double>& sensitivity,
-                      const Matrix<double>& background,
-                      const Parameters& options )
+Matrix<double> Solve(const Matrix<double>& image,
+                     const Matrix<double>& sensitivity,
+                     const Matrix<double>& background,
+                     const Parameters& options )
 {
-    Matrix<double> divX("data/512_chandra/divx.data", 263168, 1);
+    Matrix<double> divX(std::string("data/512_chandra/divx.data"), 263168, 1, double());
 
-    double lambda = 1.832689883157505;
+    double lambda = 1.8326898831575;
 
     AstroOperator astro(512, 512, 256, sensitivity, divX, false, options);
 
-    fista::poisson::Parameters params;
+    fista::poisson::Parameters<double> params;
     params.log_period = 1;
+    params.tol = 1.0e-10;
+    params.init_value = Matrix<double>(0.0L, 263168, 1);
+    params.init_value[0] = 825.566258022932L;
 
     Matrix<double> solution = fista::poisson::Solve(astro, background, image, lambda, params);
 

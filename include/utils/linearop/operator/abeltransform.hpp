@@ -3,8 +3,8 @@
 /// \brief Abel transform class header
 /// \details Provide the Abel transform operator
 /// \author Philippe Ganz <philippe.ganz@gmail.com> 2017-2018
-/// \version 0.4.0
-/// \date 2018-06-02
+/// \version 0.4.1
+/// \date 2018-06-17
 /// \copyright GPL-3.0
 ///
 
@@ -20,7 +20,8 @@
 namespace astroqut
 {
 
-class AbelTransform : public Operator<double>
+template<class T>
+class AbelTransform : public Operator<T>
 {
 private:
     size_t pic_side_;
@@ -31,7 +32,7 @@ public:
     /** Default constructor
      */
     AbelTransform()
-        : Operator<double>(0, 0)
+        : Operator<T>(0, 0)
         , pic_side_(0)
         , wavelet_amount_(0)
     {}
@@ -41,8 +42,8 @@ public:
      *  \param height Height of the full Abel matrix
      *  \param width Width of the full Abel matrix
      */
-    AbelTransform(Matrix<double>&& data, size_t height, size_t width)
-        : Operator<double>(std::forward<Matrix<double>>(data), height, width, false)
+    AbelTransform(Matrix<T>&& data, size_t height, size_t width)
+        : Operator<T>(std::forward<Matrix<T>>(data), height, width, false)
         , pic_side_(height)
         , wavelet_amount_(height)
     {}
@@ -54,7 +55,7 @@ public:
      *  \param radius Amount of pixels from centre to border of galaxy, typically pixel_amount/2
      */
     AbelTransform(unsigned int wavelets_amount, unsigned int pixel_amount, unsigned int radius)
-        : Operator<double>(Matrix<double>((double) 0, pixel_amount/4, wavelets_amount/2), pixel_amount, wavelets_amount, false)
+        : Operator<T>(Matrix<T>((T) 0, pixel_amount/4, wavelets_amount/2), pixel_amount, wavelets_amount, false)
         , pic_side_(std::sqrt(pixel_amount))
         , wavelet_amount_(wavelets_amount)
     {
@@ -90,7 +91,7 @@ public:
         }
     }
 
-    Matrix<double> operator*(const Matrix<double>& other) const override final
+    Matrix<T> operator*(const Matrix<T>& other) const override final
     {
 #ifdef DO_ARGCHECKS
         try
@@ -103,7 +104,7 @@ public:
         }
 #endif // DO_ARGCHECKS
 
-        Matrix<double> result( 0.0, this->Height(), other.Width() );
+        Matrix<T> result( 0.0, this->Height(), other.Width() );
 
         if(!this->transposed_)
         {
@@ -128,11 +129,162 @@ public:
         return *this;
     }
 
-    void Generate(Matrix<double>& result, unsigned int radius) const;
+    /** Generate a compressed Abel matrix
+     *  \brief Builds an Abel transform matrix with diagonal radius, without duplicating data or inserting zeros
+     *  \param result Resulting matrix of size pixel_amount/4 * wavelets_amount/2.
+     *  \param radius Amount of pixels from centre to border of galaxy, typically pixel_amount/2
+     */
+    void Generate(Matrix<T>& result, unsigned int radius ) const
+    {
+        size_t pic_side_half = pic_side_/2;
+        size_t pic_side_extended = std::floor(pic_side_half*std::sqrt(2.0L));
+        size_t wavelet_amount_half = wavelet_amount_/2;
+        T radius_extended = radius * std::sqrt(2.0L);
+        T radius_extended_to_pic_side_extended_ratio = radius_extended/(T)pic_side_extended;
+        T radius_to_pic_side_ratio = radius/(T)pic_side_half;
+        T radius_extended_to_wavelet_amount_half_ratio = radius_extended/(T)wavelet_amount_half;
+        T* x_axis = new T[wavelet_amount_half];
+        for( size_t i = 0; i < wavelet_amount_half; ++i )
+            x_axis[i] = ((T)i+1.0L) * radius_extended_to_wavelet_amount_half_ratio;
 
-    void Forward(const Matrix<double>& signal, Matrix<double>& result ) const;
+        for( size_t i = 0; i < pic_side_half; ++i )
+        {
+            T z = (T)i * radius_to_pic_side_ratio;
+            for( size_t j = 0; j < pic_side_half; ++j )
+            {
+                T y = (T)j * radius_extended_to_pic_side_extended_ratio;
+                T s = std::sqrt(y*y + z*z);
+                for(unsigned int k = 0; k < wavelet_amount_half; ++k)
+                {
+                    if( x_axis[k] <= s )
+                        continue;
 
-    void Transposed(const Matrix<double>& signal, Matrix<double>& result ) const;
+                    T ri0 = s;
+                    if( k != 0 && x_axis[k-1] >= s )
+                        ri0 = x_axis[k-1];
+
+                    T ri1 = x_axis[k];
+                    if( x_axis[k] < s )
+                        ri1 = s;
+
+                    size_t index = (wavelet_amount_half-i-1)*pic_side_half*wavelet_amount_half + (pic_side_half-j-1)*wavelet_amount_half + wavelet_amount_half-k-1;
+                    result[index] = 2.0L*(std::sqrt(ri1*ri1 - s*s) - std::sqrt(ri0*ri0 - s*s));
+                }
+            }
+        }
+        delete[] x_axis;
+    }
+
+    /** Abel transform
+     *  \brief Applies an Abel transform from the compressed Abel matrix.
+     *  \param signal Signal to apply the Abel transform to. Currently only accepts double type matrix
+     *  \param result Resulting matrix of size pixel_amount * wavelets_amount.
+     */
+    void Forward(const Matrix<T>& signal, Matrix<T>& result ) const
+    {
+        size_t pic_side_half = pic_side_/2;
+        size_t wavelet_amount_half = wavelet_amount_/2;
+
+    #ifdef DEBUG
+        int progress_step = std::max(1, (int)(pic_side_half*pic_side_half)/100);
+        int step = 0;
+        std::cout << std::endl;
+    #endif // DEBUG
+
+        // iterating over blocks
+        #pragma omp parallel for
+        for( size_t block = 0; block < pic_side_half; ++block )
+        {
+            // iterating over rows
+            for( size_t i = 0; i < pic_side_half; ++i )
+            {
+    #ifdef DEBUG
+                if( (block*pic_side_half+i) % progress_step == 0 )
+                {
+                    std::stringstream output;
+                    output << "\r" << step++;
+                    std::cout << output.str();
+                }
+    #endif // DEBUG
+
+                // iterating over matrix multiplication vectors
+                for( size_t k = 0; k < wavelet_amount_half; ++k )
+                {
+                    T abel_value = this->data_[(block*pic_side_half + i)*pic_side_half + k];
+
+                    // iterating over signal columns
+                    for( size_t j = 0; j < signal.Width(); ++j )
+                    {
+
+                        // left part
+                        size_t target_left_index = k*signal.Width() + j;
+
+                        T left_temp = abel_value * signal[target_left_index];
+
+                        size_t result_left_upper_index = (block*pic_side_ + i)*signal.Width() + j;
+                        result[result_left_upper_index] += left_temp;
+
+                        size_t result_left_lower_index = (block*pic_side_ + pic_side_ - i - 1)*signal.Width() + j;
+                        result[result_left_lower_index] += left_temp;
+
+
+                        // right part
+                        size_t target_right_index = (pic_side_ - k - 1)*signal.Width() + j;
+
+                        T right_temp = abel_value * signal[target_right_index];
+
+                        size_t result_right_upper_index = ((pic_side_ - block -1)*pic_side_ + i)*signal.Width() + j;
+                        result[result_right_upper_index] += right_temp;
+
+                        size_t result_right_lower_index = ((pic_side_ - block -1)*pic_side_ + pic_side_ - i - 1)*signal.Width() + j;
+                        result[result_right_lower_index] += right_temp;
+                    }
+                }
+            }
+        }
+    }
+
+    /** Transposed Abel transform
+     *  \brief Applies a transposed Abel transform from the compressed Abel matrix.
+     *  \param signal Signal to apply the Abel transform to. Currently only accepts double type matrix
+     *  \param result Resulting matrix of size pixel_amount * wavelets_amount.
+     */
+    void Transposed(const Matrix<T>& signal, Matrix<T>& result ) const
+    {
+        size_t pic_side_half = pic_side_/2;
+        size_t wavelet_amount_half = wavelet_amount_/2;
+
+        // iterating over rows
+        #pragma omp parallel for
+        for( size_t i = 0; i < wavelet_amount_half; ++i )
+        {
+
+            // iterating over blocks
+            for( size_t block = 0; block < pic_side_half; ++block )
+            {
+
+                // iterating over matrix multiplication vectors
+                for( size_t k = 0; k < pic_side_half; ++k )
+                {
+                    T abel_value = this->data_[i*pic_side_half*pic_side_half + block*pic_side_half + k];
+
+                    // iterating over signal columns
+                    for( size_t j = 0; j < signal.Width(); ++j )
+                    {
+                        // target indices
+                        size_t target_upper_left_index = (block*pic_side_ + k)*signal.Width() + j;
+                        size_t target_upper_right_index = (block*pic_side_ + pic_side_ - k - 1)*signal.Width() + j;
+                        size_t target_lower_left_index = ((pic_side_ - block - 1)*pic_side_ + k)*signal.Width() + j;
+                        size_t target_lower_right_index = ((pic_side_ - block - 1)*pic_side_ + pic_side_ - k - 1)*signal.Width() + j;
+
+                        // updating result
+                        result[i*signal.Width() + j] += abel_value * (signal[target_upper_left_index] + signal[target_upper_right_index]);
+                        result[(wavelet_amount_ - i - 1)*signal.Width() + j] += abel_value * (signal[target_lower_left_index] + signal[target_lower_right_index]);
+                    }
+                }
+            }
+        }
+    }
 };
 
 } // namespace astroqut

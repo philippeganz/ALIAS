@@ -33,7 +33,7 @@ int main( int argc, char **argv )
 
     try
     {
-        astroqut::test::PerfTest<double>(1024);
+        astroqut::test::PerfTest<double>(2048);
     }
     catch (const std::exception& err)
     {

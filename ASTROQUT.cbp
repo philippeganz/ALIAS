@@ -74,7 +74,7 @@
 			<Add option="-Wextra" />
 			<Add option="-Wall" />
 			<Add option="-m64" />
-			<Add option="-fopenmp -std=c++17 -march=native -mno-sse5 --param inline-unit-growth=100" />
+			<Add option="-fopenmp -std=c++17 -march=native -mno-sse5" />
 			<Add directory="include" />
 			<Add directory="extern_include/eigen-eigen-5a0156e40feb" />
 		</Compiler>
@@ -105,23 +105,12 @@
 		<Unit filename="include/utils/linearop/operator/wavelet.hpp" />
 		<Unit filename="include/utils/settings.hpp" />
 		<Unit filename="src/WS/astroQUT.cpp" />
-		<Unit filename="src/fista/poisson.cpp" />
 		<Unit filename="src/main.cpp" />
 		<Unit filename="src/test.cpp" />
 		<Unit filename="src/test/WS.cpp" />
 		<Unit filename="src/test/fista.cpp" />
 		<Unit filename="src/test/matrix.cpp" />
 		<Unit filename="src/test/operator.cpp" />
-		<Unit filename="src/utils/linearop/operator/abeltransform/forward.cpp" />
-		<Unit filename="src/utils/linearop/operator/abeltransform/generate.cpp" />
-		<Unit filename="src/utils/linearop/operator/abeltransform/transposed.cpp" />
-		<Unit filename="src/utils/linearop/operator/astrooperator/BAW.cpp" />
-		<Unit filename="src/utils/linearop/operator/astrooperator/WtAtBt.cpp" />
-		<Unit filename="src/utils/linearop/operator/convolution/blur.cpp" />
-		<Unit filename="src/utils/linearop/operator/matmult/spline.cpp" />
-		<Unit filename="src/utils/linearop/operator/wavelet/FWT_PO.cpp" />
-		<Unit filename="src/utils/linearop/operator/wavelet/IWT_PO.cpp" />
-		<Unit filename="src/utils/linearop/operator/wavelet/makeonfilter.cpp" />
 		<Unit filename="src/utils/settings.cpp" />
 		<Extensions>
 			<code_completion />
