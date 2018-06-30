@@ -60,7 +60,7 @@ public:
                   const Matrix<T> sensitivity,
                   const Matrix<T> standardise,
                   bool transposed = false,
-                  WS::Parameters params = WS::Parameters() )
+                  WS::Parameters<T> params = WS::Parameters<T>() )
         : Operator<T>(Matrix<T>(),
                       transposed ? (pic_size+2)*pic_size : pic_size*pic_size,
                       transposed ? pic_size*pic_size : (pic_size+2)*pic_size,

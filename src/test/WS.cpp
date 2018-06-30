@@ -28,7 +28,7 @@ void Chandra()
     std::chrono::time_point<std::chrono::high_resolution_clock> start, end;
     start = std::chrono::high_resolution_clock::now();
 
-    Matrix<double> solution = WS::Solve(picture, sensitivity, background, WS::Parameters());
+    Matrix<double> solution = WS::Solve(picture, sensitivity, background, WS::Parameters<double>());
 
     end = std::chrono::high_resolution_clock::now();
 

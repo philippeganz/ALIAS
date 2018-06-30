@@ -378,7 +378,7 @@ bool AstroTest()
 
     Matrix<long double> expected_result(std::string("data/test/res.data"), 4096, 1, double());
 
-    AstroOperator astro(64, 64, 32, E, divx, false, WS::Parameters());
+    AstroOperator astro(64, 64, 32, E, divx, false, WS::Parameters<long double>());
 
     Matrix<long double> computed_result = astro * x;
 
@@ -401,7 +401,7 @@ bool AstroTestTransposed()
 
     Matrix<long double> expected_result(std::string("data/test/res_transposed.data"), 4224,1, double());
 
-    AstroOperator astro_transp(64, 64, 32, E, divx, true, WS::Parameters());
+    AstroOperator astro_transp(64, 64, 32, E, divx, true, WS::Parameters<long double>());
 
     Matrix<long double> computed_result = astro_transp * x;
 

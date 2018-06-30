@@ -158,8 +158,8 @@ public:
      *  \author Philippe Ganz <philippe.ganz@gmail.com> 2018
      */
     Matrix<T> MakeONFilter(WaveletType wavelet_type,
-                                    int parameter,
-                                    FilterType filter_type) const
+                           int parameter,
+                           FilterType filter_type) const
     {
         size_t data_size = 0;
         T data[59] = {(T)0};
