@@ -834,6 +834,42 @@ public:
         return Matrix(*this).Log();
     }
 
+    /** Abs operator in-place
+     *  Applies the abs function to all elements
+     *  \return Current object overwritten with the result
+     */
+    Matrix&& Abs() &&
+    {
+#ifdef DO_ARGCHECKS
+        try
+        {
+            IsValid();
+        }
+        catch (const std::exception&)
+        {
+            throw;
+        }
+#endif // DO_ARGCHECKS
+
+        #pragma omp parallel for simd
+        for(size_t i = 0; i < this->length_; ++i)
+        {
+            // real part of log of negative numbers is 0
+            data_[i] = std::abs(data_[i]);
+        }
+
+        return std::move(*this);
+    }
+
+    /** Abs operator
+     *  Applies the abs function to all elements
+     *  \return A new instance containing the result
+     */
+    Matrix Abs() const &
+    {
+        return Matrix(*this).Abs();
+    }
+
     /** Shrinkage in-place
      *   Apply the shrinkage algorithm
      *   \param thresh_factor The threshold factor to be used on the data
