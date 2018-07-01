@@ -13,5 +13,6 @@
 //#define DEBUG
 //#define VERBOSE
 //#define DO_ARGCHECKS
+#define PI 3.14159265358979323846264338328
 
 #endif // ASTROQUT_CONST_HPP
