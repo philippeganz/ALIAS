@@ -162,11 +162,14 @@ public:
     }
 
     Matrix<T> BAW(const Matrix<T> source,
+                  bool standardise = true,
                   bool apply_wavelet = true,
                   bool apply_spline = true,
                   bool ps = true ) const
     {
-        Matrix<T> normalized_source = source / standardise_;
+        Matrix<T> normalized_source = source;
+        if(standardise)
+            normalized_source /= standardise_;
 
         // split the normalized source into wavelet, spline and ps components
         Matrix<T> source_wavelet(&normalized_source[0], pic_size_, 1);
@@ -209,16 +212,26 @@ public:
     }
 
     Matrix<T> WtAtBt(const Matrix<T> source,
+                     bool standardise = true,
                      bool apply_wavelet = true,
                      bool apply_spline = true,
                      bool ps = true ) const
     {
         // result matrix
-        Matrix<T> result((pic_size_+2)*pic_size_, 1);
+        Matrix<T> result((apply_wavelet + apply_spline + ps*pic_size_)*pic_size_, 1);
+
         // result components pointers
-        Matrix<T> result_wavelet(&result[0], pic_size_, 1);
-        Matrix<T> result_spline(&result[pic_size_], pic_size_, 1);
-        Matrix<T> result_ps(&result[2*pic_size_], pic_size_, pic_size_);
+        T* current_position = &result[0];
+        // wavelet component
+        Matrix<T> result_wavelet(current_position, pic_size_, 1);
+        if(apply_wavelet)
+            current_position += pic_size_;
+        // spline component
+        Matrix<T> result_spline(current_position, pic_size_, 1);
+        if(apply_spline)
+            current_position += pic_size_;
+        // point source component
+        Matrix<T> result_ps(current_position, pic_size_, pic_size_);
 
         // E' .* x
         Matrix<T> BEtx = source & sensitivity_;
@@ -250,14 +263,14 @@ public:
             result_spline = spline;
         }
 
-
         // release pointers
         result_wavelet.Data(nullptr);
         result_spline.Data(nullptr);
         result_ps.Data(nullptr);
 
         // standardize
-        result /= standardise_;
+        if(standardise)
+            result /= standardise_;
 
         return result;
     }
