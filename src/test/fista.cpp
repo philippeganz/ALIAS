@@ -2,8 +2,8 @@
 /// \file src/test/fista.cpp
 /// \brief Implementation of the FISTA class test suite.
 /// \author Philippe Ganz <philippe.ganz@gmail.com>
-/// \version 0.4.0
-/// \date 2018-03-30
+/// \version 0.5.0
+/// \date 2018-07-01
 /// \copyright GPL-3.0
 ///
 
@@ -24,7 +24,7 @@ bool SmallExample()
     double b_data[3] = {1.0,1.0,2.0};
     const astroqut::Matrix<double> b(b_data, 3, 3, 1);
     astroqut::fista::poisson::Parameters<double> options;
-    options.log_period = 50;
+    options.log_period = 20;
     double tols[3] = {1e-4, 1e-8, 1e-12};
 
     double expected_data1[4] = {0.939214191176937, 0.0, 0.0, -0.650697826008454};

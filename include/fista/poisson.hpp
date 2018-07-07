@@ -3,8 +3,8 @@
 /// \brief FISTA (Fast Iterative Shrinkage Tresholding Algorithm) solver for Poisson distributed noise.
 /// \author Hatef Monajemi <monajemi@stanford.edu> 2012-2014
 /// \author Philippe Ganz <philippe.ganz@gmail.com> 2017-2018
-/// \version 0.4.1
-/// \date 2018-06-16
+/// \version 0.5.0
+/// \date 2018-07-01
 /// \copyright GPL-3.0
 ///
 
@@ -32,7 +32,7 @@ struct Parameters
      */
     Parameters() noexcept
         : tol(1e-6)
-        , max_iter(1000)
+        , iter_max(1000)
         , init_value{}
         , indices(Matrix<size_t>(0,1,1))
         , log(true)
@@ -40,7 +40,7 @@ struct Parameters
     {}
 
     T tol; //!< Member variable "tol"
-    size_t max_iter; //!< Member variable "max_iter"
+    size_t iter_max; //!< Member variable "iter_max"
     Matrix<T> init_value; //!< Member variable "init_value"
     Matrix<size_t> indices; //!< Member variable "indices"
     bool log; //!< Member variable "log"
@@ -147,7 +147,7 @@ Matrix<T> Solve(const Operator<T>& A,
     size_t k = 0;
 
     // main loop
-    while( std::abs(tol) > options.tol && k < options.max_iter )
+    while( std::abs(tol) > options.tol && k < options.iter_max )
     {
         // backtracking loop
         T beta = std::numeric_limits<T>::infinity();
@@ -198,9 +198,9 @@ Matrix<T> Solve(const Operator<T>& A,
         }
     }
 
-    std::cout << std::setw(5) << k << " | " << std::scientific << std::setprecision(10) << std::setw(20) << std::abs(tol) << " | " << std::setw(20) << f_lasso_next << " | " << std::defaultfloat << std::setw(13) << Lf << " | " << std::setw(8) << lambda << std::endl;
+    std::cout << std::setw(5) << k << " | " << std::scientific << std::setprecision(10) << std::setw(20) << std::abs(tol) << " | " << std::setw(20) << f_lasso_next << " | " << std::defaultfloat << std::setw(13) << Lf << " | " << std::setw(8) << lambda << std::endl << std::endl << std::endl;
 
-    if(k < options.max_iter)
+    if(k < options.iter_max)
         std::cout << "FISTA: converged in " << k << " iterations" << std::endl;
     else
         std::cout << "FISTA: did not converge after " << k << " iterations" << std::endl;

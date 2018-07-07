@@ -3,8 +3,8 @@
 /// \brief Matrix class header
 /// \details Provide matrix container with multiple matrix operations used in the whole project.
 /// \author Philippe Ganz <philippe.ganz@gmail.com> 2017-2018
-/// \version 0.4.0
-/// \date 2018-06-02
+/// \version 0.5.0
+/// \date 2018-07-07
 /// \copyright GPL-3.0
 ///
 
