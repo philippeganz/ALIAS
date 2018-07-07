@@ -2,8 +2,8 @@
 /// \file include/utils/linearop/operator/astrooperator.hpp
 /// \brief Combination of all operators to create the main operator
 /// \author Philippe Ganz <philippe.ganz@gmail.com> 2017-2018
-/// \version 0.4.1
-/// \date 2018-06-16
+/// \version 0.5.0
+/// \date 2018-07-07
 /// \copyright GPL-3.0
 ///
 
@@ -25,9 +25,9 @@ class AstroOperator : public Operator<T>
 private:
     size_t pic_size_;
     AbelTransform<T> abel_;
-    Blur<T> blur_;
+    Blur<T> bluring_;
     Matrix<T> sensitivity_;
-    Matrix<T> standardise_;
+    Matrix<T> standardize_;
     Spline<T> spline_;
     Wavelet<T> wavelet_;
 
@@ -37,9 +37,9 @@ public:
     AstroOperator()
         : pic_size_()
         , abel_()
-        , blur_()
+        , bluring_()
         , sensitivity_()
-        , standardise_()
+        , standardize_()
         , spline_()
         , wavelet_()
     {}
@@ -50,7 +50,7 @@ public:
      *  \param wavelet_amount
      *  \param radius
      *  \param sensitivity
-     *  \param standardise
+     *  \param standardize
      *  \param params
      *  \param transposed
      */
@@ -58,7 +58,7 @@ public:
                   size_t wavelet_amount,
                   size_t radius,
                   const Matrix<T> sensitivity,
-                  const Matrix<T> standardise,
+                  const Matrix<T> standardize,
                   bool transposed = false,
                   WS::Parameters<T> params = WS::Parameters<T>() )
         : Operator<T>(Matrix<T>(),
@@ -69,9 +69,9 @@ public:
         , abel_(transposed ?
                 AbelTransform<T>(wavelet_amount, pic_size*pic_size, radius).Transpose() :
                 AbelTransform<T>(wavelet_amount, pic_size*pic_size, radius))
-        , blur_(Blur<T>(params.blur_thresh, params.blur_R0, params.blur_alpha))
+        , bluring_(Blur<T>(params.blur_thresh, params.blur_R0, params.blur_alpha))
         , sensitivity_(sensitivity.Transpose())
-        , standardise_(standardise)
+        , standardize_(standardize)
         , spline_(transposed ?
                   Spline<T>(pic_size).Transpose() :
                   Spline<T>(pic_size))
@@ -86,7 +86,7 @@ public:
      *  \param wavelet_amount
      *  \param radius
      *  \param sensitivity
-     *  \param standardise
+     *  \param standardize
      *  \param params
      *  \param transposed
      */
@@ -94,7 +94,7 @@ public:
                   const AbelTransform<T> abel,
                   const Blur<T> blur,
                   const Matrix<T> sensitivity,
-                  const Matrix<T> standardise,
+                  const Matrix<T> standardize,
                   const Spline<T> spline,
                   const Wavelet<T> wavelet,
                   bool transposed = false )
@@ -104,9 +104,9 @@ public:
                       transposed)
         , pic_size_(pic_size)
         , abel_( transposed ? abel : abel.Clone()->Transpose() )
-        , blur_(blur)
+        , bluring_(blur)
         , sensitivity_(sensitivity.Transpose())
-        , standardise_(standardise)
+        , standardize_(standardize)
         , spline_( transposed ? spline : spline.Clone()->Transpose() )
         , wavelet_( transposed ? wavelet : wavelet.Clone()->Transpose() )
     {}
@@ -122,6 +122,69 @@ public:
     AstroOperator* Clone() const override final
     {
         return new AstroOperator(*this);
+    }
+
+    size_t PicSize() const
+    {
+        return pic_size_;
+    }
+    void PicSize(size_t pic_size)
+    {
+        pic_size_ = pic_size;
+    }
+
+    AbelTransform<T> Abel() const
+    {
+        return abel_;
+    }
+    void Abel(const AbelTransform<T> abel)
+    {
+        abel_ = abel;
+    }
+
+    Blur<T> Bluring() const
+    {
+        return bluring_;
+    }
+    void Bluring(const Blur<T> bluring)
+    {
+        bluring_ = bluring;
+    }
+
+    Matrix<T> Sensitivity() const
+    {
+        return sensitivity_;
+    }
+    void Sensitivity(const Matrix<T> sensitivity)
+    {
+        sensitivity_ = sensitivity;
+    }
+
+    Matrix<T> Standardize() const
+    {
+        return standardize_;
+    }
+    void Standardize(const Matrix<T> standardize)
+    {
+        standardize_ = standardize;
+    }
+
+    Spline<T> SplineOp() const
+    {
+        return spline_;
+    }
+    void SplineOp(const Spline<T> spline)
+    {
+        spline_ = spline;
+    }
+
+    Wavelet<T> WaveletOp() const
+    {
+        return wavelet_;
+    }
+    void WaveletOp(const Wavelet<T> wavelet)
+    {
+        wavelet_ = wavelet;
     }
 
     /** Transpose in-place
@@ -162,14 +225,22 @@ public:
     }
 
     Matrix<T> BAW(const Matrix<T> source,
-                  bool standardise = true,
+                  bool standardize = true,
                   bool apply_wavelet = true,
                   bool apply_spline = true,
                   bool ps = true ) const
     {
+#ifdef DO_ARGCHECKS
+        if( this->transposed_ )
+        {
+            std::cerr << "You shall not use BAW on transposed operator!" << std::endl;
+            throw;
+        }
+#endif // DO_ARGCHECKS
+
         Matrix<T> normalized_source = source;
-        if(standardise)
-            normalized_source /= standardise_;
+        if(standardize)
+            normalized_source /= standardize_;
 
         // split the normalized source into wavelet, spline and ps components
         Matrix<T> source_wavelet(&normalized_source[0], pic_size_, 1);
@@ -196,7 +267,7 @@ public:
             result += source_ps;
 
         // B(AWx + ps)
-        result = blur_ * result;
+        result = bluring_ * result;
         result.Height(pic_size_*pic_size_);
         result.Width(1);
 
@@ -212,11 +283,18 @@ public:
     }
 
     Matrix<T> WtAtBt(const Matrix<T> source,
-                     bool standardise = true,
+                     bool standardize = true,
                      bool apply_wavelet = true,
                      bool apply_spline = true,
                      bool ps = true ) const
     {
+#ifdef DO_ARGCHECKS
+        if( ! this->transposed_ )
+        {
+            std::cerr << "You shall not use WtAtBt on a not transposed operator!" << std::endl;
+            throw;
+        }
+#endif // DO_ARGCHECKS
         // result matrix
         Matrix<T> result((apply_wavelet + apply_spline + ps*pic_size_)*pic_size_, 1);
 
@@ -239,7 +317,7 @@ public:
         BEtx.Width(pic_size_);
 
         // B * Etx
-        BEtx = blur_ * BEtx;
+        BEtx = bluring_ * BEtx;
         BEtx.Height(pic_size_*pic_size_);
         BEtx.Width(1);
 
@@ -269,8 +347,8 @@ public:
         result_ps.Data(nullptr);
 
         // standardize
-        if(standardise)
-            result /= standardise_;
+        if(standardize)
+            result /= standardize_;
 
         return result;
     }
