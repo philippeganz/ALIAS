@@ -24,43 +24,22 @@ namespace WS
 {
 
 
-static void MC_compute(const Matrix<double>& mu_hat,
-                       Matrix<double>& MC_results,
-                       const AstroOperator<double>& astro,
-                       bool standardize,
-                       bool ps,
-                       const Parameters<double>& options)
+static Matrix<double> MCCompute(const Matrix<double>& mu_hat,
+                                std::default_random_engine generator)
 {
-    #pragma omp parallel
+    Matrix<double> mu_hat_rnd(mu_hat.Height(), mu_hat.Width());
+
+    #pragma omp simd
+    for(size_t i = 0; i < mu_hat.Length(); ++i)
     {
-        Matrix<double> mu_hat_rnd(mu_hat.Height(), mu_hat.Width());
-        std::random_device rnd;
-        std::default_random_engine generator(rnd() + omp_get_thread_num());
-
-        #pragma omp for schedule(dynamic)
-        for(size_t MC_id = 0; MC_id < options.MC_max; ++MC_id)
-        {
-            if(MC_id % (options.MC_max/100) == 0)
-                std::cout << "\r" + std::to_string(1 + 100 * MC_id/options.MC_max) + "/100";
-
-            #pragma omp simd
-            for(size_t i = 0; i < mu_hat.Length(); ++i)
-            {
-                std::poisson_distribution<int> poisson_gen(mu_hat[i]);
-                mu_hat_rnd[i] = poisson_gen(generator);
-            }
-
-            mu_hat_rnd -= mu_hat;
-            mu_hat_rnd /= mu_hat;
-
-            Matrix<double> rdn_result = astro.WtAtBt(mu_hat_rnd, standardize, true, true, ps).Abs();
-
-            #pragma omp simd
-            for(size_t i = 0; i < MC_results.Height(); ++i )
-                MC_results[i*MC_results.Width() + MC_id] = rdn_result[i];
-        }
+        std::poisson_distribution<int> poisson_gen(mu_hat[i]);
+        mu_hat_rnd[i] = poisson_gen(generator);
     }
-    std::cout << std::endl;
+
+    mu_hat_rnd -= mu_hat;
+    mu_hat_rnd /= mu_hat;
+
+    return mu_hat_rnd;
 }
 
 static void BetaZero(const Matrix<double>& image,
@@ -89,15 +68,29 @@ static void BetaZero(const Matrix<double>& image,
     std::cout << "beta0 = " << std::scientific << options.beta0 << std::endl;
 }
 
-static void Standardize(const Matrix<double>& mu_hat,
+static void Standardize(const Matrix<double> mu_hat,
                         const Matrix<double>& background,
                         const AstroOperator<double>& astro,
                         Parameters<double>& options)
 {
     std::cout << "Computing standardization matrix..." << std::endl;
-    Matrix<double> MC_results(options.pic_size*2, options.MC_max);
+    Matrix<double> MC_astro(options.pic_size*2, options.MC_max);
 
-    MC_compute(mu_hat, MC_results, astro, false, false, options);
+    std::random_device rnd;
+    #pragma omp parallel for schedule(dynamic)
+    for(size_t MC_id = 0; MC_id < options.MC_max; ++MC_id)
+    {
+        std::default_random_engine generator(rnd() + omp_get_team_num());
+        if(MC_id % (options.MC_max/100) == 0)
+            std::cout << "\r" + std::to_string(1 + 100 * MC_id/options.MC_max) + "/100";
+
+        Matrix<double> rnd_result = astro.WtAtBt(MCCompute(mu_hat, generator), false, true, true, false).Abs();
+
+        #pragma omp simd
+        for(size_t i = 0; i < rnd_result.Height(); ++i )
+            MC_astro[i*MC_astro.Width() + MC_id] = rnd_result[i];
+    }
+    std::cout << std::endl;
 
     options.standardize = Matrix<double>(1.0, options.model_size, 1);
 
@@ -105,11 +98,11 @@ static void Standardize(const Matrix<double>& mu_hat,
     for(size_t i = 0; i < options.pic_size*2; ++i)
     {
         // partial sort
-        std::nth_element(&MC_results[i*options.MC_max],
-                         &MC_results[i*options.MC_max+options.MC_quantile_PF],
-                         &MC_results[(i+1)*options.MC_max]);
+        std::nth_element(&MC_astro[i*options.MC_max],
+                         &MC_astro[i*options.MC_max+options.MC_quantile_PF],
+                         &MC_astro[(i+1)*options.MC_max]);
         // get quantile
-        options.standardize[i] = MC_results[i*options.MC_max+options.MC_quantile_PF];
+        options.standardize[i] = MC_astro[i*options.MC_max+options.MC_quantile_PF];
     }
 
     // max rescale of wavelets and remove high frequency wavelets
@@ -130,65 +123,83 @@ static void Standardize(const Matrix<double>& mu_hat,
         if( IsEqual(background[i], 0.0) )
         {
             options.standardize[options.pic_size*2 + i] = std::numeric_limits<double>::infinity();
+#ifdef VERBOSE
             std::cout << i << " put to zero." << std::endl;
+#endif // VERBOSE
         }
 }
 
-static void Lambda(const Matrix<double>& mu_hat,
+static void Lambda(const Matrix<double> mu_hat,
                    AstroOperator<double>& astro,
                    Parameters<double>& options)
 {
     std::cout << "Computing lambda and lambdaI..." << std::endl;
-    Matrix<double> MC_results(options.model_size, options.MC_max);
-
     Matrix<double> lambda_standardize(options.standardize);
-
     lambda_standardize[0] = std::numeric_limits<double>::infinity();
-
     astro.Standardize(lambda_standardize);
 
-    MC_compute(mu_hat, MC_results, astro, true, true, options);
+    Matrix<double> WS_max_values(-std::numeric_limits<double>::infinity(), options.MC_max, 1);
+    Matrix<double> PS_max_values(-std::numeric_limits<double>::infinity(), options.MC_max, 1);
 
-    Matrix<double> max_values(options.MC_max, 1);
-    #pragma omp parallel for simd
+    std::random_device rnd;
+    #pragma omp parallel for schedule(dynamic)
     for(size_t MC_id = 0; MC_id < options.MC_max; ++MC_id)
     {
+
+        std::default_random_engine generator(rnd() + omp_get_team_num());
+
+        if(MC_id % (options.MC_max/100) == 0)
+            std::cout << "\r" + std::to_string(1 + 100 * MC_id/options.MC_max) + "/100";
+
+        Matrix<double> rnd_result = astro.WtAtBt(MCCompute(mu_hat, generator)).Abs();
+
         // compute max value for each MC simulation in wavelet and spline results
-        double max_val = -std::numeric_limits<double>::infinity();
-        for(size_t i = 0; i < options.pic_size*2; ++i)
-            max_val = std::max(max_val, MC_results[i*options.MC_max + MC_id]);
-        max_values[MC_id] = max_val;
+        WS_max_values[MC_id] = *std::max_element(&rnd_result[0], &rnd_result[options.pic_size*2]);
+
+        // compute max value for each MC simulation in point source results
+        PS_max_values[MC_id] = *std::max_element(&rnd_result[options.pic_size*2], &rnd_result[options.model_size]);
     }
+    std::cout << std::endl;
 
     // determine the value of lambda
-    std::nth_element(&max_values[0],
-                     &max_values[options.MC_quantile_PF],
-                     &max_values[options.MC_max]);
-    double lambda = max_values[options.MC_quantile_PF];
+    std::nth_element(&WS_max_values[0],
+                     &WS_max_values[options.MC_quantile_PF],
+                     &WS_max_values[options.MC_max]);
+    double lambda = WS_max_values[options.MC_quantile_PF];
     std::cout << "lambda = " << std::scientific << lambda << std::endl;
 
-    #pragma omp parallel for simd
-    for(size_t MC_id = 0; MC_id < options.MC_max; ++MC_id)
-    {
-        // compute max value for each MC simulation in point source results
-        double max_val = -std::numeric_limits<double>::infinity();
-        for(size_t i = options.pic_size*2; i < options.model_size; ++i)
-            max_val = std::max(max_val, MC_results[i*options.MC_max + MC_id]);
-        max_values[MC_id] = max_val;
-    }
-
     // determine the value of lambdaI
-    std::nth_element(&max_values[0],
-                     &max_values[options.MC_quantile_PS],
-                     &max_values[options.MC_max]);
-    double lambdaI = max_values[options.MC_quantile_PS];
+    std::nth_element(&PS_max_values[0],
+                     &PS_max_values[options.MC_quantile_PS],
+                     &PS_max_values[options.MC_max]);
+    double lambdaI = PS_max_values[options.MC_quantile_PS];
     std::cout << "lambdaI = " << std::scientific << lambdaI << std::endl;
 
     double PS_standardize_ratio = lambdaI/lambda;
-
     for(size_t i = options.pic_size*2; i < options.model_size; ++i)
         options.standardize[i] *= PS_standardize_ratio;
 
+}
+
+static void PrepareData(const Matrix<double>& background,
+                        AstroOperator<double>& astro,
+                        Parameters<double>& options)
+{
+    Matrix<double> I(0.0, options.pic_size*2, 1);
+    I[0] = 1.0;
+    Matrix<double> u = astro.BAW(I, false, true, true, false);
+    Matrix<double> mu_hat = background + u*options.beta0;
+
+    astro.Transpose();
+
+    Standardize(mu_hat, background, astro, options);
+
+    Lambda(mu_hat, astro, options);
+
+    "data/512_chandra/computeddivx.data" << options.standardize;
+
+    astro.Transpose();
+    astro.Standardize(options.standardize);
 }
 
 Matrix<double> Solve(const Matrix<double>& image,
@@ -206,26 +217,14 @@ Matrix<double> Solve(const Matrix<double>& image,
     BetaZero(image, astro, options);
 
     options.x0[0] = options.beta0;
-    Matrix<double> I(0.0, options.pic_size*2, 1);
-    I[0] = 1.0;
-    Matrix<double> u = astro.BAW(I, false, true, true, false);
-    Matrix<double> mu_hat = background + u*options.beta0;
-    astro.Transpose();
 
     std::chrono::time_point<std::chrono::high_resolution_clock> start, end;
     start = std::chrono::high_resolution_clock::now();
 
-    Standardize(mu_hat, background, astro, options);
-
-    Lambda(mu_hat, astro, options);
+    PrepareData(background, astro, options);
 
     end = std::chrono::high_resolution_clock::now();
     std::chrono::duration<double> elapsed_time_MC = end-start;
-
-    "data/512_chandra/computeddivx.data" << options.standardize;
-
-    astro.Transpose();
-    astro.Standardize(options.standardize);
 
     fista::poisson::Parameters<double> params;
     params.log_period = 10;
