@@ -12,9 +12,6 @@
 
 #include "WS/astroQUT.hpp"
 
-#include <chrono>
-#include <fstream>
-
 namespace astroqut
 {
 namespace test

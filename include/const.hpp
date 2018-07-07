@@ -2,8 +2,8 @@
 /// \file include/const.hpp
 /// \brief Constant values used throughout the whole project
 /// \author Philippe Ganz <philippe.ganz@gmail.com>
-/// \version 0.4.0
-/// \date 2018-06-02
+/// \version 0.5.0
+/// \date 2018-07-01
 /// \copyright GPL-3.0
 ///
 
