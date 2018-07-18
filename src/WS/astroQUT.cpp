@@ -165,8 +165,8 @@ static void Lambda(const Matrix<double> mu_hat,
     std::nth_element(&WS_max_values[0],
                      &WS_max_values[options.MC_quantile_PF],
                      &WS_max_values[options.MC_max]);
-    double lambda = WS_max_values[options.MC_quantile_PF];
-    std::cout << "lambda = " << std::scientific << lambda << std::endl;
+    options.lambda = WS_max_values[options.MC_quantile_PF];
+    std::cout << "lambda = " << std::scientific << options.lambda << std::endl;
 
     // determine the value of lambdaI
     std::nth_element(&PS_max_values[0],
@@ -175,7 +175,7 @@ static void Lambda(const Matrix<double> mu_hat,
     double lambdaI = PS_max_values[options.MC_quantile_PS];
     std::cout << "lambdaI = " << std::scientific << lambdaI << std::endl;
 
-    double PS_standardize_ratio = lambdaI/lambda;
+    double PS_standardize_ratio = lambdaI/options.lambda;
     for(size_t i = options.pic_size*2; i < options.model_size; ++i)
         options.standardize[i] *= PS_standardize_ratio;
 
