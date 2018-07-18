@@ -4,7 +4,7 @@
 /// \author Hatef Monajemi <monajemi@stanford.edu> 2012-2014
 /// \author Philippe Ganz <philippe.ganz@gmail.com> 2017-2018
 /// \version 0.5.0
-/// \date 2018-07-01
+/// \date 2018-07-17
 /// \copyright GPL-3.0
 ///
 
@@ -142,8 +142,10 @@ Matrix<T> Solve(const Operator<T>& A,
     T Lf = (T)1;
     T eta = (T)2;
     T L_bar = (T)0;
-//    T t = 1.0L;
-//    T t_next = (1.0L + std::sqrt(1.0L + 4.0L * t * t)) / 2.0L;
+#ifdef CLASSIC_FISTA
+    T t = 1.0L;
+    T t_next = (1.0L + std::sqrt(1.0L + 4.0L * t * t)) / 2.0L;
+#endif // CLASSIC_FISTA
     size_t k = 0;
 
     // main loop
@@ -166,8 +168,11 @@ Matrix<T> Solve(const Operator<T>& A,
         }
 
         // FISTA step
+#ifdef CLASSIC_FISTA
+        y = x_next + (x_next - x) * ((t - 1.0)/t_next);
+#else
         y = x_next;
-//        y = x_next + (x_next - x) * ((t - 1.0)/t_next);
+#endif // CLASSIC_FISTA
 
         // compute tol from previous function value
         T f_lasso_previous_sum = std::accumulate(f_lasso_previous, f_lasso_previous+10, (T)0) / std::min((T) k+1, (T)10);
@@ -180,9 +185,12 @@ Matrix<T> Solve(const Operator<T>& A,
         Ayu = A*y+u;
         f_lasso_previous[k % 10] = f_lasso_next;
         grad_current = FuncGrad(Axu, At, b);
+#ifdef CLASSIC_FISTA
+        t = t_next;
+        t_next = (1.0L + std::sqrt(1.0L + 4.0L * t * t)) / 2.0L;
+#else
         Lf = (k % 100 == 0 ? (T)1 : L_bar / (T)2);
-//        t = t_next;
-//        t_next = (1.0L + std::sqrt(1.0L + 4.0L * t * t)) / 2.0L;
+#endif // CLASSIC_FISTA
 
         if( options.log )
         {
