@@ -132,11 +132,13 @@ public:
         : LinearOp(height, width)
         , data_(data)
     {
+#ifdef DO_ARGCHECKS
         if( !IsAligned(data, sizeof(T)) )
         {
             std::cerr << "Please use only " << sizeof(T) << " bytes aligned data.";
             throw;
         }
+#endif // DO_ARGCHECKS
 #ifdef DEBUG
         std::cout << "Matrix : Full member constructor called" << std::endl;
 #endif // DEBUG
@@ -154,9 +156,7 @@ public:
     {
         #pragma omp parallel for simd
         for(size_t i = 0; i < this->length_; ++i)
-        {
             data_[i] = (T) data[i];
-        }
 #ifdef DEBUG
         std::cout << "Matrix : Full member constructor called" << std::endl;
 #endif // DEBUG
@@ -211,12 +211,15 @@ public:
 #ifdef DEBUG
         std::cout << "Matrix : Constant number constructor called" << std::endl;
 #endif // DEBUG
-        // TODO std::fill not yet parallelized : change as soon as available
-        // std::fill( data_, data_ + (this->length_), number );
-        #pragma omp parallel for simd
-        for(size_t i = 0; i < this->length_; ++i)
+        if( omp_get_max_threads() > 1 )
         {
-            data_[i] = (T) number;
+            #pragma omp parallel for simd
+            for(size_t i = 0; i < this->length_; ++i)
+                data_[i] = (T) number;
+        }
+        else
+        {
+            std::fill( data_, data_ + (this->length_), number );
         }
     }
 
@@ -278,11 +281,13 @@ public:
      */
     void Data(matrix_t* const data)
     {
+#ifdef DO_ARGCHECKS
         if( !IsAligned(data, sizeof(T)) )
         {
             std::cerr << "Please use only " << sizeof(T) << " bytes aligned data.";
             throw;
         }
+#endif // DO_ARGCHECKS
         data_ = data;
     }
 
