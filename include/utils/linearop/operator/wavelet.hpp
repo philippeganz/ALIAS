@@ -3,7 +3,7 @@
 /// \brief Wavelet transform class header
 /// \details Provide the Wavelet transform operator
 /// \author Philippe Ganz <philippe.ganz@gmail.com> 2017-2018
-/// \version 0.4.1
+/// \version 0.5.0
 /// \date 2018-06-17
 /// \copyright GPL-3.0
 ///
@@ -158,8 +158,8 @@ public:
      *  \author Philippe Ganz <philippe.ganz@gmail.com> 2018
      */
     Matrix<T> MakeONFilter(WaveletType wavelet_type,
-                                    int parameter,
-                                    FilterType filter_type) const
+                           int parameter,
+                           FilterType filter_type) const
     {
         size_t data_size = 0;
         T data[59] = {(T)0};

@@ -3,8 +3,8 @@
 /// \brief Matrix class header
 /// \details Provide matrix container with multiple matrix operations used in the whole project.
 /// \author Philippe Ganz <philippe.ganz@gmail.com> 2017-2018
-/// \version 0.4.0
-/// \date 2018-06-02
+/// \version 0.5.0
+/// \date 2018-07-07
 /// \copyright GPL-3.0
 ///
 
@@ -14,11 +14,13 @@
 #include "utils/linearop.hpp"
 #include "utils/settings.hpp"
 
+#include <algorithm>
 #include <cmath>
 #include <complex>
 #include <fstream>
 #include <iomanip>
 #include <limits>
+#include <numeric>
 #include <string>
 #include <type_traits>
 
@@ -111,7 +113,7 @@ public:
             try
             {
                 // allocate aligned memory
-                data_ = (T*) _mm_malloc (sizeof(T)*this->length_, sizeof(T));
+                data_ = (matrix_t*) _mm_malloc (sizeof(T)*this->length_, (size_t) std::pow(2, std::ceil(std::log2(sizeof(T)))));
             }
             catch (const std::bad_alloc&)
             {
@@ -130,11 +132,13 @@ public:
         : LinearOp(height, width)
         , data_(data)
     {
+#ifdef DO_ARGCHECKS
         if( !IsAligned(data, sizeof(T)) )
         {
             std::cerr << "Please use only " << sizeof(T) << " bytes aligned data.";
             throw;
         }
+#endif // DO_ARGCHECKS
 #ifdef DEBUG
         std::cout << "Matrix : Full member constructor called" << std::endl;
 #endif // DEBUG
@@ -152,9 +156,7 @@ public:
     {
         #pragma omp parallel for simd
         for(size_t i = 0; i < this->length_; ++i)
-        {
             data_[i] = (T) data[i];
-        }
 #ifdef DEBUG
         std::cout << "Matrix : Full member constructor called" << std::endl;
 #endif // DEBUG
@@ -209,12 +211,15 @@ public:
 #ifdef DEBUG
         std::cout << "Matrix : Constant number constructor called" << std::endl;
 #endif // DEBUG
-        // TODO std::fill not yet parallelized : change as soon as available
-        // std::fill( data_, data_ + (this->length_), number );
-        #pragma omp parallel for simd
-        for(size_t i = 0; i < this->length_; ++i)
+        if( omp_get_max_threads() > 1 )
         {
-            data_[i] = (T) number;
+            #pragma omp parallel for simd
+            for(size_t i = 0; i < this->length_; ++i)
+                data_[i] = (T) number;
+        }
+        else
+        {
+            std::fill( data_, data_ + (this->length_), number );
         }
     }
 
@@ -276,11 +281,13 @@ public:
      */
     void Data(matrix_t* const data)
     {
+#ifdef DO_ARGCHECKS
         if( !IsAligned(data, sizeof(T)) )
         {
             std::cerr << "Please use only " << sizeof(T) << " bytes aligned data.";
             throw;
         }
+#endif // DO_ARGCHECKS
         data_ = data;
     }
 
@@ -366,7 +373,7 @@ public:
                 try
                 {
                     // allocate aligned data
-                    data_ = (T*) _mm_malloc (sizeof(T)*this->length_, sizeof(T));
+                    data_ = (matrix_t*) _mm_malloc (sizeof(T)*this->length_, (size_t) std::pow(2, std::ceil(std::log2(sizeof(T)))));
                 }
                 catch (const std::bad_alloc&)
                 {
@@ -379,14 +386,16 @@ public:
         // copy data if need be
         if( data_ != nullptr && data_ != other.data_ )
         {
-            #pragma omp parallel for simd
-            for(size_t i = 0; i < other.length_; ++i)
+            if(omp_get_max_threads() > 1)
             {
-                data_[i] = other.data_[i];
+                #pragma omp parallel for simd
+                for(size_t i = 0; i < other.length_; ++i)
+                    data_[i] = other.data_[i];
             }
-
-            // TODO std::copy not yet parallelized : change as soon as available
-            // std::copy(other.data_, other.data_ + other.length_, data_);
+            else
+            {
+                std::copy(other.data_, other.data_ + other.length_, data_);
+            }
         }
 
         // finally, update the size values
@@ -834,6 +843,42 @@ public:
         return Matrix(*this).Log();
     }
 
+    /** Abs operator in-place
+     *  Applies the abs function to all elements
+     *  \return Current object overwritten with the result
+     */
+    Matrix&& Abs() &&
+    {
+#ifdef DO_ARGCHECKS
+        try
+        {
+            IsValid();
+        }
+        catch (const std::exception&)
+        {
+            throw;
+        }
+#endif // DO_ARGCHECKS
+
+        #pragma omp parallel for simd
+        for(size_t i = 0; i < this->length_; ++i)
+        {
+            // real part of log of negative numbers is 0
+            data_[i] = std::abs(data_[i]);
+        }
+
+        return std::move(*this);
+    }
+
+    /** Abs operator
+     *  Applies the abs function to all elements
+     *  \return A new instance containing the result
+     */
+    Matrix Abs() const &
+    {
+        return Matrix(*this).Abs();
+    }
+
     /** Shrinkage in-place
      *   Apply the shrinkage algorithm
      *   \param thresh_factor The threshold factor to be used on the data
@@ -952,26 +997,32 @@ public:
         {
         case one:
         {
-            double local_result[omp_get_max_threads()]{0.0};
-            #pragma omp parallel
+            if(omp_get_max_threads() > 1)
             {
-            size_t my_num = omp_get_thread_num();
-            #pragma omp for
-            for(size_t i = 0; i < this->length_; ++i)
-            {
-                local_result[my_num] += std::abs(data_[i]);
-            }
-            }
+                double local_result[omp_get_max_threads()]{0.0};
+                #pragma omp parallel
+                {
+                    size_t my_num = omp_get_thread_num();
+                    #pragma omp for
+                    for(size_t i = 0; i < this->length_; ++i)
+                        local_result[my_num] += std::abs(data_[i]);
+                }
 
-            double result = 0.0;
-            for(size_t i = 0; i < omp_get_max_threads(); ++i)
-            {
-                result += local_result[i];
-            }
-            return result;
+                double result = 0.0;
+                for(size_t i = 0; i < omp_get_max_threads(); ++i)
+                    result += local_result[i];
 
-            // TODO std::accumulate not yet parallelized : change as soon as available
-            // std::accumulate(data_, data_ + (this->length_), 0.0, [](const T acc, const T next){return acc + std::abs(next);});
+                return result;
+            }
+            else
+            {
+                return std::accumulate( data_, data_ + (this->length_), 0.0L,
+                                        [](T acc, T next)
+                                        {
+                                            return std::abs(acc) + std::abs(next);
+                                        }
+                                      );
+            }
         }
         case two:
         {
@@ -979,46 +1030,65 @@ public:
         }
         case two_squared:
         {
-            double local_result[omp_get_max_threads()]{0.0};
-            #pragma omp parallel
+            if(omp_get_max_threads() > 1)
             {
-            size_t my_num = omp_get_thread_num();
-            #pragma omp for
-            for(size_t i = 0; i < this->length_; ++i)
-            {
-                local_result[my_num] += std::norm(data_[i]);
-            }
-            }
+                double local_result[omp_get_max_threads()]{0.0};
+                #pragma omp parallel
+                {
+                    size_t my_num = omp_get_thread_num();
+                    #pragma omp for
+                    for(size_t i = 0; i < this->length_; ++i)
+                        local_result[my_num] += std::norm(data_[i]);
+                }
 
-            double result = 0.0;
-            for(size_t i = 0; i < omp_get_max_threads(); ++i)
-            {
-                result += local_result[i];
+                double result = 0.0;
+                for(size_t i = 0; i < omp_get_max_threads(); ++i)
+                    result += local_result[i];
+                return result;
+
             }
-            return result;
+            else
+            {
+                return std::accumulate( data_, data_ + (this->length_), 0.0L,
+                                        [](T acc, T next)
+                                        {
+                                            return std::abs(acc) + std::norm(next);
+                                        }
+                                      );
+            }
         }
         case inf:
         {
-            double local_result[omp_get_max_threads()]{0.0};
-            #pragma omp parallel
+            if(omp_get_max_threads() > 1)
             {
-            size_t my_num = omp_get_thread_num();
-            #pragma omp for
-            for(size_t i = 0; i < this->length_; ++i)
-            {
-                double abs_data = std::abs(data_[i]);
-                if( abs_data > local_result[my_num] )
+                double local_result[omp_get_max_threads()]{0.0};
+                #pragma omp parallel
                 {
-                    local_result[my_num] = abs_data;
+                    size_t my_num = omp_get_thread_num();
+                    #pragma omp for
+                    for(size_t i = 0; i < this->length_; ++i)
+                    {
+                        double abs_data = std::abs(data_[i]);
+                        if( abs_data > local_result[my_num] )
+                            local_result[my_num] = abs_data;
+                    }
                 }
-            }
-            }
 
-            return *std::max_element(local_result, local_result + omp_get_max_threads());
+                return *std::max_element(local_result, local_result + omp_get_max_threads());
+            }
+            else
+            {
+                return std::abs(*std::max_element(  data_, data_ + (this->length_),
+                                                    [](T current_max, T next)
+                                                    {
+                                                        return (std::abs(current_max) < std::abs(next));
+                                                    }
+                                                 ));
+            }
         }
         default:
         {
-            return 0.0;
+            return 0.0L;
         }
         }
     }
@@ -1040,26 +1110,27 @@ public:
         }
 #endif // DO_ARGCHECKS
 
-        T local_result[omp_get_max_threads()]{0};
-        #pragma omp parallel
+        if(omp_get_max_threads() > 1)
         {
-        size_t my_num = omp_get_thread_num();
-        #pragma omp for
-        for(size_t i = 0; i < this->length_; ++i)
-        {
-            local_result[my_num] += data_[i];
-        }
-        }
+            T local_result[omp_get_max_threads()]{0};
+            #pragma omp parallel
+            {
+                size_t my_num = omp_get_thread_num();
+                #pragma omp for
+                for(size_t i = 0; i < this->length_; ++i)
+                    local_result[my_num] += data_[i];
+            }
 
-        T result = 0;
-        for(size_t i = 0; i < omp_get_max_threads(); ++i)
-        {
-            result += local_result[i];
-        }
-        return result;
+            T result = 0;
+            for(size_t i = 0; i < omp_get_max_threads(); ++i)
+                result += local_result[i];
 
-        // TODO std::accumulate not yet parallelized : change as soon as available
-        // std::accumulate(data_, data_ + this->length_, (T) 0);
+            return result;
+        }
+        else
+        {
+            return std::accumulate(data_, data_ + this->length_, (T) 0);
+        }
     }
 
     void PrintRefQual() const &
@@ -1431,26 +1502,26 @@ T Inner(const Matrix<T>& first, const Matrix<T>& second)
     }
 #endif // DO_ARGCHECKS
 
-    T local_result[omp_get_max_threads()]{0};
-    #pragma omp parallel
+    if(omp_get_max_threads() > 1)
     {
-    size_t my_num = omp_get_thread_num();
-    #pragma omp for
-    for(size_t i = 0; i < first.Length(); ++i)
-    {
-        local_result[my_num] += first[i] * second[i];
-    }
-    }
+        T local_result[omp_get_max_threads()]{0};
+        #pragma omp parallel
+        {
+            size_t my_num = omp_get_thread_num();
+            #pragma omp for
+            for(size_t i = 0; i < first.Length(); ++i)
+                local_result[my_num] += first[i] * second[i];
+        }
 
-    T result = 0;
-    for(size_t i = 0; i < omp_get_max_threads(); ++i)
-    {
-        result += local_result[i];
+        T result = 0;
+        for(size_t i = 0; i < omp_get_max_threads(); ++i)
+            result += local_result[i];
+        return result;
     }
-    return result;
-
-    // TODO std::inner_product not yet parallelized : change as soon as available
-    // std::inner_product( first.Data(), first.Data() + first.Length(), other.Data(), (T) 0 );
+    else
+    {
+        return std::inner_product( first.Data(), first.Data() + first.Length(), second.Data(), (T) 0 );
+    }
 }
 inline std::complex<double> Inner(const Matrix<std::complex<double>>& first, const Matrix<std::complex<double>>& second)
 {

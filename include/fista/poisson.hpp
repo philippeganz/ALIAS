@@ -3,8 +3,8 @@
 /// \brief FISTA (Fast Iterative Shrinkage Tresholding Algorithm) solver for Poisson distributed noise.
 /// \author Hatef Monajemi <monajemi@stanford.edu> 2012-2014
 /// \author Philippe Ganz <philippe.ganz@gmail.com> 2017-2018
-/// \version 0.4.1
-/// \date 2018-06-16
+/// \version 0.5.0
+/// \date 2018-07-17
 /// \copyright GPL-3.0
 ///
 
@@ -32,28 +32,28 @@ struct Parameters
      */
     Parameters() noexcept
         : tol(1e-6)
-        , max_iter(1000)
+        , iter_max(1000)
         , init_value{}
+        , indices(Matrix<size_t>(0,1,1))
         , log(true)
         , log_period(10)
     {}
 
     T tol; //!< Member variable "tol"
-    size_t max_iter; //!< Member variable "max_iter"
+    size_t iter_max; //!< Member variable "iter_max"
     Matrix<T> init_value; //!< Member variable "init_value"
+    Matrix<size_t> indices; //!< Member variable "indices"
     bool log; //!< Member variable "log"
     unsigned int log_period; //!< Member variable "log_period"
 };
 
 template<class T>
-static void RemoveNeg(Matrix<T>& mat, size_t pic_side)
+static void RemoveNeg(Matrix<T>& mat, Matrix<size_t> indices)
 {
-    if(mat[0] < 0)
-        mat[0] = (T)0;
-    for(size_t i = pic_side; i < mat.Length(); ++i)
+    for(size_t i = 0; i < indices.Length(); ++i)
     {
-        if(mat[i] < 0)
-            mat[i] = (T)0;
+        if(mat[indices[i]] < 0)
+            mat[indices[i]] = (T)0;
     }
 }
 
@@ -119,8 +119,6 @@ Matrix<T> Solve(const Operator<T>& A,
     std::cout << std::string(80, '-') << std::endl;
     std::cout << std::scientific;
 
-    size_t pic_side = (size_t)std::sqrt(A.Width());
-
     // x and y variables
     Matrix<T> x((T)0, A.Width(), 1);
     if( !options.init_value.IsEmpty() )
@@ -144,12 +142,14 @@ Matrix<T> Solve(const Operator<T>& A,
     T Lf = (T)1;
     T eta = (T)2;
     T L_bar = (T)0;
-//    T t = 1.0L;
-//    T t_next = (1.0L + std::sqrt(1.0L + 4.0L * t * t)) / 2.0L;
+#ifdef CLASSIC_FISTA
+    T t = 1.0L;
+    T t_next = (1.0L + std::sqrt(1.0L + 4.0L * t * t)) / 2.0L;
+#endif // CLASSIC_FISTA
     size_t k = 0;
 
     // main loop
-    while( std::abs(tol) > options.tol && k < options.max_iter )
+    while( std::abs(tol) > options.tol && k < options.iter_max )
     {
         // backtracking loop
         T beta = std::numeric_limits<T>::infinity();
@@ -157,11 +157,9 @@ Matrix<T> Solve(const Operator<T>& A,
         {
             L_bar = std::pow(eta, ik) * Lf;
             x_next = y - (grad_current/L_bar);
-            if(x_next[0] < 0.0)
-                x_next[0] = 0;
             x_next_woi.Data(x_next.Data()+1); // points to second element of new x_next
             std::move(x_next_woi).Shrink(lambda/L_bar); //cast to an rvalue to allow in-place shrinkage
-            RemoveNeg(x_next, pic_side);
+            RemoveNeg(x_next, options.indices);
             Ax_nextu = (A*x_next)+u;
             if( Ax_nextu.ContainsNeg() ) // skip function evaluation if we have negative values
                 continue;
@@ -170,8 +168,11 @@ Matrix<T> Solve(const Operator<T>& A,
         }
 
         // FISTA step
+#ifdef CLASSIC_FISTA
+        y = x_next + (x_next - x) * ((t - 1.0)/t_next);
+#else
         y = x_next;
-//        y = x_next + (x_next - x) * ((t - 1.0)/t_next);
+#endif // CLASSIC_FISTA
 
         // compute tol from previous function value
         T f_lasso_previous_sum = std::accumulate(f_lasso_previous, f_lasso_previous+10, (T)0) / std::min((T) k+1, (T)10);
@@ -184,9 +185,12 @@ Matrix<T> Solve(const Operator<T>& A,
         Ayu = A*y+u;
         f_lasso_previous[k % 10] = f_lasso_next;
         grad_current = FuncGrad(Axu, At, b);
+#ifdef CLASSIC_FISTA
+        t = t_next;
+        t_next = (1.0L + std::sqrt(1.0L + 4.0L * t * t)) / 2.0L;
+#else
         Lf = (k % 100 == 0 ? (T)1 : L_bar / (T)2);
-//        t = t_next;
-//        t_next = (1.0L + std::sqrt(1.0L + 4.0L * t * t)) / 2.0L;
+#endif // CLASSIC_FISTA
 
         if( options.log )
         {
@@ -202,9 +206,9 @@ Matrix<T> Solve(const Operator<T>& A,
         }
     }
 
-    std::cout << std::setw(5) << k << " | " << std::scientific << std::setprecision(10) << std::setw(20) << std::abs(tol) << " | " << std::setw(20) << f_lasso_next << " | " << std::defaultfloat << std::setw(13) << Lf << " | " << std::setw(8) << lambda << std::endl;
+    std::cout << std::setw(5) << k << " | " << std::scientific << std::setprecision(10) << std::setw(20) << std::abs(tol) << " | " << std::setw(20) << f_lasso_next << " | " << std::defaultfloat << std::setw(13) << Lf << " | " << std::setw(8) << lambda << std::endl << std::endl << std::endl;
 
-    if(k < options.max_iter)
+    if(k < options.iter_max)
         std::cout << "FISTA: converged in " << k << " iterations" << std::endl;
     else
         std::cout << "FISTA: did not converge after " << k << " iterations" << std::endl;

@@ -21,9 +21,13 @@
 				<Option type="1" />
 				<Option compiler="gcc" />
 				<Compiler>
+					<Add option="-pg" />
 					<Add option="-Og" />
 					<Add option="-g" />
 				</Compiler>
+				<Linker>
+					<Add option="-pg -lgmon" />
+				</Linker>
 			</Target>
 			<Target title="ReleaseO1">
 				<Option output="bin/ReleaseO1/AstroQUT" prefix_auto="1" extension_auto="1" />
@@ -51,6 +55,20 @@
 				<Compiler>
 					<Add option="-O3" />
 				</Compiler>
+			</Target>
+			<Target title="ReleaseO3Static">
+				<Option output="bin/ReleaseO3Static/AstroQUT" prefix_auto="1" extension_auto="1" />
+				<Option object_output="obj/ReleaseO3Static/" />
+				<Option type="1" />
+				<Option compiler="gcc" />
+				<Compiler>
+					<Add option="-O3" />
+				</Compiler>
+				<Linker>
+					<Add option="-static-libstdc++" />
+					<Add option="-static-libgcc" />
+					<Add option="-static" />
+				</Linker>
 			</Target>
 		</Build>
 		<Compiler>
@@ -84,7 +102,6 @@
 		</Linker>
 		<Unit filename=".gitignore" />
 		<Unit filename="include/WS/astroQUT.hpp" />
-		<Unit filename="include/WS/parameters.hpp" />
 		<Unit filename="include/const.hpp" />
 		<Unit filename="include/fista/poisson.hpp" />
 		<Unit filename="include/test.hpp" />
