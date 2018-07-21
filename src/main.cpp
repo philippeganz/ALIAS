@@ -3,8 +3,8 @@
 /// \brief Launcher for the ASTROQUT solver.
 /// \details Handle the user input, calls the preparation tools and the solver.
 /// \author Philippe Ganz <philippe.ganz@gmail.com>
-/// \version 0.4.0
-/// \date 2018-06-02
+/// \version 0.5.0
+/// \date 2018-07-07
 /// \copyright GPL-3.0
 ///
 

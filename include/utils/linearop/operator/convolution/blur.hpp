@@ -2,7 +2,7 @@
 /// \file include/utils/linearop/operator/matmult/blur.hpp
 /// \brief Blurring operator class header
 /// \author Philippe Ganz <philippe.ganz@gmail.com> 2017-2018
-/// \version 0.4.0
+/// \version 0.5.0
 /// \date 2018-04-22
 /// \copyright GPL-3.0
 ///

@@ -2,7 +2,7 @@
 /// \file include/test/WS.hpp
 /// \brief Test suite to test the WS method.
 /// \author Philippe Ganz <philippe.ganz@gmail.com>
-/// \version 0.4.0
+/// \version 0.5.0
 /// \date 2018-05-01
 /// \copyright GPL-3.0
 ///

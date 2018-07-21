@@ -21,9 +21,13 @@
 				<Option type="1" />
 				<Option compiler="gcc" />
 				<Compiler>
+					<Add option="-pg" />
 					<Add option="-Og" />
 					<Add option="-g" />
 				</Compiler>
+				<Linker>
+					<Add option="-pg -lgmon" />
+				</Linker>
 			</Target>
 			<Target title="ReleaseO1">
 				<Option output="bin/ReleaseO1/AstroQUT" prefix_auto="1" extension_auto="1" />

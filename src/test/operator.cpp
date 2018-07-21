@@ -2,7 +2,7 @@
 /// \file src/test/operator.cpp
 /// \brief Test suite to validate the operator classes
 /// \author Philippe Ganz <philippe.ganz@gmail.com>
-/// \version 0.4.1
+/// \version 0.5.0
 /// \date 2018-06-16
 /// \copyright GPL-3.0
 ///

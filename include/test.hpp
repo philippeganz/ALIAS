@@ -2,7 +2,7 @@
 /// \file include/test.hpp
 /// \brief Test suites to validate the project code
 /// \author Philippe Ganz <philippe.ganz@gmail.com>
-/// \version 0.4.0
+/// \version 0.5.0
 /// \date 2018-03-30
 /// \copyright GPL-3.0
 ///

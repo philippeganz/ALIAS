@@ -3,7 +3,7 @@
 /// \brief Abel transform class header
 /// \details Provide the Abel transform operator
 /// \author Philippe Ganz <philippe.ganz@gmail.com> 2017-2018
-/// \version 0.4.1
+/// \version 0.5.0
 /// \date 2018-06-17
 /// \copyright GPL-3.0
 ///
