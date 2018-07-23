@@ -4,13 +4,14 @@
 /// \author Jairo Diaz <jairo.diaz@unige.ch> MATLAB version 2016-2017
 /// \author Philippe Ganz <philippe.ganz@gmail.com> 2017-2018
 /// \version 0.5.0
-/// \date 2018-07-07
+/// \date 2018-07-21
 /// \copyright GPL-3.0
 ///
 
 #ifndef ASTROQUT_WS_ASTROQUT_HPP
 #define ASTROQUT_WS_ASTROQUT_HPP
 
+#include "fista/poisson.hpp"
 #include "utils/linearop/matrix.hpp"
 
 namespace astroqut
@@ -31,7 +32,6 @@ struct Parameters
         , blur_alpha(1.449)
         , blur_R0(2.2364)
         , wavelet{3,8}
-        , iter_max(1000)
         , MC_max(100)
         , MC_quantile_PF(80)
         , MC_quantile_PS(99)
@@ -39,6 +39,7 @@ struct Parameters
         , lambda(1.0)
         , standardize{}
         , x0{}
+        , fista_params{}
     {
 #ifdef DEBUG
         std::cerr << "WS::Parameters Default constructor called." << std::endl;
@@ -60,7 +61,6 @@ struct Parameters
     T blur_alpha; //!< Member variable "blur_alpha" alpha in psf
     T blur_R0; //!< Member variable "blur_R0" r0 in psf
     int wavelet[2]; //!< Member variable "wavelet" wavelet type
-    size_t iter_max; //!< Member variable "nb_iter" number of iterations
     size_t MC_max;
     size_t MC_quantile_PF;
     size_t MC_quantile_PS;
@@ -68,6 +68,7 @@ struct Parameters
     T lambda;
     Matrix<T> standardize;
     Matrix<T> x0;
+    fista::poisson::Parameters<T> fista_params;
 };
 
 void Prepare(const Matrix<double>& image,
