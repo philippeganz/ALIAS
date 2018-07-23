@@ -35,8 +35,8 @@ public:
      *  \param height Height of the operator
      *  \param width Width of the operator
      */
-    MatMult(Matrix<T>&& data, size_t height, size_t width) noexcept
-        : Operator<T>(std::forward<Matrix<T>>(data), height, width, false)
+    MatMult(Matrix<T> data, size_t height, size_t width)
+        : Operator<T>(data, height, width, false)
     {
 #ifdef DEBUG
         std::cout << "MatMult : Full member constructor called" << std::endl;

@@ -30,8 +30,8 @@ public:
     /** Full member constructor
      *  \param data Blurring filter matrix
      */
-    Blur(Matrix<T>&& data)
-        : Convolution<T>(std::forward<Matrix<T>>(data))
+    Blur(Matrix<T> data)
+        : Convolution<T>(data)
     {}
 
     /** Build constructor

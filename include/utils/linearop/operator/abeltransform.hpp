@@ -42,8 +42,8 @@ public:
      *  \param height Height of the full Abel matrix
      *  \param width Width of the full Abel matrix
      */
-    AbelTransform(Matrix<T>&& data, size_t height, size_t width)
-        : Operator<T>(std::forward<Matrix<T>>(data), height, width, false)
+    AbelTransform(Matrix<T> data, size_t height, size_t width)
+        : Operator<T>(data, height, width, false)
         , pic_side_(height)
         , wavelet_amount_(height)
     {}

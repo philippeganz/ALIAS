@@ -33,8 +33,8 @@ public:
      *  \param height Height of the full Abel matrix
      *  \param width Width of the full Abel matrix
      */
-    Spline(Matrix<T>&& data, size_t height, size_t width)
-        : MatMult<T>(std::forward<Matrix<T>>(data), height, width)
+    Spline(Matrix<T> data, size_t height, size_t width)
+        : MatMult<T>(data, height, width)
     {}
 
     /** Build constructor

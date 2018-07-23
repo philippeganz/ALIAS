@@ -30,8 +30,8 @@ public:
     /** Full member constructor
      *  \param data Matrix containing the filter's data. Needs to be already inverted if not symmetrical.
      */
-    Convolution(Matrix<T>&& data)
-        : Operator<T>(std::forward<Matrix<T>>(data), data.Height(), data.Width(), false)
+    Convolution(Matrix<T> data)
+        : Operator<T>(data, data.Height(), data.Width(), false)
     {
         if( this->height_ % 2 != 1 || this->width_ % 2 != 1 )
         {

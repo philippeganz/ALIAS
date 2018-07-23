@@ -84,9 +84,9 @@ public:
      *  \param width Width of the operator
      *  \param transposed If the operator is transposed
      */
-    Operator(Matrix<T>&& data, size_t height, size_t width, bool transposed) noexcept
+    Operator(Matrix<T> data, size_t height, size_t width, bool transposed) noexcept
         : LinearOp(height, width)
-        , data_(std::forward<Matrix<T>>(data))
+        , data_(Matrix<T>(data))
         , transposed_(transposed)
     {
 #ifdef DEBUG
