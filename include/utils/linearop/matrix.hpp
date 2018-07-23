@@ -330,20 +330,18 @@ public:
      */
     bool ContainsNeg() const noexcept
     {
+#ifdef DO_ARGCHECKS
         if( this->height_ == 0 ||
             this->width_ == 0 ||
             data_ == nullptr)
         {
             return false;
         }
+#endif // DO_ARGCHECKS
 
         for( size_t i = 0; i < this->length_; ++i )
-        {
             if( data_[i] < 0 )
-            {
                 return true;
-            }
-        }
 
         return false;
     }
@@ -432,6 +430,7 @@ public:
     {
         Matrix<U> result(this->height_, this->width_);
 
+        #pragma omp parallel for simd
         for(size_t i = 0; i < this->length_; ++i)
             result[i] = (U) data_[i];
 
@@ -486,9 +485,7 @@ public:
 
         #pragma omp parallel for simd
         for(size_t i = 0; i < this->length_; ++i)
-        {
             this->data_[i] += other.data_[i];
-        }
 
         return *this;
     }
@@ -517,9 +514,7 @@ public:
 
         #pragma omp parallel for simd
         for(size_t i = 0; i < this->length_; ++i)
-        {
             this->data_[i] -= other.data_[i];
-        }
 
         return *this;
     }
@@ -611,9 +606,7 @@ public:
 
         #pragma omp parallel for simd
         for(size_t i = 0; i < this->length_; ++i)
-        {
             data_[i] *= number;
-        }
 
         return *this;
     }
@@ -642,9 +635,7 @@ public:
 
         #pragma omp parallel for simd
         for(size_t i = 0; i < this->length_; ++i)
-        {
             data_[i] *= other.data_[i];
-        }
 
         return *this;
     }
@@ -669,9 +660,7 @@ public:
 
         #pragma omp parallel for simd
         for(size_t i = 0; i < this->length_; ++i)
-        {
             data_[i] /= number;
-        }
 
         return *this;
     }
@@ -699,9 +688,7 @@ public:
 
         #pragma omp parallel for simd
         for(size_t i = 0; i < this->length_; ++i)
-        {
             data_[i] /= other.data_[i];
-        }
 
         return *this;
     }
@@ -727,7 +714,16 @@ public:
         // vector
         if( this->height_ == 1 || this->width_ == 1 )
         {
-            std::copy(data_, data_ + (this->length_), result.data_);
+            if( omp_get_max_threads() > 1)
+            {
+                #pragma omp parallel for simd
+                for(size_t i = 0; i < this->length_; ++i)
+                    result[i] = data_[i];
+            }
+            else
+            {
+                std::copy(data_, data_ + (this->length_), result.data_);
+            }
         }
         // matrix
         else
@@ -737,9 +733,7 @@ public:
 			{
 			    #pragma omp simd
 				for ( size_t j = 0 ; j < this->width_; ++j )
-				{
 					result.data_[ j * this->height_ + i ] = data_[ i * this->width_ + j ];
-				}
 			}
         }
         return result;
@@ -778,9 +772,7 @@ public:
                 {
                     #pragma omp simd
                     for ( size_t j = i+1 ; j < this->width_; ++j )
-                    {
                         std::swap(data_[i * this->width_ + j], data_[j * this->width_ + i]);
-                    }
                 }
                 std::swap(this->height_, this->width_); // width <--> height
             }
@@ -797,9 +789,7 @@ public:
                 {
                     #pragma omp simd
                     for ( size_t j = 0 ; j < this->width_; ++j )
-                    {
                         result.data_[ j * this->height_ + i ] = data_[ i * this->width_ + j ];
-                    }
                 }
                 *this = std::move(result);
             }
@@ -824,7 +814,7 @@ public:
         }
 #endif // DO_ARGCHECKS
 
-        #pragma omp parallel for
+        #pragma omp parallel for simd
         for(size_t i = 0; i < this->length_; ++i)
         {
             // real part of log of negative numbers is 0
@@ -862,10 +852,7 @@ public:
 
         #pragma omp parallel for simd
         for(size_t i = 0; i < this->length_; ++i)
-        {
-            // real part of log of negative numbers is 0
             data_[i] = std::abs(data_[i]);
-        }
 
         return std::move(*this);
     }
@@ -897,11 +884,9 @@ public:
         }
 #endif // DO_ARGCHECKS
 
-        #pragma omp parallel for
+        #pragma omp parallel for simd
         for( size_t i = 0; i < this->length_; ++i )
-        {
             data_[i] *= std::max(1 - thresh_factor / (double)std::abs(data_[i]), 0.0);
-        }
 
         return std::move(*this);
     }
@@ -914,6 +899,102 @@ public:
     Matrix Shrink(double thresh_factor) const &
     {
         return Matrix(*this).Shrink(thresh_factor);
+    }
+
+    /** Remove negative values in-place
+     *   Set all values below zero in [first, last) to zero
+     *   \param first First element of the range
+     *   \param last Last element of the range
+     *   \return A reference to this
+     */
+    Matrix&& RemoveNeg(size_t first, size_t last) &&
+    {
+        #pragma omp parallel for simd
+        for(size_t i = first; i < last; ++i)
+            if(data_[i] < 0)
+                data_[i] = (T)0;
+
+        return std::move(*this);
+    }
+
+    /** Remove negative values at location
+     *   Set all values below zero in [first, last) to zero
+     *   \param first First element of the range
+     *   \param last Last element of the range
+     *   \return A new instance containing the result
+     */
+    Matrix RemoveNeg(size_t first, size_t last) const &
+    {
+        return Matrix(*this).RemoveNeg(first, last);
+    }
+
+    /** Remove negative values at location in-place
+     *   Set values below zero to zero
+     *   \param indices An array of index of location to remove negative values
+     *   \return A reference to this
+     */
+    Matrix&& RemoveNeg(Matrix<size_t> indices) &&
+    {
+        #pragma omp parallel for simd
+        for(size_t i = 0; i < indices.Length(); ++i)
+            if(data_[indices[i]] < 0)
+                data_[indices[i]] = (T)0;
+
+        return std::move(*this);
+    }
+
+    /** Remove negative values at location
+     *   Set values below zero to zero
+     *   \param indices An array of index of location to remove negative values
+     *   \return A new instance containing the result
+     */
+    Matrix RemoveNeg(Matrix<size_t> indices) const &
+    {
+        return Matrix(*this).RemoveNeg(indices);
+    }
+
+    /** Get indices of non zero elements
+     *   \return A new instance containing the result
+     */
+    Matrix<size_t> NonZeroIndices() const &
+    {
+        std::vector<size_t> indices;
+        for(size_t i = 0; i < this->length_; ++i)
+            if(data_[i] < 0 || data_[i] > 0)
+                indices.push_back(i);
+
+        return Matrix<size_t>(&indices[0], indices.size(), indices.size(), 1);
+    }
+
+    /** Get amount of non zero elements
+     *   \return A new instance containing the result
+     */
+    size_t NonZeroAmount() const &
+    {
+        size_t result = 0;
+        if(omp_get_max_threads() > 1)
+        {
+            size_t local_result[omp_get_max_threads()]{0};
+            #pragma omp parallel
+            {
+                size_t my_num = omp_get_thread_num();
+                #pragma omp for
+                for(size_t i = 0; i < this->length_; ++i)
+                    if(data_[i] < 0 || data_[i] > 0)
+                        ++local_result[my_num];
+            }
+
+            for(size_t i = 0; i < omp_get_max_threads(); ++i)
+                result += local_result[i];
+        }
+        else
+        {
+            for(size_t i = 0; i < this->length_; ++i)
+                if(data_[i] < 0 || data_[i] > 0)
+                    ++result;
+        }
+
+        return result;
     }
 
     /** Padding function for temporary instances
@@ -930,22 +1011,16 @@ public:
         bool height_padding = false;
         bool width_padding = false;
         if( height_ < height )
-        {
             height_padding = true;
-        }
         if( width_ < width )
-        {
             width_padding = true;
-        }
 
         // no padding necessary
         if( !height_padding && !width_padding )
         {
             // no type conversion necessary
             if( std::is_same<T,U>::value )
-            {
                 return std::forward(*this);
-            }
             Matrix<U> result = *this;
             return std::move(result);
         }
@@ -968,9 +1043,7 @@ public:
         {
             #pragma omp parallel for
             for( size_t i = height_; i < height; ++i )
-            {
                 std::fill( result.Data() + i*width, result.Data() + (i+1)*width, (T) 0 );
-            }
         }
 
         return std::move(result);
@@ -1283,9 +1356,7 @@ Matrix<T>&& operator-(const Matrix<T>& first, Matrix<T>&& second)
 
     #pragma omp parallel for simd
     for(size_t i = 0; i < first.Length(); ++i)
-    {
         second[i] = first[i] - second[i];
-    }
 
     return std::move(second); // if second is temporary, no need to allocate new memory for the result
 }
@@ -1438,9 +1509,7 @@ std::ostream& operator<<(std::ostream& os, const Matrix<T>& mat)
     {
         os << std::endl;
         for( size_t j = 0; j < mat.Width(); ++j )
-        {
             os << std::setw(10) << mat[i*mat.Width() + j] << " ";
-        }
     }
     os << std::endl;
     return os;
@@ -1469,9 +1538,7 @@ void operator<<(std::string filename, Matrix<T>& mat)
     T* memblock = new T[mat.Length()];
 
     for(size_t i = 0; i < mat.Length(); ++i)
-    {
         memblock[i] = mat[i];
-    }
 
     char* reinterpret_memblock = (char*) memblock;
 
@@ -1539,12 +1606,10 @@ inline std::complex<double> Inner(const Matrix<std::complex<double>>& first, con
     std::complex<double> local_result[omp_get_max_threads()]{0};
     #pragma omp parallel
     {
-    size_t my_num = omp_get_thread_num();
-    #pragma omp for
-    for(size_t i = 0; i < first.Length(); ++i)
-    {
-        local_result[my_num] += std::conj(first[i]) * second[i];
-    }
+        size_t my_num = omp_get_thread_num();
+        #pragma omp for
+        for(size_t i = 0; i < first.Length(); ++i)
+            local_result[my_num] += std::conj(first[i]) * second[i];
     }
 
     std::complex<double> result = 0;
@@ -1625,16 +1690,9 @@ void MatrixMatrixMult(const Matrix<T>& first, const Matrix<T>& second, Matrix<T>
             }
             #pragma omp parallel for
             for(size_t i = 0; i < first.Height(); ++i)
-            {
                 for(size_t k = 0; k < first.Width(); ++k)
-                {
                     for(size_t j = 0; j < second.Width(); ++j)
-                    {
                         result[i*second.Width() + j] += first[i*first.Width() + k] * second[k*second.Width() + j];
-                    }
-                }
-            }
-
             break;
         }
     case MM_pure_eigen:
@@ -1723,11 +1781,9 @@ void MatrixVectorMult(const Matrix<T>& mat, const Matrix<T>& vect, Matrix<T>& re
             #pragma omp parallel for
             for(size_t i = 0; i < mat.Height(); ++i)
             {
-                result[i] = 0;
+                result[i] = (T)0;
                 for(size_t j = 0; j < mat.Width(); ++j)
-                {
                     result[i] += mat[i*mat.Width() + j] * vect[j];
-                }
             }
 
             break;
@@ -1766,19 +1822,13 @@ void VectorMatrixMult(const Matrix<T>& vect, const Matrix<T>& mat, Matrix<T>& re
     case VM_naive:
         {
             // Init result to zero
+            #pragma omp parallel for simd
             for(size_t i = 0; i < result.Length(); ++i)
-            {
-                result[i] = 0;
-            }
+                result[i] = (T)0;
             #pragma omp parallel for
             for(size_t i = 0; i < mat.Height(); ++i)
-            {
                 for(size_t j = 0; j < mat.Width(); ++j)
-                {
                     result[j] += vect[i] * mat[i*mat.Width() + j];
-                }
-            }
-
             break;
         }
     case VM_pure_eigen:
