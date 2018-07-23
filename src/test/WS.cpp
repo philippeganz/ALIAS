@@ -3,7 +3,7 @@
 /// \brief Test suite to test the WS method.
 /// \author Philippe Ganz <philippe.ganz@gmail.com>
 /// \version 0.5.0
-/// \date 2018-07-07
+/// \date 2018-07-21
 /// \copyright GPL-3.0
 ///
 
@@ -26,10 +26,10 @@ void Chandra()
     Matrix<double> expected_result(std::string("data/512_chandra/MATLAB/100/solstatic.data"), 263168, 1, double());
 
     WS::Parameters<double> params;
-    params.MC_max = 10000;
+    params.MC_max = 1000;
     params.MC_quantile_PF = (size_t) (params.MC_max * (1.0 - 1.0/(std::sqrt(PI*std::log(512)))) - 1.0);
     params.MC_quantile_PS = (size_t) (params.MC_max * (1.0 - 1.0/(512*512)) - 1.0);
-    params.iter_max = 1000;
+    params.fista_params.iter_max = 1000;
 
     Matrix<double> solution = WS::Solve(picture, sensitivity, background, params);
 
@@ -44,8 +44,6 @@ void Chandra()
 
     double relative_error = std::abs((solution - expected_result).Norm(two)) / std::abs(expected_result.Norm(two));
     std::cout << relative_error << " relative norm error." << std::endl;
-
-    "data/512_chandra/computedsol.data" << solution;
 }
 
 } // namespace astro
