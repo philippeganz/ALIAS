@@ -960,7 +960,20 @@ public:
     {
         std::vector<size_t> indices;
         for(size_t i = 0; i < this->length_; ++i)
-            if(data_[i] < 0 || data_[i] > 0)
+            if(data_[i] < (T)0 || data_[i] > (T)0)
+                indices.push_back(i);
+
+        return Matrix<size_t>(&indices[0], indices.size(), indices.size(), 1);
+    }
+
+    /** Get indices of zero elements
+     *   \return A new instance containing the result
+     */
+    Matrix<size_t> ZeroIndices() const &
+    {
+        std::vector<size_t> indices;
+        for(size_t i = 0; i < this->length_; ++i)
+            if( IsEqual(data_[i], (T)0) )
                 indices.push_back(i);
 
         return Matrix<size_t>(&indices[0], indices.size(), indices.size(), 1);
