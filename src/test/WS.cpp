@@ -25,13 +25,12 @@ void Chandra()
 
     Matrix<double> expected_result(std::string("data/512_chandra/MATLAB/100/solstatic.data"), 263168, 1, double());
 
-    WS::Parameters<double> params;
-    params.MC_max = 1000;
-    params.MC_quantile_PF = (size_t) (params.MC_max * (1.0 - 1.0/(std::sqrt(PI*std::log(512)))) - 1.0);
-    params.MC_quantile_PS = (size_t) (params.MC_max * (1.0 - 1.0/(512*512)) - 1.0);
-    params.fista_params.iter_max = 1000;
+    WS::Parameters<double> options;
+    options.MC_max = 5000;
+    options.MC_quantile_PF = (size_t) (options.MC_max * (1.0 - 1.0/(std::sqrt(PI*std::log(512)))) - 1.0);
+    options.MC_quantile_PS = (size_t) (options.MC_max * (1.0 - 1.0/(512*512)) - 1.0);
 
-    Matrix<double> solution = WS::Solve(picture, sensitivity, background, params);
+    Matrix<double> solution = WS::Solve(picture, sensitivity, background, options);
 
     std::cout << std::endl;
     std::cout << "MATLAB result : " << std::endl;
