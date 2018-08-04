@@ -459,11 +459,13 @@ public:
         }
     #endif // DO_ARGCHECKS
 
+        #pragma omp parallel for simd
         for( size_t i = 0; i < signal.Height(); ++i )
             intermediate[i] = signal[i*wcoef.Width() + column];
 
         for( size_t level = level_max; level > coarsest_level; --level )
         {
+            #pragma omp parallel for
             for( size_t pass_index = 0; pass_index < level_offset/2; ++pass_index )
             {
                 T low_pass_local_coef = 0.0;
@@ -496,6 +498,7 @@ public:
             level_offset /= 2;
         }
 
+        #pragma omp parallel for simd
         for( size_t i = 0; i < signal.Height(); ++i )
             wcoef[i*wcoef.Width() + column] = intermediate[i];
     }
@@ -544,13 +547,14 @@ public:
         }
     #endif // DO_ARGCHECKS
 
+        #pragma omp parallel for simd
         for( size_t i = 0; i < (size_t) std::pow(2, coarsest_level); ++i )
-        {
             intermediate[i] = wcoef[i*wcoef.Width() + column];
-        }
+
 
         for( size_t level = (size_t) std::pow(2, coarsest_level); level <= level_max; ++level )
         {
+            #pragma omp parallel for
             for( size_t pass_index = 0; pass_index < level_offset; ++pass_index )
             {
                 T even_local_coef = 0.0;
@@ -564,17 +568,13 @@ public:
 
                     --low_pass_offset;
                     if( low_pass_offset < 0 )
-                    {
                         low_pass_offset += level_offset;
-                    }
 
                     odd_local_coef += high_pass_filter_[2*filter_index] * wcoef[(level_offset + high_pass_offset)*wcoef.Width() + column];
 
                     ++high_pass_offset;
                     if( high_pass_offset >= level_offset )
-                    {
                         high_pass_offset -= level_offset;
-                    }
                 }
 
                 low_pass_offset = pass_index;
@@ -585,17 +585,13 @@ public:
 
                     --low_pass_offset;
                     if( low_pass_offset < 0 )
-                    {
                         low_pass_offset += level_offset;
-                    }
 
                     even_local_coef += high_pass_filter_[2*filter_index+1] * wcoef[(level_offset + high_pass_offset)*wcoef.Width() + column];
 
                     ++high_pass_offset;
                     if( high_pass_offset >= level_offset )
-                    {
                         high_pass_offset -= level_offset;
-                    }
                 }
 
                 intermediate_temp[2*pass_index] = even_local_coef;
@@ -610,10 +606,9 @@ public:
             level_offset *= 2;
         }
 
+        #pragma omp parallel for simd
         for( size_t i = 0; i < signal.Height(); ++i )
-        {
             signal[i*signal.Width() + column] = intermediate[i];
-        }
     }
 };
 

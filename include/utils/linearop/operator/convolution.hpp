@@ -34,9 +34,7 @@ public:
         : Operator<T>(data, data.Height(), data.Width(), false)
     {
         if( this->height_ % 2 != 1 || this->width_ % 2 != 1 )
-        {
             throw std::invalid_argument("The filter size for the convolution needs to be odd in both dimensions.");
-        }
     }
 
     /** Clone function
