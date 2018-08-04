@@ -144,9 +144,10 @@ public:
         T radius_to_pic_side_ratio = radius/(T)pic_side_half;
         T radius_extended_to_wavelet_amount_half_ratio = radius_extended/(T)wavelet_amount_half;
         T* x_axis = new T[wavelet_amount_half];
+        #pragma omp parallel for simd
         for( size_t i = 0; i < wavelet_amount_half; ++i )
             x_axis[i] = ((T)i+1.0L) * radius_extended_to_wavelet_amount_half_ratio;
-
+        #pragma omp parallel for simd
         for( size_t i = 0; i < pic_side_half; ++i )
         {
             T z = (T)i * radius_to_pic_side_ratio;
