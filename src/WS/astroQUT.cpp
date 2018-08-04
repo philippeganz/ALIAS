@@ -4,11 +4,10 @@
 /// \author Jairo Diaz <jairo.diaz@unige.ch> 2016-2017
 /// \author Philippe Ganz <philippe.ganz@gmail.com> 2017-2018
 /// \version 0.5.0
-/// \date 2018-07-07
+/// \date 2018-07-21
 /// \copyright GPL-3.0
 ///
 
-#include "fista/poisson.hpp"
 #include "utils/linearop/operator/astrooperator.hpp"
 #include "WS/astroQUT.hpp"
 
@@ -146,7 +145,7 @@ static void Lambda(const Matrix<double> mu_hat,
     for(size_t MC_id = 0; MC_id < options.MC_max; ++MC_id)
     {
 
-        std::default_random_engine generator(rnd() + omp_get_team_num());
+        std::default_random_engine generator(rnd() + omp_get_thread_num());
 
         if(MC_id % (options.MC_max/100) == 0)
             std::cout << "\r" + std::to_string(1 + 100 * MC_id/options.MC_max) + "/100";
@@ -181,10 +180,11 @@ static void Lambda(const Matrix<double> mu_hat,
 
 }
 
-static void PrepareData(const Matrix<double>& background,
-                        AstroOperator<double>& astro,
-                        Parameters<double>& options)
+static void StandardizeAndRegularize(const Matrix<double>& background,
+                                     AstroOperator<double>& astro,
+                                     Parameters<double>& options)
 {
+    std::cout << "Computing standardization and regularization values..." << std::endl;
     Matrix<double> I(0.0, options.pic_size*2, 1);
     I[0] = 1.0;
     Matrix<double> u = astro.BAW(I, false, true, true, false);
@@ -196,10 +196,92 @@ static void PrepareData(const Matrix<double>& background,
 
     Lambda(mu_hat, astro, options);
 
-    "data/512_chandra/computeddivx.data" << options.standardize;
+    "data/512_chandra/computed_divx.data" << options.standardize;
 
     astro.Transpose();
     astro.Standardize(options.standardize);
+    std::cout << std::endl;
+}
+
+static Matrix<double> Estimate(const Matrix<double>& image,
+                               const Matrix<double>& background,
+                               const AstroOperator<double>& astro,
+                               Parameters<double>& options)
+{
+    std::cout << "Computing static estimate..." << std::endl;
+    options.fista_params.iter_max = 1000;
+    options.fista_params.init_value = Matrix<double>(0.0, options.model_size, 1);
+    options.fista_params.init_value[0] = options.beta0 * options.standardize[0];
+    options.fista_params.indices = Matrix<size_t>(0,1+options.pic_size+options.pic_size*options.pic_size,1);
+    for(size_t i = 1; i < 1+options.pic_size+options.pic_size*options.pic_size; ++i)
+        options.fista_params.indices[i] = i + options.pic_size - 1;
+
+    Matrix<double> result = fista::poisson::Solve(astro, background, image, options.lambda, options.fista_params);
+
+    result /= options.standardize;
+    result.RemoveNeg(options.pic_size*2, options.model_size);
+
+    std::cout << std::endl;
+
+    return result;
+}
+
+static Matrix<double> EstimateNonZero(const Matrix<double>& image,
+                                      const Matrix<double>& background,
+                                      const Matrix<double>& solution_static,
+                                      const AstroOperator<double>& astro,
+                                      Parameters<double>& options)
+{
+
+    std::cout << "Getting non zero elements..." << std::endl;
+    options.fista_params.iter_max = 1000;
+    Matrix<size_t> non_zero_elements_indices = solution_static.NonZeroIndices();
+    Matrix<double> non_zero_elements_operator(image.Length(),
+                                              non_zero_elements_indices.Length());
+
+    std::cout << "Generating non zero elements operator..." << std::endl;
+    #pragma omp parallel
+    {
+        Matrix<double> identity(0.0, options.model_size, 1);
+        #pragma omp for schedule(dynamic)
+        for(size_t i = 0; i < non_zero_elements_indices.Length(); ++i)
+        {
+            if(i % (non_zero_elements_indices.Length()/100) == 0)
+                std::cout << "\r" + std::to_string(1 + 100 * i/non_zero_elements_indices.Length()) + "/100";
+            identity[non_zero_elements_indices[i]] = 1.0;
+            Matrix<double> local_result = astro * identity;
+            identity[non_zero_elements_indices[i]] = 0.0;
+
+            for(size_t j = 0; j < local_result.Length(); ++j)
+                non_zero_elements_operator[j*non_zero_elements_indices.Length() + i] = local_result[j];
+        }
+    }
+    std::cout << std::endl;
+
+    options.fista_params.init_value = Matrix<double>(non_zero_elements_indices.Length(), 1);
+
+    #pragma omp parallel for simd
+    for(size_t i = 0; i < non_zero_elements_indices.Length(); ++i)
+        options.fista_params.init_value[i] = solution_static[non_zero_elements_indices[i]] * options.standardize[non_zero_elements_indices[i]];
+
+    std::vector<size_t> remove_neg_indices = {0};
+    for(size_t i = 1; i < non_zero_elements_indices.Length(); ++i)
+        if(non_zero_elements_indices[i] > options.pic_size)
+            remove_neg_indices.push_back(i);
+    options.fista_params.indices = Matrix<size_t>(&remove_neg_indices[0], remove_neg_indices.size(), remove_neg_indices.size(), 1);
+
+    std::cout << "Generating the new beta estimates..." << std::endl;
+    Matrix<double> beta_new = fista::poisson::Solve(MatMult<double>(non_zero_elements_operator, non_zero_elements_operator.Height(), non_zero_elements_operator.Width()),
+                                                    background,
+                                                    image,
+                                                    0.0,
+                                                    options.fista_params);
+
+    Matrix<double> result(solution_static);
+    for(size_t i = 0; i < non_zero_elements_indices.Length(); ++i)
+        result[non_zero_elements_indices[i]] = beta_new[i];
+
+    return result;
 }
 
 Matrix<double> Solve(const Matrix<double>& image,
@@ -211,6 +293,7 @@ Matrix<double> Solve(const Matrix<double>& image,
     options.model_size = (options.pic_size + 2) * options.pic_size;
     options.x0 = Matrix<double>(0.0, options.model_size, 1);
     options.x0[0] = 1;
+    options.fista_params.log_period = 20;
 
     AstroOperator<double> astro(options.pic_size, options.pic_size, options.pic_size/2, sensitivity, Matrix<double>(1, options.model_size, 1), false, options);
 
@@ -219,36 +302,62 @@ Matrix<double> Solve(const Matrix<double>& image,
     options.x0[0] = options.beta0;
 
     std::chrono::time_point<std::chrono::high_resolution_clock> start, end;
+
     start = std::chrono::high_resolution_clock::now();
-
-    PrepareData(background, astro, options);
-
+    StandardizeAndRegularize(background, astro, options);
     end = std::chrono::high_resolution_clock::now();
     std::chrono::duration<double> elapsed_time_MC = end-start;
 
-    fista::poisson::Parameters<double> params;
-    params.log_period = 10;
-    params.tol = 1.0e-10;
-    params.iter_max = options.iter_max;
-    params.init_value = Matrix<double>(0.0, options.model_size, 1);
-    params.init_value[0] = options.beta0 * options.standardize[0];
-    params.indices = Matrix<size_t>(0,1+options.pic_size+options.pic_size*options.pic_size,1);
-    for(size_t i = 1; i < 1+options.pic_size+options.pic_size*options.pic_size; ++i)
-        params.indices[i] = i + options.pic_size - 1;
-
     start = std::chrono::high_resolution_clock::now();
-
-    Matrix<double> solution = fista::poisson::Solve(astro, background, image, options.lambda, params);
-
+    Matrix<double> solution_static = Estimate(image, background, astro, options);
     end = std::chrono::high_resolution_clock::now();
     std::chrono::duration<double> elapsed_time_FISTA = end-start;
+    "data/512_chandra/computed_sol_static.data" << solution_static;
+
+    start = std::chrono::high_resolution_clock::now();
+    Matrix<double> solution = EstimateNonZero(image, background, solution_static, astro, options);
+    end = std::chrono::high_resolution_clock::now();
+    std::chrono::duration<double> elapsed_time_NZ = end-start;
+    "data/512_chandra/computed_sol.data" << solution;
+
+    options.x0[0] = solution[0]/options.standardize[0];
+    std::cout << "Using new beta0 = " << options.x0[0] << std::endl;
+
+    start = std::chrono::high_resolution_clock::now();
+    StandardizeAndRegularize(background, astro, options);
+    end = std::chrono::high_resolution_clock::now();
+    std::chrono::duration<double> elapsed_time_MC2 = end-start;
+
+    Matrix<size_t> zero_elements = solution.ZeroIndices();
+    for(size_t i = 0; i < zero_elements.Length(); ++i)
+        options.standardize[zero_elements[i]] = std::numeric_limits<double>::infinity();
+    astro.Standardize(options.standardize);
+
+    start = std::chrono::high_resolution_clock::now();
+    Matrix<double> solution_static_new = Estimate(image, background, astro, options);
+    end = std::chrono::high_resolution_clock::now();
+    std::chrono::duration<double> elapsed_time_FISTA2 = end-start;
+    "data/512_chandra/computed_sol_static_new.data" << solution_static_new;
+
+    start = std::chrono::high_resolution_clock::now();
+    Matrix<double> solution_new = EstimateNonZero(image, background, solution_static_new, astro, options);
+    end = std::chrono::high_resolution_clock::now();
+    std::chrono::duration<double> elapsed_time_NZ2 = end-start;
+    "data/512_chandra/computed_sol_new.data" << solution_new;
+
+    options.x0[0] = solution_new[0]/options.standardize[0];
+    std::cout << "Using new beta0 = " << options.x0[0] << std::endl;
 
     std::cout << std::defaultfloat << std::endl;
     std::cout << "Time for MC simulations: " << elapsed_time_MC.count()    << " seconds" << std::endl;
     std::cout << "Time for FISTA solver: "   << elapsed_time_FISTA.count() << " seconds" << std::endl;
+    std::cout << "Time for GLM fit on non zero elements: "   << elapsed_time_NZ.count() << " seconds" << std::endl;
+    std::cout << "Time for MC simulations 2: " << elapsed_time_MC2.count()    << " seconds" << std::endl;
+    std::cout << "Time for FISTA solver 2: "   << elapsed_time_FISTA2.count() << " seconds" << std::endl;
+    std::cout << "Time for GLM fit on non zero elements 2: "   << elapsed_time_NZ2.count() << " seconds" << std::endl;
     std::cout << std::endl;
 
-    return solution;
+    return solution_static;
 }
 
 } // namespace WS
