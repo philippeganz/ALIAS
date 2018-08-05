@@ -1,16 +1,16 @@
 addpath(genpath('C:\Program Files\MATLAB\R2018a\toolbox\Wavelab850'))
 addpath(genpath('D:\Philippe\SwitchDrive\AstroQUT_matlab\ASTROQUT v2.0'))
 
-fid = fopen("MATLAB/2000/solstatic.data", "r");
+fid = fopen("MATLAB/1000/sol.data", "r");
 sol = fread(fid, 263168, 'double');
 fclose(fid);
-fid = fopen("MATLAB/2000/divx.data", "r");
+fid = fopen("MATLAB/1000/divx.data", "r");
 divx = fread(fid, 263168, 'double');
 fclose(fid);
-fid = fopen("AstroQUT/100000/computedsol.data", "r");
+fid = fopen("AstroQUT/5000/computed_sol.data", "r");
 sol_c = fread(fid, 263168, 'double');
 fclose(fid);
-fid = fopen("AstroQUT/100000/computeddivx.data", "r");
+fid = fopen("AstroQUT/5000/computed_divx.data", "r");
 divx_c = fread(fid, 263168, 'double');
 fclose(fid);
 
@@ -19,7 +19,6 @@ MM = 1024;
 N = 262144;
 R = 256;
 
-sol = sol ./ divx;
 sol_c = sol_c ./ divx_c;
 flassow = sol(1:M);
 flassow_c = sol_c(1:M);
