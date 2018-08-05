@@ -4,7 +4,7 @@
 /// \author Jairo Diaz <jairo.diaz@unige.ch> 2016-2017
 /// \author Philippe Ganz <philippe.ganz@gmail.com> 2017-2018
 /// \version 0.5.0
-/// \date 2018-07-21
+/// \date 2018-08-05
 /// \copyright GPL-3.0
 ///
 
@@ -184,7 +184,8 @@ static void StandardizeAndRegularize(const Matrix<double>& background,
                                      AstroOperator<double>& astro,
                                      Parameters<double>& options)
 {
-    std::cout << "Computing standardization and regularization values..." << std::endl;
+    std::cout << "Computing standardization and regularization values with ";
+    std::cout << options.MC_max << " MC simulations..." << std::endl;
     Matrix<double> I(0.0, options.pic_size*2, 1);
     I[0] = 1.0;
     Matrix<double> u = astro.BAW(I, false, true, true, false);
@@ -195,8 +196,6 @@ static void StandardizeAndRegularize(const Matrix<double>& background,
     Standardize(mu_hat, background, astro, options);
 
     Lambda(mu_hat, astro, options);
-
-    "data/512_chandra/computed_divx.data" << options.standardize;
 
     astro.Transpose();
     astro.Standardize(options.standardize);
@@ -312,41 +311,43 @@ Matrix<double> Solve(const Matrix<double>& image,
     Matrix<double> solution_static = Estimate(image, background, astro, options);
     end = std::chrono::high_resolution_clock::now();
     std::chrono::duration<double> elapsed_time_FISTA = end-start;
-    "data/512_chandra/computed_sol_static.data" << solution_static;
 
     start = std::chrono::high_resolution_clock::now();
     Matrix<double> solution = EstimateNonZero(image, background, solution_static, astro, options);
     end = std::chrono::high_resolution_clock::now();
     std::chrono::duration<double> elapsed_time_NZ = end-start;
-    "data/512_chandra/computed_sol.data" << solution;
-
     options.x0[0] = solution[0]/options.standardize[0];
-    std::cout << "Using new beta0 = " << options.x0[0] << std::endl;
+    std::cout << "New beta0 = " << options.x0[0] << std::endl;
 
     start = std::chrono::high_resolution_clock::now();
     StandardizeAndRegularize(background, astro, options);
     end = std::chrono::high_resolution_clock::now();
     std::chrono::duration<double> elapsed_time_MC2 = end-start;
 
+    for(size_t i = 0; i < options.pic_size; ++i)
+        solution[i] += 1e-10;
     Matrix<size_t> zero_elements = solution.ZeroIndices();
     for(size_t i = 0; i < zero_elements.Length(); ++i)
         options.standardize[zero_elements[i]] = std::numeric_limits<double>::infinity();
     astro.Standardize(options.standardize);
+    "data/512_chandra/computed_divx.data" << options.standardize;
 
     start = std::chrono::high_resolution_clock::now();
-    Matrix<double> solution_static_new = Estimate(image, background, astro, options);
+    solution_static = Estimate(image, background, astro, options);
     end = std::chrono::high_resolution_clock::now();
     std::chrono::duration<double> elapsed_time_FISTA2 = end-start;
-    "data/512_chandra/computed_sol_static_new.data" << solution_static_new;
+    "data/512_chandra/computed_sol_static.data" << solution_static;
 
     start = std::chrono::high_resolution_clock::now();
-    Matrix<double> solution_new = EstimateNonZero(image, background, solution_static_new, astro, options);
+    solution = EstimateNonZero(image, background, solution_static, astro, options);
     end = std::chrono::high_resolution_clock::now();
     std::chrono::duration<double> elapsed_time_NZ2 = end-start;
-    "data/512_chandra/computed_sol_new.data" << solution_new;
 
-    options.x0[0] = solution_new[0]/options.standardize[0];
-    std::cout << "Using new beta0 = " << options.x0[0] << std::endl;
+    Matrix<double> solution_normalized = solution / options.standardize;
+    "data/512_chandra/computed_sol.data" << solution_normalized;
+
+    options.x0[0] = solution_normalized[0];
+    std::cout << "New beta0 = " << options.x0[0] << std::endl;
 
     std::cout << std::defaultfloat << std::endl;
     std::cout << "Time for MC simulations: " << elapsed_time_MC.count()    << " seconds" << std::endl;
@@ -355,9 +356,10 @@ Matrix<double> Solve(const Matrix<double>& image,
     std::cout << "Time for MC simulations 2: " << elapsed_time_MC2.count()    << " seconds" << std::endl;
     std::cout << "Time for FISTA solver 2: "   << elapsed_time_FISTA2.count() << " seconds" << std::endl;
     std::cout << "Time for GLM fit on non zero elements 2: "   << elapsed_time_NZ2.count() << " seconds" << std::endl;
+    std::cout << "Total time: "   << elapsed_time_MC.count() + elapsed_time_FISTA.count() + elapsed_time_NZ.count() + elapsed_time_MC2.count() + elapsed_time_FISTA2.count()+ elapsed_time_NZ2.count() << " seconds" << std::endl;
     std::cout << std::endl;
 
-    return solution_static;
+    return solution_normalized;
 }
 
 } // namespace WS
