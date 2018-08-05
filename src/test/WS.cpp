@@ -23,7 +23,7 @@ void Chandra()
 
     Matrix<double> background(std::string("data/512_chandra/O.data"), 262144, 1, double());
 
-    Matrix<double> expected_result(std::string("data/512_chandra/MATLAB/100/solstatic.data"), 263168, 1, double());
+    Matrix<double> expected_result(std::string("data/512_chandra/MATLAB/1000/sol.data"), 263168, 1, double());
 
     WS::Parameters<double> options;
     options.MC_max = 5000;
@@ -34,10 +34,10 @@ void Chandra()
 
     std::cout << std::endl;
     std::cout << "MATLAB result : " << std::endl;
-    std::cout << "FISTA: converged in 1000 iterations (nnz(x)= 2984)" << std::endl;
-    std::cout << "FISTA: Relative error: -1.34e-05" << std::endl;
-    std::cout << "FISTA: Final FLasso value: -1.337219e+06" << std::endl;
-    std::cout << "Elapsed time is 7952.558757 seconds." << std::endl << std::endl;
+    std::cout << "FISTA: did not converge in 1000 iterations (nnz(x)= 2329)" << std::endl;
+    std::cout << "FISTA: Relative error: -1.93e-06" << std::endl;
+    std::cout << "FISTA: Final FLasso value: -1.387380e+06" << std::endl;
+    std::cout << "Elapsed time is 9293.529344 seconds." << std::endl << std::endl;
 
     Compare(expected_result, solution);
 
