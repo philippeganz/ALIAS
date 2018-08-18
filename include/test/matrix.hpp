@@ -256,7 +256,7 @@ bool TransposeRect()
 
     T data[10] = {1,6,2,7,3,8,4,9,5,10};
     const Matrix<T> expected_result(data, 10, 5, 2);
-    bool test_result =  (Compare(expected_result, RectMatrix<T>().Transpose()));
+    bool test_result = (Compare(expected_result, RectMatrix<T>().Transpose()));
     std::cout << (test_result ? "Success" : "Failure") << std::endl;
 
     return test_result;
@@ -272,7 +272,7 @@ bool Add()
 
     T data[9] = {2,4,6,8,10,12,14,16,18};
     const Matrix<T> expected_result(data, 9, 3, 3);
-    bool test_result =  (Compare(expected_result, SquareMatrix<T>() + SquareMatrix<T>()));
+    bool test_result = (Compare(expected_result, SquareMatrix<T>() + SquareMatrix<T>()));
     std::cout << (test_result ? "Success" : "Failure") << std::endl;
 
     return test_result;
@@ -288,7 +288,7 @@ bool Sub()
 
     T data[9] = {-1,-2,-3,-4,-5,-6,-7,-8,-9};
     const Matrix<T> expected_result(data, 9, 3, 3);
-    bool test_result =  (Compare(expected_result, SquareMatrix<T>() - (T)2 * SquareMatrix<T>()));
+    bool test_result = (Compare(expected_result, SquareMatrix<T>() - (T)2 * SquareMatrix<T>()));
     std::cout << (test_result ? "Success" : "Failure") << std::endl;
 
     return test_result;
@@ -304,7 +304,7 @@ bool MultSquare()
 
     T data[9] = {30,36,42,66,81,96,102,126,150};
     const Matrix<T> expected_result(data, 9, 3, 3);
-    bool test_result =  (Compare(expected_result, SquareMatrix<T>() * SquareMatrix<T>()));
+    bool test_result = (Compare(expected_result, SquareMatrix<T>() * SquareMatrix<T>()));
     std::cout << (test_result ? "Success" : "Failure") << std::endl;
 
     return test_result;
@@ -320,7 +320,7 @@ bool MultRect()
 
     T data[4] = {55,130,130,330};
     const Matrix<T> expected_result(data, 4, 2, 2);
-    bool test_result =  (Compare(expected_result, RectMatrix<T>() * RectMatrix<T>().Transpose()));
+    bool test_result = (Compare(expected_result, RectMatrix<T>() * RectMatrix<T>().Transpose()));
     std::cout << (test_result ? "Success" : "Failure") << std::endl;
 
     return test_result;
@@ -340,7 +340,7 @@ bool MultVectMat()
     T data[5] = {13,16,19,22,25};
     const Matrix<T> expected_result(data, 5, 1, 5);
 
-    bool test_result =  (Compare(expected_result, vect * RectMatrix<T>()));
+    bool test_result = (Compare(expected_result, vect * RectMatrix<T>()));
     std::cout << (test_result ? "Success" : "Failure") << std::endl;
 
     return test_result;
@@ -360,7 +360,7 @@ bool MultMatVect()
     T data[2] = {55,130};
     const Matrix<T> expected_result(data, 2, 2, 1);
 
-    bool test_result =  (Compare(expected_result, RectMatrix<T>() * vect));
+    bool test_result = (Compare(expected_result, RectMatrix<T>() * vect));
     std::cout << (test_result ? "Success" : "Failure") << std::endl;
 
     return test_result;
@@ -374,7 +374,7 @@ bool NormOne()
     std::string type(typeid(T).name());
     std::cout << "Norm one test with " << type << " : ";
 
-    bool test_result =  IsEqual(SquareMatrix<T>().Norm(one), (T) 45.0);
+    bool test_result = IsEqual(SquareMatrix<T>().Norm(one), (T) 45.0);
     std::cout << (test_result ? "Success" : "Failure") << std::endl;
 
     return test_result;
@@ -389,7 +389,7 @@ bool NormTwo()
     std::string type(typeid(T).name());
     std::cout << "Norm two test with " << type << " : ";
 
-    bool test_result =  IsEqual(SquareMatrix<T>().Norm(two), (T) 16.881943016134134);
+    bool test_result = IsEqual(SquareMatrix<T>().Norm(two), (T) 16.881943016134134);
     std::cout << (test_result ? "Success" : "Failure") << std::endl;
 
     return test_result;
@@ -434,7 +434,7 @@ bool Shrink()
     T data[9] = {0,0,1,2,3,4,5,6,7};
     const Matrix<T> expected_result(data, 9, 3, 3);
 
-    bool test_result =  (Compare(expected_result, SquareMatrix<T>().Shrink(2)));
+    bool test_result = (Compare(expected_result, SquareMatrix<T>().Shrink(2)));
     std::cout << (test_result ? "Success" : "Failure") << std::endl;
 
     return test_result;
@@ -443,6 +443,44 @@ template <>
 bool Shrink<std::complex<double>>();
 
 bool Input();
+
+template <class T>
+bool CC()
+{
+    std::string type(typeid(T).name());
+    std::cout << "Connected component test with " << type << " : ";
+
+    T data[100] = {9,0,0,0,0,2,0,0,3,0,
+                   0,0,0,0,0,1,1,0,0,2,
+                   0,0,2,5,0,3,9,5,0,0,
+                   2,0,3,5,0,6,5,1,2,4,
+                   0,0,0,0,0,0,1,1,1,9,
+                   0,0,1,0,4,0,0,0,0,0,
+                   0,0,0,2,0,0,0,0,6,0,
+                   0,0,4,0,3,0,0,0,0,0,
+                   0,5,0,0,0,0,3,0,0,0,
+                   0,0,0,5,0,0,0,0,1,0};
+
+    const Matrix<T> raw_data(data, 100, 10, 10);
+
+    T result_data[100] = { 9,0,0,0,0,0,0,0,3,0,
+                           0,0,0,0,0,0,0,0,0,0,
+                           0,0,0,5,0,0,9,0,0,0,
+                           2,0,0,0,0,0,0,0,0,0,
+                           0,0,0,0,0,0,0,0,0,0,
+                           0,0,0,0,0,0,0,0,0,0,
+                           0,0,0,0,0,0,0,0,6,0,
+                           0,0,0,0,0,0,0,0,0,0,
+                           0,5,0,0,0,0,3,0,0,0,
+                           0,0,0,5,0,0,0,0,1,0};
+
+    const Matrix<T> expected_result(result_data, 100, 10, 10);
+
+    bool test_result = (Compare(expected_result, raw_data.ConnectedComponentsMax()));
+    std::cout << (test_result ? "Success" : "Failure") << std::endl;
+
+    return test_result;
+}
 
 } // namespace matrix
 } // namespace test

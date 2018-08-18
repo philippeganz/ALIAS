@@ -21,6 +21,7 @@
 #include <iomanip>
 #include <limits>
 #include <numeric>
+#include <queue>
 #include <string>
 #include <type_traits>
 
@@ -30,7 +31,6 @@
 
 namespace astroqut
 {
-
 template<class T> struct is_complex : std::false_type {};
 template<class T> struct is_complex<std::complex<T>> : std::true_type {};
 
@@ -74,6 +74,12 @@ inline bool IsEqual(T first, T second)
     return IsEqual(std::real(first), std::real(second)) && IsEqual(std::imag(first), std::imag(second));
 }
 
+#ifdef VERBOSE
+template <class T>
+class Matrix;
+template <class T>
+std::ostream& operator<<(std::ostream& os, const Matrix<T>& mat);
+#endif // VERBOSE
 
 template <class T>
 class Matrix : public LinearOp
@@ -951,6 +957,78 @@ public:
     Matrix RemoveNeg(Matrix<size_t> indices) const &
     {
         return Matrix(*this).RemoveNeg(indices);
+    }
+
+    Matrix ConnectedComponentsMax() const &
+    {
+        Matrix<T> CC_max(0.0, height_, width_);
+        Matrix<bool> CC_marked(false, height_, width_);
+
+        for(size_t row = 0; row < height_; ++row)
+        {
+            for(size_t col = 0; col < width_; ++col)
+            {
+                // consider only non-zero data and point not already marked
+                if(data_[row*width_ + col] != 0 && ! CC_marked[row*width_ + col])
+                {
+                    // mark current point
+                    CC_marked[row*width_ + col] = true;
+
+                    // initialise the new CC with the current non-zero point
+                    std::vector<size_t> CC_current = {row*width_ + col};
+                    std::queue<std::pair<int, int>> points;
+                    points.push(std::pair<int, int>(row, col));
+#ifdef VERBOSE
+                    std::cout << "(" << row << "," << col << ")" << std::endl;
+#endif // VERBOSE
+
+                    // Breadth First Search to look for all points connected to the currentCC.
+                    while( ! points.empty() )
+                    {
+                        std::pair<int, int> point = points.front();
+                        points.pop();
+                        // check all 8 neighbours of the current point
+                        for(int neighbor_row = std::max(point.first-1, 0); neighbor_row < std::min(point.first+2, (int)width_); ++neighbor_row )
+                        {
+                            for(int neighbor_col = std::max(point.second-1, 0); neighbor_col < std::min(point.second+2, (int)height_); ++neighbor_col )
+                            {
+                                size_t point_index = neighbor_row*width_ + neighbor_col;
+                                // do not check if it is already marked
+                                if(! CC_marked[point_index])
+                                {
+                                    CC_marked[point_index] = true;
+                                    // consider only if non zero
+                                    if(data_[point_index] != 0)
+                                    {
+                                        CC_current.push_back(point_index);
+                                        points.push(std::pair<int, int>(neighbor_row, neighbor_col));
+#ifdef VERBOSE
+                                        std::cout << "(" << neighbor_row << "," << neighbor_col << ")" << std::endl;
+#endif // VERBOSE
+                                    }
+                                }
+                            }
+                        }
+                    }
+
+                    // get maximum value of the connected component
+                    size_t max_index = CC_current[0];
+                    for(size_t i = 1; i < CC_current.size(); ++i)
+                        if(data_[max_index] < data_[CC_current[i]])
+                            max_index = CC_current[i];
+
+                    // assign the maximum value to its index in the result
+                    CC_max[max_index] = data_[max_index];
+
+#ifdef VERBOSE
+                    std::cout << *this;
+                    std::cout << CC_max;
+#endif // VERBOSE
+                }
+            }
+        }
+
+        return CC_max;
     }
 
     /** Get indices of non zero elements
