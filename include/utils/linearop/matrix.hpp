@@ -496,6 +496,31 @@ public:
         return *this;
     }
 
+    /** Additive operator with single number in-place
+     *  \param number Number to add to current object
+     *  \return A reference to this
+     */
+    template <class U, typename std::enable_if_t<std::is_arithmetic<U>::value || is_complex<U>{}>* = nullptr>
+    Matrix& operator+=(U number)
+    {
+#ifdef DO_ARGCHECKS
+        try
+        {
+            IsValid();
+        }
+        catch (const std::exception&)
+        {
+            throw;
+        }
+#endif // DO_ARGCHECKS
+
+        #pragma omp parallel for simd
+        for(size_t i = 0; i < this->length_; ++i)
+            data_[i] += number;
+
+        return *this;
+    }
+
     /** Subtractive operator in-place
      *  \param other Object to subtract current object to
      *  \return A reference to this
@@ -521,6 +546,31 @@ public:
         #pragma omp parallel for simd
         for(size_t i = 0; i < this->length_; ++i)
             this->data_[i] -= other.data_[i];
+
+        return *this;
+    }
+
+    /** Subtractive operator with single number in-place
+     *  \param number Number to remove from current object
+     *  \return A reference to this
+     */
+    template <class U, typename std::enable_if_t<std::is_arithmetic<U>::value || is_complex<U>{}>* = nullptr>
+    Matrix& operator-=(U number)
+    {
+#ifdef DO_ARGCHECKS
+        try
+        {
+            IsValid();
+        }
+        catch (const std::exception&)
+        {
+            throw;
+        }
+#endif // DO_ARGCHECKS
+
+        #pragma omp parallel for simd
+        for(size_t i = 0; i < this->length_; ++i)
+            data_[i] -= number;
 
         return *this;
     }
@@ -1401,6 +1451,29 @@ Matrix<T>&& operator+(const Matrix<T>& first, Matrix<T>&& second)
     return std::move(second += first); // if second is temporary, no need to allocate new memory for the result
 }
 
+/** Additive operator with single number
+ *  \param number Number to add to current object
+ *  \param mat Matrix, lvalue ref
+ *  \return A reference to this
+ */
+template <class T, class U, typename std::enable_if_t<std::is_arithmetic<U>::value || is_complex<U>{}>* = nullptr>
+Matrix<T> operator+(const Matrix<T>& mat, U number)
+{
+    Matrix<T> result(mat);
+    return result += number;
+}
+
+/** Additive operator with single number of temporary instance
+ *  \param number Number to add to current object
+ *  \param mat Matrix, rvalue ref
+ *  \return A reference to this
+ */
+template <class T, class U, typename std::enable_if_t<std::is_arithmetic<U>::value || is_complex<U>{}>* = nullptr>
+Matrix<T>&& operator+(Matrix<T>&& mat, U number)
+{
+    return std::move(mat += number);
+}
+
 /** Subtractive operator, both Matrix are lvalues
  *  \param first Matrix, lvalue ref
  *  \param second Matrix to subtract from current object, lvalue ref
@@ -1450,6 +1523,29 @@ Matrix<T>&& operator-(const Matrix<T>& first, Matrix<T>&& second)
         second[i] = first[i] - second[i];
 
     return std::move(second); // if second is temporary, no need to allocate new memory for the result
+}
+
+/** Subtractive operator with single number
+ *  \param number Number to remove from current object
+ *  \param mat Matrix, lvalue ref
+ *  \return A reference to this
+ */
+template <class T, class U, typename std::enable_if_t<std::is_arithmetic<U>::value || is_complex<U>{}>* = nullptr>
+Matrix<T> operator-(const Matrix<T>& mat, U number)
+{
+    Matrix<T> result(mat);
+    return result -= number;
+}
+
+/** Subtractive operator with single number of temporary instance
+ *  \param number Number to remove from current object
+ *  \param mat Matrix, rvalue ref
+ *  \return A reference to this
+ */
+template <class T, class U, typename std::enable_if_t<std::is_arithmetic<U>::value || is_complex<U>{}>* = nullptr>
+Matrix<T>&& operator-(Matrix<T>&& mat, U number)
+{
+    return std::move(mat -= number);
 }
 
 /** Multiplicative operator element-wise
