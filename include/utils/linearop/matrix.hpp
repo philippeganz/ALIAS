@@ -1707,7 +1707,7 @@ std::ostream& operator<<(std::ostream& os, const Matrix<T>& mat)
  *  \param mat Matrix to read from
  */
 template <class T>
-void operator<<(std::string filename, Matrix<T>& mat)
+void operator<<(std::string filename, const Matrix<T>& mat)
 {
 #ifdef DO_ARGCHECKS
     try
