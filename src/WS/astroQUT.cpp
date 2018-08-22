@@ -186,9 +186,9 @@ static void StandardizeAndRegularize(const Matrix<double>& background,
 {
     std::cout << "Computing standardization and regularization values with ";
     std::cout << options.MC_max << " MC simulations..." << std::endl;
-    Matrix<double> I(0.0, options.pic_size*2, 1);
-    I[0] = 1.0;
-    Matrix<double> u = astro.BAW(I, false, true, true, false);
+    Matrix<double> initial_guess(0.0, options.pic_size*2, 1);
+    initial_guess[0] = 1.0;
+    Matrix<double> u = astro.BAW(initial_guess, false, true, true, false);
     Matrix<double> mu_hat = background + u*options.beta0;
 
     astro.Transpose();
@@ -202,13 +202,57 @@ static void StandardizeAndRegularize(const Matrix<double>& background,
     std::cout << std::endl;
 }
 
+static void StandardizeAndRegularizePS(const Matrix<double>& image,
+                                       const Matrix<double>& background,
+                                       const Matrix<double>& solution,
+                                       AstroOperator<double>& astro,
+                                       Parameters<double>& options)
+{
+    std::cout << "Computing standardization and regularization values for Point Source estimation with ";
+    std::cout << options.MC_max << " MC simulations..." << std::endl;
+    Matrix<double> initial_guess(solution.Data(), options.pic_size*2, options.pic_size*2, 1);
+    Matrix<double> background_shifted = background + 1e-10;
+
+    Matrix<double> u = astro.BAW(initial_guess, false, true, true, false);
+    Matrix<double> mu_hat = background_shifted + u;
+
+    astro.Transpose();
+
+    Standardize(mu_hat, background_shifted, astro, options);
+
+    // remove point source from empty image points
+    for(size_t i = 0; i < image.Length(); ++i)
+        if( image[i] <= 1 )
+            options.standardize[options.pic_size*2 + i] = std::numeric_limits<double>::infinity();
+
+    Lambda(mu_hat, astro, options);
+
+    // do not consider wavelets or splines for point source estimate
+    for(size_t i = 0; i < options.pic_size*2; ++i)
+        options.standardize[i] = std::numeric_limits<double>::infinity();
+
+    // consider only the maximum value of each point source
+    Matrix<double> dhat(solution.Data() + options.pic_size*2,
+                        options.pic_size*options.pic_size,
+                        options.pic_size, options.pic_size);
+    Matrix<double> dhat_CC = dhat.ConnectedComponentsMax();
+    Matrix<double> dhat_CC_index = dhat_CC.ZeroIndices();
+
+    for(size_t i = 0; i < dhat_CC_index.Length(); ++i)
+        options.standardize[dhat_CC_index[i]] = std::numeric_limits<double>::infinity();
+
+    astro.Transpose();
+    astro.Standardize(options.standardize);
+    std::cout << std::endl;
+}
+
 static Matrix<double> Estimate(const Matrix<double>& image,
                                const Matrix<double>& background,
                                const AstroOperator<double>& astro,
                                Parameters<double>& options)
 {
     std::cout << "Computing static estimate..." << std::endl;
-    options.fista_params.iter_max = 1000;
+    options.fista_params.iter_max = 1500;
     options.fista_params.init_value = Matrix<double>(0.0, options.model_size, 1);
     options.fista_params.init_value[0] = options.beta0 * options.standardize[0];
     options.fista_params.indices = Matrix<size_t>(0,1+options.pic_size+options.pic_size*options.pic_size,1);
@@ -283,21 +327,12 @@ static Matrix<double> EstimateNonZero(const Matrix<double>& image,
     return result;
 }
 
-Matrix<double> Solve(const Matrix<double>& image,
-                     const Matrix<double>& sensitivity,
-                     const Matrix<double>& background,
-                     Parameters<double>& options )
+static Matrix<double> SolveWS(const Matrix<double>& image,
+                              const Matrix<double>& background,
+                              AstroOperator<double> astro,
+                              Parameters<double>& options)
 {
-    options.pic_size = (size_t)std::sqrt(image.Length());
-    options.model_size = (options.pic_size + 2) * options.pic_size;
-    options.x0 = Matrix<double>(0.0, options.model_size, 1);
-    options.x0[0] = 1;
-    options.fista_params.log_period = 20;
-
-    AstroOperator<double> astro(options.pic_size, options.pic_size, options.pic_size/2, sensitivity, Matrix<double>(1, options.model_size, 1), false, options);
-
-    BetaZero(image, astro, options);
-
+    std::cout << "Computing wavelet and spline estimates." << std::endl;
     options.x0[0] = options.beta0;
 
     std::chrono::time_point<std::chrono::high_resolution_clock> start, end;
@@ -336,7 +371,7 @@ Matrix<double> Solve(const Matrix<double>& image,
     solution_static = Estimate(image, background, astro, options);
     end = std::chrono::high_resolution_clock::now();
     std::chrono::duration<double> elapsed_time_FISTA2 = end-start;
-    "data/512_chandra/computed_sol_static.data" << solution_static;
+    "data/512_chandra/computed_sol_static.data" << (solution_static / options.standardize);
 
     start = std::chrono::high_resolution_clock::now();
     solution = EstimateNonZero(image, background, solution_static, astro, options);
@@ -360,6 +395,79 @@ Matrix<double> Solve(const Matrix<double>& image,
     std::cout << std::endl;
 
     return solution_normalized;
+}
+
+static Matrix<double> SolvePS(const Matrix<double>& image,
+                              const Matrix<double>& background,
+                              const Matrix<double>& solution,
+                              AstroOperator<double> astro,
+                              Parameters<double>& options)
+{
+    std::cout << "Computing Point Sources estimate." << std::endl;
+    std::chrono::time_point<std::chrono::high_resolution_clock> start, end;
+
+    start = std::chrono::high_resolution_clock::now();
+    StandardizeAndRegularizePS(image, background, solution, astro, options);
+    end = std::chrono::high_resolution_clock::now();
+    std::chrono::duration<double> elapsed_time_MC = end-start;
+
+    start = std::chrono::high_resolution_clock::now();
+    options.fista_params.init_value = Matrix<double>(0.0, options.model_size, 1);
+    options.fista_params.indices = Matrix<double>(options.pic_size*options.pic_size, 1);
+    for(size_t i = 0; i < options.pic_size*options.pic_size; ++i)
+        options.fista_params.indices[i] = options.pic_size*2 + i;
+
+    Matrix<double> solution_PS = fista::poisson::Solve(astro, background, image, options.lambda, options.fista_params);
+
+    solution_PS /= options.standardize;
+    solution_PS.RemoveNeg(options.pic_size*2, options.model_size);
+    end = std::chrono::high_resolution_clock::now();
+    std::chrono::duration<double> elapsed_time_FISTA = end-start;
+
+    std::cout << std::defaultfloat << std::endl;
+    std::cout << "Time for MC simulations: " << elapsed_time_MC.count()    << " seconds" << std::endl;
+    std::cout << "Time for FISTA solver: " << elapsed_time_FISTA.count()    << " seconds" << std::endl;
+    std::cout << "Total time: "   << elapsed_time_MC.count() + elapsed_time_FISTA.count() << " seconds" << std::endl;
+    std::cout << std::endl;
+
+    return solution_PS;
+}
+
+Matrix<double> Solve(const Matrix<double>& image,
+                     const Matrix<double>& sensitivity,
+                     const Matrix<double>& background,
+                     Parameters<double>& options )
+{
+    options.pic_size = (size_t)std::sqrt(image.Length());
+    options.model_size = (options.pic_size + 2) * options.pic_size;
+    options.x0 = Matrix<double>(0.0, options.model_size, 1);
+    options.x0[0] = 1;
+    options.fista_params.log_period = 20;
+
+    AstroOperator<double> astro(options.pic_size, options.pic_size, options.pic_size/2, sensitivity, Matrix<double>(1, options.model_size, 1), false, options);
+
+    BetaZero(image, astro, options);
+
+    Matrix<double> solution = SolveWS(image, background, astro, options);
+
+    Matrix<double> solution_PS = SolvePS(image, background, solution, astro, options);
+
+    Matrix<double> solution_final(solution);
+    for(size_t i = 0; i < options.pic_size*2; ++i)
+        solution_final[i] = solution_PS[i];
+
+    "data/512_chandra/computed_sol_final.data" << solution_final;
+
+    astro.Transpose();
+    Matrix<double> fhatw(solution.Data(), options.pic_size, options.pic_size, 1);
+    fhatw = astro.WaveletOp()*fhatw;
+    "data/512_chandra/computed_fhatw.data" << fhatw;
+    Matrix<double> fhats(solution.Data()+options.pic_size, options.pic_size, options.pic_size, 1);
+    fhats = astro.SplineOp()*fhats;
+    "data/512_chandra/computed_fhats.data" << fhats;
+    "data/512_chandra/computed_fhat.data" << (fhatw + fhats);
+
+    return solution_final;
 }
 
 } // namespace WS
