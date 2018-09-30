@@ -2,8 +2,8 @@
 /// \file include/test/operator.hpp
 /// \brief Test suite to validate the Operator class.
 /// \author Philippe Ganz <philippe.ganz@gmail.com>
-/// \version 0.5.0
-/// \date 2018-06-02
+/// \version 0.6.0
+/// \date 2018-09-30
 /// \copyright GPL-3.0
 ///
 
@@ -36,6 +36,8 @@ bool AbelTestTransposed2();
 void AbelTime(size_t pic_size);
 
 bool WaveletTest();
+bool WaveletTest2();
+bool WaveletTest3();
 
 bool SplineTest();
 
