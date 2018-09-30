@@ -3,8 +3,8 @@
 /// \brief Wavelet transform class header
 /// \details Provide the Wavelet transform operator
 /// \author Philippe Ganz <philippe.ganz@gmail.com> 2017-2018
-/// \version 0.5.0
-/// \date 2018-06-17
+/// \version 0.6.0
+/// \date 2018-09-30
 /// \copyright GPL-3.0
 ///
 
@@ -118,19 +118,11 @@ public:
 
         if(!this->transposed_)
         {
-            #pragma omp parallel for
-            for( size_t i = 0; i < other.Width(); ++i )
-            {
-                IWT_PO(other, result, i, 0, temp_1, temp_2);
-            }
+            IWT_PO(other, result, 0, 0, temp_1, temp_2);
         }
         else
         {
-            #pragma omp parallel for
-            for( size_t i = 0; i < other.Width(); ++i )
-            {
-                FWT_PO(other, result, i, 0, temp_1, temp_2);
-            }
+            FWT_PO(other, result, 0, 0, temp_1, temp_2);
         }
 
         delete[] temp_1;
@@ -407,12 +399,8 @@ public:
         }
 
         if( filter_type == high )
-        {
             for( size_t i = 1; i < data_size; i += 2 )
-            {
                 data[i] = -data[i];
-            }
-        }
 
         Matrix<T> result(data, data_size, data_size, 1);
         return result/result.Norm(two);
@@ -424,8 +412,8 @@ public:
      *  \param wcoef Result array, must be the same size as signal.
      *  \param column Column to transform
      *  \param coarsest_level Coarsest level of the wavelet transform
-     *  \param intermediate Temporary array of size 1 x Height of signal
-     *  \param intermediate_temp Temporary array of size 1 x Height of signal
+     *  \param intermediate Temporary array of size Height of signal
+     *  \param intermediate_temp Temporary array of size Height of signal
      *  \author David Donoho <donoho@stat.stanford.edu> 1993
      *  \author Philippe Ganz <philippe.ganz@gmail.com> 2018
      */
@@ -509,8 +497,8 @@ public:
      *  \param signal Result array, must be the same size as wcoef.
      *  \param column Column to transform, -1 to transform all
      *  \param coarsest_level Coarsest level of the wavelet transform
-     *  \param intermediate Temporary array of size 1 x Height of signal
-     *  \param intermediate_temp Temporary array of size 1 x Height of signal
+     *  \param intermediate Temporary array of size Height of signal
+     *  \param intermediate_temp Temporary array of size Height of signal
      *  \author David Donoho <donoho@stat.stanford.edu> 1993
      *  \author Philippe Ganz <philippe.ganz@gmail.com> 2018
      */
