@@ -3,8 +3,8 @@
 /// \brief Matrix class header
 /// \details Provide matrix container with multiple matrix operations used in the whole project.
 /// \author Philippe Ganz <philippe.ganz@gmail.com> 2017-2018
-/// \version 0.5.0
-/// \date 2018-07-07
+/// \version 0.6.0
+/// \date 2018-09-30
 /// \copyright GPL-3.0
 ///
 
@@ -107,7 +107,7 @@ public:
      *  \param height Height of the data
      *  \param width Width of the data
      */
-    Matrix( size_t height, size_t width)
+    Matrix(size_t height, size_t width)
         : LinearOp(height, width)
         , data_(nullptr)
     {
@@ -134,7 +134,7 @@ public:
      *  \param height Height of the data
      *  \param width Width of the data
      */
-    Matrix( matrix_t* data, size_t height, size_t width)
+    Matrix(matrix_t* data, size_t height, size_t width)
         : LinearOp(height, width)
         , data_(data)
     {
@@ -157,7 +157,7 @@ public:
      *  \param width Width of the data
      */
     template <class U, typename std::enable_if_t<std::is_arithmetic<U>::value || std::is_same<T, U>{}>* = nullptr>
-    Matrix( const U data[], size_t length, size_t height, size_t width)
+    Matrix(const U data[], size_t length, size_t height, size_t width)
         : Matrix(height, width)
     {
         #pragma omp parallel for simd
@@ -168,13 +168,13 @@ public:
 #endif // DEBUG
     }
 
-    /** File constructor
+    /** File constructor with known size
      *  \param filename Path of the binary file to read the matrix data from
      *  \param height Height of the data
      *  \param width Width of the data
      */
     template <class U = T, typename std::enable_if_t<std::is_arithmetic<U>::value>* = nullptr>
-    Matrix( const std::string filename, size_t height, size_t width, U dummy = 0)
+    Matrix(const std::string filename, size_t height, size_t width, U dummy = 0)
         : Matrix(height, width)
     {
         std::ifstream file(filename, std::ios::binary | std::ios::in | std::ios::ate);
@@ -192,12 +192,54 @@ public:
         U* reinterpret_memblock = (U*) memblock;
 
         for(size_t i = 0; i < this->length_; ++i)
-        {
-            data_[i] = (T) reinterpret_memblock[i];
-        }
+            data_[i] = reinterpret_memblock[i];
 
         delete[] memblock;
+        file.close();
 
+#ifdef DEBUG
+        std::cout << "Matrix : File constructor called" << std::endl;
+#endif // DEBUG
+    }
+
+    /** File constructor raw
+     *  \param filename Path of the binary file to read the matrix data from
+     */
+    template <class U = T, typename std::enable_if_t<std::is_arithmetic<U>::value>* = nullptr>
+    Matrix(const std::string filename, U dummy = 0)
+    {
+        std::ifstream file(filename, std::ios::binary | std::ios::in | std::ios::ate);
+
+        size_t file_size = file.tellg();
+        if(file_size == 0)
+        {
+            std::cerr << "Input file is empty";
+            throw;
+        }
+        char* memblock = new char [file_size];
+        file.seekg(0, std::ios::beg);
+        file.read(memblock, file_size);
+
+        U* reinterpret_memblock = (U*) memblock;
+
+        try
+        {
+            // allocate aligned memory
+            data_ = (matrix_t*) _mm_malloc (file_size, (size_t) std::pow(2, std::ceil(std::log2(sizeof(T)))));
+        }
+        catch (const std::bad_alloc&)
+        {
+            std::cerr << "Could not allocate memory for new array!" << std::endl;
+            throw;
+        }
+        height_ = file_size/sizeof(T);
+        width_ = 1;
+        length_ = height_;
+
+        for(size_t i = 0; i < length_; ++i)
+            data_[i] = reinterpret_memblock[i];
+
+        delete[] memblock;
         file.close();
 
 #ifdef DEBUG
@@ -211,7 +253,7 @@ public:
      *  \param width Width of the data
      */
     template <class U, typename std::enable_if_t<std::is_arithmetic<U>::value || std::is_same<T, U>{}>* = nullptr>
-    Matrix( U number, size_t height, size_t width)
+    Matrix(U number, size_t height, size_t width)
         : Matrix(height, width)
     {
 #ifdef DEBUG
@@ -350,6 +392,19 @@ public:
                 return true;
 
         return false;
+    }
+
+    /** Partial matrix creator
+     *  \brief Generates a new matrix from the current one with data in [start,end)
+     *  \param start First element of partial matrix
+     *  \param end Last element (not-included) of partial matrix
+     *  \return A new matrix with the partial data
+     */
+    Matrix Partial(size_t start, size_t end)
+    {
+        Matrix result(end-start, 1);
+        std::copy(data_+start, data_+end, result.Data());
+        return result;
     }
 
     /** Copy assignment operator
