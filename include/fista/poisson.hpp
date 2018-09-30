@@ -3,8 +3,8 @@
 /// \brief FISTA (Fast Iterative Shrinkage Tresholding Algorithm) solver for Poisson distributed noise.
 /// \author Hatef Monajemi <monajemi@stanford.edu> 2012-2014
 /// \author Philippe Ganz <philippe.ganz@gmail.com> 2017-2018
-/// \version 0.5.0
-/// \date 2018-07-21
+/// \version 0.6.0
+/// \date 2018-09-02
 /// \copyright GPL-3.0
 ///
 
@@ -32,11 +32,11 @@ struct Parameters
      */
     Parameters() noexcept
         : tol(1e-10)
-        , iter_max(1000)
+        , iter_max(2000)
         , init_value{}
         , indices(Matrix<size_t>(0,1,1))
         , log(true)
-        , log_period(10)
+        , log_period(20)
     {}
 
     T tol; //!< Member variable "tol"
@@ -101,8 +101,8 @@ Matrix<T> Solve(const Operator<T>& A,
     std::cout << std::defaultfloat;
     std::cout << std::string(37, '*') << " FISTA " << std::string(36, '*') << std::endl;
     std::cout << "A: " << A.Height() << "x" << A.Width() << " matrix";
-    std::cout << ", u: " << u.Height() << " vector";
-    std::cout << ", b: " << b.Height() << " vector" << std::endl;
+    std::cout << ", u: " << u.Length() << " vector";
+    std::cout << ", b: " << b.Length() << " vector" << std::endl;
     std::cout << "lambda:" << lambda << ", tol:" << options.tol << std::endl;
     std::cout << std::string(80, '*') << std::endl << std::endl;
     std::cout << " iter" << " | " << "         tol        " << " | " << "       FLasso       " << " | " << "     Lf      " << " | " << "  NNZ   " << std::endl;
