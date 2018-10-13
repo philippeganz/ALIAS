@@ -20,6 +20,7 @@ namespace astro
 {
 
 void Chandra();
+void Sym256();
 
 } // namespace astro
 } // namespace test
