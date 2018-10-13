@@ -1,5 +1,5 @@
 CC := g++
-CFLAGS := -std=c++17 -O3 -fopenmp -pedantic -Wall -m64
+CFLAGS := -std=c++17 -O3 -fopenmp -pedantic -Wall -m64 -march=native
 
 PROJECTNAME := AstroQUT
 
