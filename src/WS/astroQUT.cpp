@@ -4,7 +4,7 @@
 /// \author Jairo Diaz <jairo.diaz@unige.ch> 2016-2017
 /// \author Philippe Ganz <philippe.ganz@gmail.com> 2017-2018
 /// \version 0.5.0
-/// \date 2018-08-05
+/// \date 2018-09-02
 /// \copyright GPL-3.0
 ///
 
@@ -14,6 +14,7 @@
 #include <algorithm>
 #include <chrono>
 #include <random>
+#include <vector>
 
 #include <omp.h>
 
@@ -22,6 +23,55 @@ namespace astroqut
 namespace WS
 {
 
+
+static Matrix<double> CenterOffset(std::string picture_path, int offset_vert, int offset_horiz, Parameters<double>& options)
+{
+    Matrix<double> result(options.pic_size, options.pic_size);
+    Matrix<double> raw_picture(picture_path);
+    size_t raw_pic_size = (size_t) sqrt(raw_picture.Length());
+    size_t offset_base = (raw_pic_size-options.pic_size)/2;
+    size_t offset_height = offset_base + offset_vert;
+    size_t offset_width = offset_base + offset_horiz;
+
+    #pragma omp parallel for simd
+    for(size_t row = 0; row < options.pic_size; ++row)
+        for(size_t col = 0; col < options.pic_size; ++col)
+            result[row*options.pic_size + col] = raw_picture[(row+offset_height)*options.pic_size + (col+offset_width)];
+
+    return result;
+}
+
+static Matrix<double> Resample(Matrix<double> picture, size_t resample_windows_size)
+{
+    // no resampling
+    if(resample_windows_size == 1)
+        return picture;
+
+    Matrix<double> result(picture.Height(), picture.Width());
+    std::random_device rnd;
+    std::default_random_engine generator(rnd() + std::chrono::system_clock::now().time_since_epoch().count());
+    std::uniform_int_distribution uniform_dist(0,(int)(resample_windows_size*resample_windows_size-1));
+
+    #pragma omp parallel for simd
+    for(size_t block_row = 0; block_row < picture.Height(); block_row += resample_windows_size )
+    {
+        for(size_t block_col = 0; block_col < picture.Width(); block_col += resample_windows_size )
+        {
+            // get all values from the block
+            std::vector<double> block_values;
+            for(size_t row = block_row; row < block_row + resample_windows_size; ++row)
+                for(size_t col = block_col; col < block_col + resample_windows_size; ++col)
+                    block_values.push_back(picture[row*picture.Width()+col]);
+
+            // resample the block with replacement
+            for(size_t row = block_row; row < block_row + resample_windows_size; ++row)
+                for(size_t col = block_col; col < block_col + resample_windows_size; ++col)
+                    result[row*picture.Width()+col] = block_values[uniform_dist(generator)];
+        }
+    }
+
+    return result;
+}
 
 static Matrix<double> MCCompute(const Matrix<double>& mu_hat,
                                 std::default_random_engine generator)
@@ -41,18 +91,21 @@ static Matrix<double> MCCompute(const Matrix<double>& mu_hat,
     return mu_hat_rnd;
 }
 
-static void BetaZero(const Matrix<double>& image,
+static void BetaZero(const Matrix<double>& picture,
                      const AstroOperator<double>& astro,
                      Parameters<double>& options)
 {
     std::cout << "Computing beta0..." << std::endl;
-    Matrix<double> null_model = astro.BAW(options.x0, false, true, true, false);
+    Matrix<double> x0(0.0, options.model_size, 1);
+    x0[0] = 1;
+    Matrix<double> null_model = astro.BAW(x0, false, true, true, false);
 
-    Matrix<double> non_zero_values(image.Height(), image.Width());
+    Matrix<double> non_zero_values(picture.Height(), picture.Width());
     size_t non_zero_values_amount = 0;
-    for(size_t i = 0; i < image.Length(); ++i)
-        if( ! IsEqual(image[i], 0.0) )
-            non_zero_values[non_zero_values_amount++] = image[i];
+    #pragma omp parallel for simd
+    for(size_t i = 0; i < picture.Length(); ++i)
+        if( ! IsEqual(picture[i], 0.0) )
+            non_zero_values[non_zero_values_amount++] = picture[i];
 
     // partial sort
     std::nth_element(&non_zero_values[0],
@@ -79,9 +132,9 @@ static void Standardize(const Matrix<double> mu_hat,
     #pragma omp parallel for schedule(dynamic)
     for(size_t MC_id = 0; MC_id < options.MC_max; ++MC_id)
     {
-        std::default_random_engine generator(rnd() + omp_get_team_num());
-        if(MC_id % (options.MC_max/100) == 0)
-            std::cout << "\r" + std::to_string(1 + 100 * MC_id/options.MC_max) + "/100";
+        std::default_random_engine generator(rnd() + omp_get_team_num() + std::chrono::system_clock::now().time_since_epoch().count());
+        if((options.MC_max >= 100 && MC_id % (options.MC_max/100) == 0) || options.MC_max < 100)
+            std::cout << "\r" + std::to_string(1+std::lround(MC_id*100.0/(double)options.MC_max)) + "/100";
 
         Matrix<double> rnd_result = astro.WtAtBt(MCCompute(mu_hat, generator), false, true, true, false).Abs();
 
@@ -106,18 +159,22 @@ static void Standardize(const Matrix<double> mu_hat,
 
     // max rescale of wavelets and remove high frequency wavelets
     double wavelet_max_value = *std::max_element(&options.standardize[1], &options.standardize[options.pic_size]);
+    #pragma omp parallel for simd
     for(size_t i = 0; i < options.pic_size/2; ++i)
         options.standardize[i] = wavelet_max_value;
+    #pragma omp parallel for simd
     for(size_t i = options.pic_size/2; i < options.pic_size; ++i)
         options.standardize[i] = std::numeric_limits<double>::infinity();
 
     // spline ok
 
     // remove point sources from centre of the picture
+    #pragma omp parallel for simd
     for(size_t i = 3*options.pic_size/8; i < 5*options.pic_size/8; ++i)
         for(size_t j = 3*options.pic_size/8; j < 5*options.pic_size/8; ++j)
             options.standardize[options.pic_size*2 + i*options.pic_size + j] = std::numeric_limits<double>::infinity();
     // remove point sources from empty background
+    #pragma omp parallel for simd
     for(size_t i = 0; i < background.Length(); ++i)
         if( IsEqual(background[i], 0.0) )
         {
@@ -145,10 +202,10 @@ static void Lambda(const Matrix<double> mu_hat,
     for(size_t MC_id = 0; MC_id < options.MC_max; ++MC_id)
     {
 
-        std::default_random_engine generator(rnd() + omp_get_thread_num());
+        std::default_random_engine generator(rnd() + omp_get_thread_num() + std::chrono::system_clock::now().time_since_epoch().count());
 
-        if(MC_id % (options.MC_max/100) == 0)
-            std::cout << "\r" + std::to_string(1 + 100 * MC_id/options.MC_max) + "/100";
+        if((options.MC_max >= 100 && MC_id % (options.MC_max/100) == 0) || options.MC_max < 100)
+            std::cout << "\r" + std::to_string(1+std::lround(MC_id*100.0/(double)options.MC_max)) + "/100";
 
         Matrix<double> rnd_result = astro.WtAtBt(MCCompute(mu_hat, generator)).Abs();
 
@@ -175,6 +232,7 @@ static void Lambda(const Matrix<double> mu_hat,
     std::cout << "lambdaI = " << std::scientific << lambdaI << std::endl;
 
     double PS_standardize_ratio = lambdaI/options.lambda;
+    #pragma omp parallel for simd
     for(size_t i = options.pic_size*2; i < options.model_size; ++i)
         options.standardize[i] *= PS_standardize_ratio;
 
@@ -202,64 +260,20 @@ static void StandardizeAndRegularize(const Matrix<double>& background,
     std::cout << std::endl;
 }
 
-static void StandardizeAndRegularizePS(const Matrix<double>& image,
-                                       const Matrix<double>& background,
-                                       const Matrix<double>& solution,
-                                       AstroOperator<double>& astro,
-                                       Parameters<double>& options)
-{
-    std::cout << "Computing standardization and regularization values for Point Source estimation with ";
-    std::cout << options.MC_max << " MC simulations..." << std::endl;
-    Matrix<double> initial_guess(solution.Data(), options.pic_size*2, options.pic_size*2, 1);
-    Matrix<double> background_shifted = background + 1e-10;
-
-    Matrix<double> u = astro.BAW(initial_guess, false, true, true, false);
-    Matrix<double> mu_hat = background_shifted + u;
-
-    astro.Transpose();
-
-    Standardize(mu_hat, background_shifted, astro, options);
-
-    // remove point source from empty image points
-    for(size_t i = 0; i < image.Length(); ++i)
-        if( image[i] <= 1 )
-            options.standardize[options.pic_size*2 + i] = std::numeric_limits<double>::infinity();
-
-    Lambda(mu_hat, astro, options);
-
-    // do not consider wavelets or splines for point source estimate
-    for(size_t i = 0; i < options.pic_size*2; ++i)
-        options.standardize[i] = std::numeric_limits<double>::infinity();
-
-    // consider only the maximum value of each point source
-    Matrix<double> dhat(solution.Data() + options.pic_size*2,
-                        options.pic_size*options.pic_size,
-                        options.pic_size, options.pic_size);
-    Matrix<double> dhat_CC = dhat.ConnectedComponentsMax();
-    Matrix<double> dhat_CC_index = dhat_CC.ZeroIndices();
-
-    for(size_t i = 0; i < dhat_CC_index.Length(); ++i)
-        options.standardize[dhat_CC_index[i]] = std::numeric_limits<double>::infinity();
-
-    astro.Transpose();
-    astro.Standardize(options.standardize);
-    std::cout << std::endl;
-}
-
-static Matrix<double> Estimate(const Matrix<double>& image,
+static Matrix<double> Estimate(const Matrix<double>& picture,
                                const Matrix<double>& background,
                                const AstroOperator<double>& astro,
                                Parameters<double>& options)
 {
     std::cout << "Computing static estimate..." << std::endl;
-    options.fista_params.iter_max = 1500;
     options.fista_params.init_value = Matrix<double>(0.0, options.model_size, 1);
     options.fista_params.init_value[0] = options.beta0 * options.standardize[0];
     options.fista_params.indices = Matrix<size_t>(0,1+options.pic_size+options.pic_size*options.pic_size,1);
+    #pragma omp parallel for simd
     for(size_t i = 1; i < 1+options.pic_size+options.pic_size*options.pic_size; ++i)
         options.fista_params.indices[i] = i + options.pic_size - 1;
 
-    Matrix<double> result = fista::poisson::Solve(astro, background, image, options.lambda, options.fista_params);
+    Matrix<double> result = fista::poisson::Solve(astro, background, picture, options.lambda, options.fista_params);
 
     result /= options.standardize;
     result.RemoveNeg(options.pic_size*2, options.model_size);
@@ -269,7 +283,7 @@ static Matrix<double> Estimate(const Matrix<double>& image,
     return result;
 }
 
-static Matrix<double> EstimateNonZero(const Matrix<double>& image,
+static Matrix<double> EstimateNonZero(const Matrix<double>& picture,
                                       const Matrix<double>& background,
                                       const Matrix<double>& solution_static,
                                       const AstroOperator<double>& astro,
@@ -277,38 +291,33 @@ static Matrix<double> EstimateNonZero(const Matrix<double>& image,
 {
 
     std::cout << "Getting non zero elements..." << std::endl;
-    options.fista_params.iter_max = 1000;
     Matrix<size_t> non_zero_elements_indices = solution_static.NonZeroIndices();
-    Matrix<double> non_zero_elements_operator(image.Length(),
-                                              non_zero_elements_indices.Length());
+    size_t non_zero_elements_amount = non_zero_elements_indices.Length();
+    Matrix<double> non_zero_elements_operator(picture.Length(), non_zero_elements_amount);
 
     std::cout << "Generating non zero elements operator..." << std::endl;
-    #pragma omp parallel
+    Matrix<double> identity(0.0, options.model_size, 1);
+    for(size_t i = 0; i < non_zero_elements_amount; ++i)
     {
-        Matrix<double> identity(0.0, options.model_size, 1);
-        #pragma omp for schedule(dynamic)
-        for(size_t i = 0; i < non_zero_elements_indices.Length(); ++i)
-        {
-            if(i % (non_zero_elements_indices.Length()/100) == 0)
-                std::cout << "\r" + std::to_string(1 + 100 * i/non_zero_elements_indices.Length()) + "/100";
-            identity[non_zero_elements_indices[i]] = 1.0;
-            Matrix<double> local_result = astro * identity;
-            identity[non_zero_elements_indices[i]] = 0.0;
-
-            for(size_t j = 0; j < local_result.Length(); ++j)
-                non_zero_elements_operator[j*non_zero_elements_indices.Length() + i] = local_result[j];
-        }
+        if((non_zero_elements_amount >= 100 && i % (non_zero_elements_amount/100) == 0) || non_zero_elements_amount < 100)
+            std::cout << "\r" + std::to_string(1+std::lround(i*100.0/(double)non_zero_elements_amount)) + "/100";
+        identity[non_zero_elements_indices[i]] = 1.0;
+        Matrix<double> local_result = astro * identity;
+        identity[non_zero_elements_indices[i]] = 0.0;
+        #pragma omp parallel for simd
+        for(size_t j = 0; j < local_result.Length(); ++j)
+            non_zero_elements_operator[j*non_zero_elements_amount + i] = local_result[j];
     }
     std::cout << std::endl;
 
-    options.fista_params.init_value = Matrix<double>(non_zero_elements_indices.Length(), 1);
+    options.fista_params.init_value = Matrix<double>(non_zero_elements_amount, 1);
 
     #pragma omp parallel for simd
-    for(size_t i = 0; i < non_zero_elements_indices.Length(); ++i)
+    for(size_t i = 0; i < non_zero_elements_amount; ++i)
         options.fista_params.init_value[i] = solution_static[non_zero_elements_indices[i]] * options.standardize[non_zero_elements_indices[i]];
 
     std::vector<size_t> remove_neg_indices = {0};
-    for(size_t i = 1; i < non_zero_elements_indices.Length(); ++i)
+    for(size_t i = 1; i < non_zero_elements_amount; ++i)
         if(non_zero_elements_indices[i] > options.pic_size)
             remove_neg_indices.push_back(i);
     options.fista_params.indices = Matrix<size_t>(&remove_neg_indices[0], remove_neg_indices.size(), remove_neg_indices.size(), 1);
@@ -316,158 +325,211 @@ static Matrix<double> EstimateNonZero(const Matrix<double>& image,
     std::cout << "Generating the new beta estimates..." << std::endl;
     Matrix<double> beta_new = fista::poisson::Solve(MatMult<double>(non_zero_elements_operator, non_zero_elements_operator.Height(), non_zero_elements_operator.Width()),
                                                     background,
-                                                    image,
+                                                    picture,
                                                     0.0,
                                                     options.fista_params);
 
     Matrix<double> result(solution_static);
-    for(size_t i = 0; i < non_zero_elements_indices.Length(); ++i)
+    for(size_t i = 0; i < non_zero_elements_amount; ++i)
         result[non_zero_elements_indices[i]] = beta_new[i];
 
     return result;
 }
 
-static Matrix<double> SolveWS(const Matrix<double>& image,
+static Matrix<double> SolveWS(const Matrix<double>& picture,
+                              const Matrix<double>& sensitivity,
                               const Matrix<double>& background,
-                              AstroOperator<double> astro,
                               Parameters<double>& options)
 {
-    std::cout << "Computing wavelet and spline estimates." << std::endl;
-    options.x0[0] = options.beta0;
-
-    std::chrono::time_point<std::chrono::high_resolution_clock> start, end;
-
-    start = std::chrono::high_resolution_clock::now();
-    StandardizeAndRegularize(background, astro, options);
-    end = std::chrono::high_resolution_clock::now();
-    std::chrono::duration<double> elapsed_time_MC = end-start;
-
-    start = std::chrono::high_resolution_clock::now();
-    Matrix<double> solution_static = Estimate(image, background, astro, options);
-    end = std::chrono::high_resolution_clock::now();
-    std::chrono::duration<double> elapsed_time_FISTA = end-start;
-
-    start = std::chrono::high_resolution_clock::now();
-    Matrix<double> solution = EstimateNonZero(image, background, solution_static, astro, options);
-    end = std::chrono::high_resolution_clock::now();
-    std::chrono::duration<double> elapsed_time_NZ = end-start;
-    options.x0[0] = solution[0]/options.standardize[0];
-    std::cout << "New beta0 = " << options.x0[0] << std::endl;
-
-    start = std::chrono::high_resolution_clock::now();
-    StandardizeAndRegularize(background, astro, options);
-    end = std::chrono::high_resolution_clock::now();
-    std::chrono::duration<double> elapsed_time_MC2 = end-start;
-
-    for(size_t i = 0; i < options.pic_size; ++i)
-        solution[i] += 1e-10;
-    Matrix<size_t> zero_elements = solution.ZeroIndices();
-    for(size_t i = 0; i < zero_elements.Length(); ++i)
-        options.standardize[zero_elements[i]] = std::numeric_limits<double>::infinity();
-    astro.Standardize(options.standardize);
-    "data/512_chandra/computed_divx.data" << options.standardize;
-
-    start = std::chrono::high_resolution_clock::now();
-    solution_static = Estimate(image, background, astro, options);
-    end = std::chrono::high_resolution_clock::now();
-    std::chrono::duration<double> elapsed_time_FISTA2 = end-start;
-    "data/512_chandra/computed_sol_static.data" << (solution_static / options.standardize);
-
-    start = std::chrono::high_resolution_clock::now();
-    solution = EstimateNonZero(image, background, solution_static, astro, options);
-    end = std::chrono::high_resolution_clock::now();
-    std::chrono::duration<double> elapsed_time_NZ2 = end-start;
-
-    Matrix<double> solution_normalized = solution / options.standardize;
-    "data/512_chandra/computed_sol.data" << solution_normalized;
-
-    options.x0[0] = solution_normalized[0];
-    std::cout << "New beta0 = " << options.x0[0] << std::endl;
-
-    std::cout << std::defaultfloat << std::endl;
-    std::cout << "Time for MC simulations: " << elapsed_time_MC.count()    << " seconds" << std::endl;
-    std::cout << "Time for FISTA solver: "   << elapsed_time_FISTA.count() << " seconds" << std::endl;
-    std::cout << "Time for GLM fit on non zero elements: "   << elapsed_time_NZ.count() << " seconds" << std::endl;
-    std::cout << "Time for MC simulations 2: " << elapsed_time_MC2.count()    << " seconds" << std::endl;
-    std::cout << "Time for FISTA solver 2: "   << elapsed_time_FISTA2.count() << " seconds" << std::endl;
-    std::cout << "Time for GLM fit on non zero elements 2: "   << elapsed_time_NZ2.count() << " seconds" << std::endl;
-    std::cout << "Total time: "   << elapsed_time_MC.count() + elapsed_time_FISTA.count() + elapsed_time_NZ.count() + elapsed_time_MC2.count() + elapsed_time_FISTA2.count()+ elapsed_time_NZ2.count() << " seconds" << std::endl;
-    std::cout << std::endl;
-
-    return solution_normalized;
-}
-
-static Matrix<double> SolvePS(const Matrix<double>& image,
-                              const Matrix<double>& background,
-                              const Matrix<double>& solution,
-                              AstroOperator<double> astro,
-                              Parameters<double>& options)
-{
-    std::cout << "Computing Point Sources estimate." << std::endl;
-    std::chrono::time_point<std::chrono::high_resolution_clock> start, end;
-
-    start = std::chrono::high_resolution_clock::now();
-    StandardizeAndRegularizePS(image, background, solution, astro, options);
-    end = std::chrono::high_resolution_clock::now();
-    std::chrono::duration<double> elapsed_time_MC = end-start;
-
-    start = std::chrono::high_resolution_clock::now();
-    options.fista_params.init_value = Matrix<double>(0.0, options.model_size, 1);
-    options.fista_params.indices = Matrix<double>(options.pic_size*options.pic_size, 1);
-    for(size_t i = 0; i < options.pic_size*options.pic_size; ++i)
-        options.fista_params.indices[i] = options.pic_size*2 + i;
-
-    Matrix<double> solution_PS = fista::poisson::Solve(astro, background, image, options.lambda, options.fista_params);
-
-    solution_PS /= options.standardize;
-    solution_PS.RemoveNeg(options.pic_size*2, options.model_size);
-    end = std::chrono::high_resolution_clock::now();
-    std::chrono::duration<double> elapsed_time_FISTA = end-start;
-
-    std::cout << std::defaultfloat << std::endl;
-    std::cout << "Time for MC simulations: " << elapsed_time_MC.count()    << " seconds" << std::endl;
-    std::cout << "Time for FISTA solver: " << elapsed_time_FISTA.count()    << " seconds" << std::endl;
-    std::cout << "Total time: "   << elapsed_time_MC.count() + elapsed_time_FISTA.count() << " seconds" << std::endl;
-    std::cout << std::endl;
-
-    return solution_PS;
-}
-
-Matrix<double> Solve(const Matrix<double>& image,
-                     const Matrix<double>& sensitivity,
-                     const Matrix<double>& background,
-                     Parameters<double>& options )
-{
-    options.pic_size = (size_t)std::sqrt(image.Length());
-    options.model_size = (options.pic_size + 2) * options.pic_size;
-    options.x0 = Matrix<double>(0.0, options.model_size, 1);
-    options.x0[0] = 1;
-    options.fista_params.log_period = 20;
-
     AstroOperator<double> astro(options.pic_size, options.pic_size, options.pic_size/2, sensitivity, Matrix<double>(1, options.model_size, 1), false, options);
 
-    BetaZero(image, astro, options);
+    BetaZero(picture, astro, options);
 
-    Matrix<double> solution = SolveWS(image, background, astro, options);
+    std::chrono::time_point<std::chrono::high_resolution_clock> start, end;
+    Matrix<double> solution;
+    bool first = true;
+    double prev_beta0 = std::numeric_limits<double>::infinity();
+    double total_time = 0;
 
-    Matrix<double> solution_PS = SolvePS(image, background, solution, astro, options);
+    std::cout << "Computing wavelet and spline estimates." << std::endl;
+    while( std::abs(options.beta0-prev_beta0)/options.beta0 > 0.1 )
+    {
+        std::cout << "beta0 ratio = " << std::abs(options.beta0-prev_beta0)/options.beta0 << ". Continuing..." << std::endl;
+        prev_beta0 = options.beta0;
 
-    Matrix<double> solution_final(solution);
-    for(size_t i = 0; i < options.pic_size*2; ++i)
-        solution_final[i] = solution_PS[i];
+        start = std::chrono::high_resolution_clock::now();
+        StandardizeAndRegularize(background, astro, options);
+        end = std::chrono::high_resolution_clock::now();
+        std::chrono::duration<double> elapsed_time_MC = end-start;
 
-    "data/512_chandra/computed_sol_final.data" << solution_final;
+        if( !first )
+        {
+            #pragma omp parallel for simd
+            for(size_t i = 0; i < options.pic_size; ++i)
+                solution[i] += 1e-10;
+            Matrix<size_t> zero_elements = solution.ZeroIndices();
+            #pragma omp parallel for simd
+            for(size_t i = 0; i < zero_elements.Length(); ++i)
+                options.standardize[zero_elements[i]] = std::numeric_limits<double>::infinity();
+            astro.Standardize(options.standardize);
+        }
+        else
+        {
+            first = false;
+        }
 
-    astro.Transpose();
+        start = std::chrono::high_resolution_clock::now();
+        Matrix<double> solution_static = Estimate(picture, background, astro, options);
+        end = std::chrono::high_resolution_clock::now();
+        std::chrono::duration<double> elapsed_time_FISTA = end-start;
+
+        start = std::chrono::high_resolution_clock::now();
+        solution = EstimateNonZero(picture, background, solution_static, astro, options);
+        end = std::chrono::high_resolution_clock::now();
+        std::chrono::duration<double> elapsed_time_NZ = end-start;
+        options.beta0 = solution[0]/options.standardize[0];
+        std::cout << "New beta0 = " << options.beta0 << std::endl;
+        std::cout << std::defaultfloat << std::endl;
+        std::cout << "Time for MC simulations: " << elapsed_time_MC.count() << " seconds" << std::endl;
+        total_time += elapsed_time_MC.count();
+        std::cout << "Time for FISTA solver: " << elapsed_time_FISTA.count() << " seconds" << std::endl;
+        total_time += elapsed_time_FISTA.count();
+        std::cout << "Time for GLM fit on non zero elements: " << elapsed_time_NZ.count() << " seconds" << std::endl;
+        total_time += elapsed_time_NZ.count();
+    }
+
+    std::cout << "Total time: "   << total_time << " seconds" << std::endl << std::endl;
+
+    return solution/options.standardize;
+}
+
+Matrix<double> Solve(std::string picture_path,
+                     std::string sensitivity_path,
+                     std::string background_path,
+                     std::string solution_path,
+                     Parameters<double>& options )
+{
+    options.model_size = (options.pic_size + 2) * options.pic_size;
+    options.MC_quantile_PF = (size_t) (options.MC_max * (1.0 - 1.0/(std::sqrt(PI*std::log(options.pic_size)))) - 1.0);
+    options.MC_quantile_PS = (size_t) (options.MC_max * (1.0 - 1.0/(options.pic_size*options.pic_size)) - 1.0);
+
+    // result matrix containing a solution on each row
+    Matrix<double> result(options.bootstrap_max, options.model_size);
+    Matrix<double> result_fhat(options.bootstrap_max, options.pic_size);
+    Matrix<double> result_fhat_cropped(options.bootstrap_max, std::lround((options.pic_size/2)*(1+1/std::sqrt(2)))-std::lround((options.pic_size/2)*(1-1/std::sqrt(2)))+2);
+
+    // first solution is not bootstrapped
+    Matrix<double> picture = CenterOffset(picture_path, 0, 0, options);
+    Matrix<double> sensitivity = CenterOffset(sensitivity_path, 0, 0, options);
+    Matrix<double> background = CenterOffset(background_path, 0, 0, options);
+
+    std::cout << std::string(80, '=') << std::endl;
+    std::cout << "Computing solution without bootstrapping." << std::endl;
+    std::cout << std::string(80, '=') << std::endl << std::endl;
+    Matrix<double> solution = SolveWS(picture, sensitivity, background, options);
+//    "results/computed_sol_0.data" << solution;
+
+    Matrix<double> dhat(solution.Data()+options.pic_size*2, options.pic_size*options.pic_size, options.pic_size, options.pic_size);
+//    "results/computed_dhat_0.data" << dhat;
+//    "results/computed_dhat_CC_0.data" << dhat.ConnectedComponentsMax();
+
     Matrix<double> fhatw(solution.Data(), options.pic_size, options.pic_size, 1);
-    fhatw = astro.WaveletOp()*fhatw;
-    "data/512_chandra/computed_fhatw.data" << fhatw;
-    Matrix<double> fhats(solution.Data()+options.pic_size, options.pic_size, options.pic_size, 1);
-    fhats = astro.SplineOp()*fhats;
-    "data/512_chandra/computed_fhats.data" << fhats;
-    "data/512_chandra/computed_fhat.data" << (fhatw + fhats);
+    Wavelet<double> wave_op((WaveletType)options.wavelet[0], options.wavelet[1]);
+    fhatw = wave_op*fhatw;
 
-    return solution_final;
+    Matrix<double> fhats(solution.Data()+options.pic_size, options.pic_size, options.pic_size, 1);
+    Spline<double> spline_op(options.pic_size);
+    fhats = spline_op*fhats;
+
+    Matrix<double> fhat = fhatw + fhats;
+//    "results/computed_fhat_0.data" << fhat;
+
+    Matrix<double> fhat_cropped = fhat.Partial(std::round((options.pic_size/2)*(1-1/std::sqrt(2)))-1, std::round((options.pic_size/2)*(1+1/std::sqrt(2))));
+//    "results/computed_fhat_cropped_0.data" << fhat_cropped;
+
+    std::copy(solution.Data(), solution.Data()+fhat.Length(), result.Data());
+
+    std::random_device rnd;
+    std::default_random_engine generator(rnd() + std::chrono::system_clock::now().time_since_epoch().count());
+
+    size_t bootstrap_current = 1;
+    while(bootstrap_current < options.bootstrap_max)
+    {
+        // bootstrap center of picture
+        std::uniform_int_distribution random_center(-(int)options.center_offset_max,(int)options.center_offset_max);
+        int offset_vert = random_center(generator);
+        int offset_horiz = random_center(generator);
+        picture = CenterOffset(picture_path, offset_vert, offset_horiz, options);
+        sensitivity = CenterOffset(sensitivity_path, offset_vert, offset_horiz, options);
+        background = CenterOffset(background_path, offset_vert, offset_horiz, options);
+
+        // resample pixels
+        picture = Resample(picture, options.resample_windows_size);
+
+        // choose random wavelets
+        std::uniform_int_distribution random_wavelet(0,6);
+        options.wavelet[0] = random_wavelet(generator);
+        switch(options.wavelet[0])
+        {
+        case 2:
+            {
+                std::uniform_int_distribution random_wavelet_param(1,5);
+                options.wavelet[1] = random_wavelet_param(generator);
+                break;
+            }
+        case 3:
+            {
+                std::uniform_int_distribution random_wavelet_param(2,10);
+                options.wavelet[1] = 2*random_wavelet_param(generator);
+                break;
+            }
+        case 4:
+            {
+                std::uniform_int_distribution random_wavelet_param(4,10);
+                options.wavelet[1] = random_wavelet_param(generator);
+                break;
+            }
+        case 6:
+            {
+                std::uniform_int_distribution random_wavelet_param(0,2);
+                options.wavelet[1] = 2*random_wavelet_param(generator) + 1;
+                break;
+            }
+        default:
+            {
+                break;
+            }
+        }
+
+        // solve with bootstrap
+        std::cout << std::string(80, '=') << std::endl;
+        std::cout << "Computing with bootstrapping:" << std::endl;
+        std::cout << "Wavelets: " << options.wavelet[0] << ", " << options.wavelet[1] << std::endl;
+        std::cout << "Center: " << offset_vert << ", " << offset_horiz << std::endl;
+        std::cout << "Resample windows size: " << options.resample_windows_size << std::endl << std::endl;
+        std::cout << std::string(80, '=') << std::endl << std::endl;
+        solution = SolveWS(picture, sensitivity, background, options);
+        std::copy(solution.Data(), solution.Data()+options.model_size, result.Data()+bootstrap_current*options.model_size);
+
+        fhatw = Matrix<double>(solution.Data(), options.pic_size, options.pic_size, 1);
+        wave_op = Wavelet<double>((WaveletType)options.wavelet[0], options.wavelet[1]);
+        fhatw = wave_op*fhatw;
+
+        fhats = Matrix<double>(solution.Data()+options.pic_size, options.pic_size, options.pic_size, 1);
+        fhats = spline_op*fhats;
+
+        fhat = fhatw + fhats;
+        std::copy(fhat.Data(), fhat.Data()+fhat.Length(), result_fhat.Data()+bootstrap_current*fhat.Length());
+
+        fhat_cropped = fhat.Partial(std::lround((options.pic_size/2)*(1-1/std::sqrt(2)))-1, std::lround((options.pic_size/2)*(1+1/std::sqrt(2))));
+        std::copy(fhat_cropped.Data(), fhat_cropped.Data()+fhat_cropped.Length(), result_fhat_cropped.Data()+bootstrap_current*fhat_cropped.Length());
+
+        ++bootstrap_current;
+    }
+
+    solution_path << fhat_cropped;
+
+    return fhat_cropped;
 }
 
 } // namespace WS
