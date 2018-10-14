@@ -16,6 +16,7 @@
 #include <algorithm>
 #include <cmath>
 #include <complex>
+#include <cstdlib>
 #include <fstream>
 #include <iomanip>
 #include <limits>
@@ -24,7 +25,6 @@
 #include <queue>
 #include <string>
 #include <type_traits>
-
 
 namespace astroqut
 {
@@ -116,7 +116,12 @@ public:
             try
             {
                 // allocate aligned memory
-                data_ = (matrix_t*) _mm_malloc (sizeof(T)*this->length_, (size_t) std::pow(2, std::ceil(std::log2(sizeof(T)))));
+                size_t alignment = std::pow(2, std::ceil(std::log2(sizeof(T))));
+#ifdef __WIN32
+                data_ = static_cast<matrix_t*>(_mm_malloc(alignment*this->length_, alignment));
+#elif defined __linux__
+                data_ = static_cast<matrix_t*>(aligned_alloc(alignment, alignment*this->length_));
+#endif
             }
             catch (const std::bad_alloc&)
             {
@@ -223,7 +228,13 @@ public:
         try
         {
             // allocate aligned memory
-            data_ = (matrix_t*) _mm_malloc (file_size, (size_t) std::pow(2, std::ceil(std::log2(sizeof(T)))));
+            size_t alignment = std::pow(2, std::ceil(std::log2(sizeof(T))));
+            double original_target_type_ratio = (double)alignment/(double)sizeof(U);
+#ifdef __WIN32
+            data_ = static_cast<matrix_t*>(_mm_malloc((size_t)(file_size*original_target_type_ratio), alignment));
+#elif defined __linux__
+            data_ = static_cast<matrix_t*>(aligned_alloc(alignment, (size_t)(file_size*original_target_type_ratio)));
+#endif
         }
         catch (const std::bad_alloc&)
         {
@@ -310,7 +321,11 @@ public:
         if( data_ != nullptr )
         {
             // deallocate aligned memory
+#ifdef __WIN32
             _mm_free(data_);
+#elif defined __linux__
+            free(data_);
+#endif
         }
         data_ = nullptr;
     }
@@ -421,7 +436,11 @@ public:
             if( data_ != nullptr )
             {
                 // deallocate aligned memory
+#ifdef __WIN32
                 _mm_free(data_);
+#elif defined __linux__
+                free(data_);
+#endif
                 data_ = nullptr;
             }
             // and we need to reallocate if there is something to store
@@ -430,7 +449,12 @@ public:
                 try
                 {
                     // allocate aligned data
-                    data_ = (matrix_t*) _mm_malloc (sizeof(T)*this->length_, (size_t) std::pow(2, std::ceil(std::log2(sizeof(T)))));
+                    size_t alignment = std::pow(2, std::ceil(std::log2(sizeof(T))));
+#ifdef __WIN32
+                    data_ = static_cast<matrix_t*>(_mm_malloc(alignment*this->length_, alignment));
+#elif defined __linux__
+                    data_ = static_cast<matrix_t*>(aligned_alloc(alignment, alignment*this->length_));
+#endif
                 }
                 catch (const std::bad_alloc&)
                 {
