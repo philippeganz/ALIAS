@@ -423,113 +423,98 @@ Matrix<double> Solve(std::string picture_path,
     Matrix<double> sensitivity = CenterOffset(sensitivity_path, 0, 0, options);
     Matrix<double> background = CenterOffset(background_path, 0, 0, options);
 
-    std::cout << std::string(80, '=') << std::endl;
-    std::cout << "Computing solution without bootstrapping." << std::endl;
-    std::cout << std::string(80, '=') << std::endl << std::endl;
-    Matrix<double> solution = SolveWS(picture, sensitivity, background, options);
-//    "results/computed_sol_0.data" << solution;
-
-    Matrix<double> dhat(solution.Data()+options.pic_size*2, options.pic_size*options.pic_size, options.pic_size, options.pic_size);
-//    "results/computed_dhat_0.data" << dhat;
-//    "results/computed_dhat_CC_0.data" << dhat.ConnectedComponentsMax();
-
-    Matrix<double> fhatw(solution.Data(), options.pic_size, options.pic_size, 1);
-    Wavelet<double> wave_op((WaveletType)options.wavelet[0], options.wavelet[1]);
-    fhatw = wave_op*fhatw;
-
-    Matrix<double> fhats(solution.Data()+options.pic_size, options.pic_size, options.pic_size, 1);
-    Spline<double> spline_op(options.pic_size);
-    fhats = spline_op*fhats;
-
-    Matrix<double> fhat = fhatw + fhats;
-//    "results/computed_fhat_0.data" << fhat;
-
-    Matrix<double> fhat_cropped = fhat.Partial(std::round((options.pic_size/2)*(1-1/std::sqrt(2)))-1, std::round((options.pic_size/2)*(1+1/std::sqrt(2))));
-//    "results/computed_fhat_cropped_0.data" << fhat_cropped;
-
-    std::copy(solution.Data(), solution.Data()+fhat.Length(), result.Data());
-
     std::random_device rnd;
     std::default_random_engine generator(rnd() + std::chrono::system_clock::now().time_since_epoch().count());
 
-    size_t bootstrap_current = 1;
+    size_t bootstrap_current = 0;
     while(bootstrap_current < options.bootstrap_max)
     {
-        // bootstrap center of picture
-        std::uniform_int_distribution random_center(-(int)options.center_offset_max,(int)options.center_offset_max);
-        int offset_vert = random_center(generator);
-        int offset_horiz = random_center(generator);
-        picture = CenterOffset(picture_path, offset_vert, offset_horiz, options);
-        sensitivity = CenterOffset(sensitivity_path, offset_vert, offset_horiz, options);
-        background = CenterOffset(background_path, offset_vert, offset_horiz, options);
-
-        // resample pixels
-        picture = Resample(picture, options.resample_windows_size);
-
-        // choose random wavelets
-        std::uniform_int_distribution random_wavelet(0,6);
-        options.wavelet[0] = random_wavelet(generator);
-        switch(options.wavelet[0])
+        if(bootstrap_current == 0)
         {
-        case 2:
+            std::cout << std::string(80, '=') << std::endl;
+            std::cout << "Computing solution without bootstrapping." << std::endl;
+            std::cout << std::string(80, '=') << std::endl << std::endl;
+        }
+        else
+        {
+            // bootstrap center of picture
+            std::uniform_int_distribution random_center(-(int)options.center_offset_max,(int)options.center_offset_max);
+            int offset_vert = random_center(generator);
+            int offset_horiz = random_center(generator);
+            picture = CenterOffset(picture_path, offset_vert, offset_horiz, options);
+            sensitivity = CenterOffset(sensitivity_path, offset_vert, offset_horiz, options);
+            background = CenterOffset(background_path, offset_vert, offset_horiz, options);
+
+            // resample pixels
+            picture = Resample(picture, options.resample_windows_size);
+
+            // choose random wavelets
+            std::uniform_int_distribution random_wavelet(0,6);
+            options.wavelet[0] = random_wavelet(generator);
+            switch(options.wavelet[0])
             {
-                std::uniform_int_distribution random_wavelet_param(1,5);
-                options.wavelet[1] = random_wavelet_param(generator);
-                break;
+            case 2:
+                {
+                    std::uniform_int_distribution random_wavelet_param(1,5);
+                    options.wavelet[1] = random_wavelet_param(generator);
+                    break;
+                }
+            case 3:
+                {
+                    std::uniform_int_distribution random_wavelet_param(2,10);
+                    options.wavelet[1] = 2*random_wavelet_param(generator);
+                    break;
+                }
+            case 4:
+                {
+                    std::uniform_int_distribution random_wavelet_param(4,10);
+                    options.wavelet[1] = random_wavelet_param(generator);
+                    break;
+                }
+            case 6:
+                {
+                    std::uniform_int_distribution random_wavelet_param(0,2);
+                    options.wavelet[1] = 2*random_wavelet_param(generator) + 1;
+                    break;
+                }
+            default:
+                {
+                    break;
+                }
             }
-        case 3:
-            {
-                std::uniform_int_distribution random_wavelet_param(2,10);
-                options.wavelet[1] = 2*random_wavelet_param(generator);
-                break;
-            }
-        case 4:
-            {
-                std::uniform_int_distribution random_wavelet_param(4,10);
-                options.wavelet[1] = random_wavelet_param(generator);
-                break;
-            }
-        case 6:
-            {
-                std::uniform_int_distribution random_wavelet_param(0,2);
-                options.wavelet[1] = 2*random_wavelet_param(generator) + 1;
-                break;
-            }
-        default:
-            {
-                break;
-            }
+
+            // solve with bootstrap
+            std::cout << std::string(80, '=') << std::endl;
+            std::cout << "Computing with bootstrapping:" << std::endl;
+            std::cout << "Wavelets: " << options.wavelet[0] << ", " << options.wavelet[1] << std::endl;
+            std::cout << "Center: " << offset_vert << ", " << offset_horiz << std::endl;
+            std::cout << "Resample windows size: " << options.resample_windows_size << std::endl << std::endl;
+            std::cout << std::string(80, '=') << std::endl << std::endl;
         }
 
-        // solve with bootstrap
-        std::cout << std::string(80, '=') << std::endl;
-        std::cout << "Computing with bootstrapping:" << std::endl;
-        std::cout << "Wavelets: " << options.wavelet[0] << ", " << options.wavelet[1] << std::endl;
-        std::cout << "Center: " << offset_vert << ", " << offset_horiz << std::endl;
-        std::cout << "Resample windows size: " << options.resample_windows_size << std::endl << std::endl;
-        std::cout << std::string(80, '=') << std::endl << std::endl;
-        solution = SolveWS(picture, sensitivity, background, options);
+        Matrix<double> solution = SolveWS(picture, sensitivity, background, options);
         std::copy(solution.Data(), solution.Data()+options.model_size, result.Data()+bootstrap_current*options.model_size);
 
-        fhatw = Matrix<double>(solution.Data(), options.pic_size, options.pic_size, 1);
-        wave_op = Wavelet<double>((WaveletType)options.wavelet[0], options.wavelet[1]);
+        Matrix<double> fhatw = Matrix<double>(solution.Data(), options.pic_size, options.pic_size, 1);
+        Wavelet<double> wave_op = Wavelet<double>((WaveletType)options.wavelet[0], options.wavelet[1]);
         fhatw = wave_op*fhatw;
 
-        fhats = Matrix<double>(solution.Data()+options.pic_size, options.pic_size, options.pic_size, 1);
+        Matrix<double> fhats = Matrix<double>(solution.Data()+options.pic_size, options.pic_size, options.pic_size, 1);
+        Spline<double> spline_op(options.pic_size);
         fhats = spline_op*fhats;
 
-        fhat = fhatw + fhats;
+        Matrix<double> fhat = fhatw + fhats;
         std::copy(fhat.Data(), fhat.Data()+fhat.Length(), result_fhat.Data()+bootstrap_current*fhat.Length());
 
-        fhat_cropped = fhat.Partial(std::lround((options.pic_size/2)*(1-1/std::sqrt(2)))-1, std::lround((options.pic_size/2)*(1+1/std::sqrt(2))));
+        Matrix<double> fhat_cropped = fhat.Partial(std::lround((options.pic_size/2)*(1-1/std::sqrt(2)))-1, std::lround((options.pic_size/2)*(1+1/std::sqrt(2)))+1);
         std::copy(fhat_cropped.Data(), fhat_cropped.Data()+fhat_cropped.Length(), result_fhat_cropped.Data()+bootstrap_current*fhat_cropped.Length());
 
         ++bootstrap_current;
     }
 
-    solution_path << fhat_cropped;
+    solution_path << result_fhat_cropped;
 
-    return fhat_cropped;
+    return result_fhat_cropped;
 }
 
 } // namespace WS
