@@ -120,7 +120,6 @@
 		<Unit filename="include/utils/linearop/operator/matmult.hpp" />
 		<Unit filename="include/utils/linearop/operator/matmult/spline.hpp" />
 		<Unit filename="include/utils/linearop/operator/wavelet.hpp" />
-		<Unit filename="include/utils/settings.hpp" />
 		<Unit filename="src/WS/astroQUT.cpp" />
 		<Unit filename="src/main.cpp" />
 		<Unit filename="src/test.cpp" />
@@ -128,7 +127,6 @@
 		<Unit filename="src/test/fista.cpp" />
 		<Unit filename="src/test/matrix.cpp" />
 		<Unit filename="src/test/operator.cpp" />
-		<Unit filename="src/utils/settings.cpp" />
 		<Extensions>
 			<code_completion />
 			<envvars />

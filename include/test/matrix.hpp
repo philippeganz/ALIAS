@@ -2,7 +2,7 @@
 /// \file include/test/matrix.hpp
 /// \brief Test suite to validate the Matrix class.
 /// \author Philippe Ganz <philippe.ganz@gmail.com>
-/// \version 0.5.0
+/// \version 0.6.0
 /// \date 2018-10-14
 /// \copyright GPL-3.0
 ///
@@ -25,14 +25,14 @@ void Optimizations(size_t length)
 {
     std::string type(typeid(T).name());
     T number = (T) 3.14159265359;
-    typename Matrix<T>::matrix_t* test_array = (T*) _mm_malloc(sizeof(T)*length, sizeof(T));
+    Matrix<T> test_array(length, 1);
     std::chrono::time_point<std::chrono::high_resolution_clock> start, end;
     std::chrono::duration<double> elapsed_time;
 
 // STL algorithm
     start = std::chrono::high_resolution_clock::now();
 
-    std::fill( test_array, test_array + length, number );
+    std::fill( test_array.Data(), test_array.Data() + length, number );
 
     end = std::chrono::high_resolution_clock::now();
     elapsed_time = end-start;
@@ -43,9 +43,7 @@ void Optimizations(size_t length)
 
     #pragma omp parallel for
     for(size_t i = 0; i < length; ++i)
-    {
         test_array[i] = number;
-    }
 
     end = std::chrono::high_resolution_clock::now();
     elapsed_time = end-start;
@@ -56,9 +54,7 @@ void Optimizations(size_t length)
 
     #pragma omp for simd
     for(size_t i = 0; i < length; ++i)
-    {
         test_array[i] = number;
-    }
 
     end = std::chrono::high_resolution_clock::now();
     elapsed_time = end-start;
@@ -69,9 +65,7 @@ void Optimizations(size_t length)
 
     #pragma omp parallel for simd
     for(size_t i = 0; i < length; ++i)
-    {
         test_array[i] = number;
-    }
 
     end = std::chrono::high_resolution_clock::now();
     elapsed_time = end-start;
@@ -83,9 +77,7 @@ void Optimizations(size_t length)
 
     #pragma omp taskloop
     for(size_t i = 0; i < length; ++i)
-    {
         test_array[i] = number;
-    }
 
     end = std::chrono::high_resolution_clock::now();
     elapsed_time = end-start;
@@ -96,15 +88,11 @@ void Optimizations(size_t length)
 
     #pragma omp taskloop simd
     for(size_t i = 0; i < length; ++i)
-    {
         test_array[i] = number;
-    }
 
     end = std::chrono::high_resolution_clock::now();
     elapsed_time = end-start;
     std::cout << "Time for omp taskloop simd to assign " << length << " " << type << " : " << elapsed_time.count() << " seconds" << std::endl;
-
-    _mm_free(test_array);
 }
 
 template <class T>
