@@ -3,7 +3,7 @@
 /// \brief Test suites to validate the project code
 /// \author Philippe Ganz <philippe.ganz@gmail.com>
 /// \version 0.6.0
-/// \date 2018-09-30
+/// \date 2018-10-14
 /// \copyright GPL-3.0
 ///
 
@@ -21,12 +21,6 @@
 
 namespace astroqut{
 namespace test{
-
-template <class T>
-void PerfTest(size_t length)
-{
-    matrix::Time<T>(length);
-}
 
 template <class T>
 bool MatrixTest()

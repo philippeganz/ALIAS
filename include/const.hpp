@@ -3,7 +3,7 @@
 /// \brief Constant values used throughout the whole project
 /// \author Philippe Ganz <philippe.ganz@gmail.com>
 /// \version 0.5.0
-/// \date 2018-07-17
+/// \date 2018-10-14
 /// \copyright GPL-3.0
 ///
 

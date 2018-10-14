@@ -3,7 +3,7 @@
 /// \brief Test suite to validate the Matrix class.
 /// \author Philippe Ganz <philippe.ganz@gmail.com>
 /// \version 0.5.0
-/// \date 2018-03-30
+/// \date 2018-10-14
 /// \copyright GPL-3.0
 ///
 
@@ -11,7 +11,6 @@
 #define ASTROQUT_TEST_MATRIX_HPP
 
 #include "utils/linearop/matrix.hpp"
-#include "utils/settings.hpp"
 
 #include <chrono>
 #include <iostream>
@@ -20,112 +19,6 @@
 namespace astroqut{
 namespace test{
 namespace matrix{
-
-template <class T>
-void MMTest(size_t length)
-{
-    std::string type(typeid(T).name());
-    std::cout << std::endl;
-    std::cout << "Matrix-Matrix multiplication performance test with " << type << std::endl;
-    std::cout << "---------------------------------------------------" << std::string( type.length(), '-') << std::endl;
-
-    std::chrono::time_point<std::chrono::high_resolution_clock> start, end;
-    std::chrono::duration<double> elapsed_time;
-    double result_times[2];
-    Matrix<T> big_matrix((T)2, length, length);
-
-    for(int i = 0; i < 2; ++i)
-    {
-        settings::default_MMType = static_cast<MMMultType>(i);
-        start = std::chrono::high_resolution_clock::now();
-        big_matrix * big_matrix;
-        end = std::chrono::high_resolution_clock::now();
-        elapsed_time = end-start;
-        result_times[i] = elapsed_time.count();
-        std::cout << "Time for " << length << " x " << length << " with method ";
-        std::cout << settings::MMMultTypeName[i] << " : " << result_times[i]*1000 << " milliseconds" << std::endl;
-    }
-
-    std::cout << "---------------------------------------------" << std::endl;
-    int best = std::distance(result_times, std::min_element(result_times, result_times+2));
-    std::cout << "Best performance achieved by " << settings::MMMultTypeName[best] << " with ";
-    std::cout << result_times[best]*1000 << " milliseconds" << std::endl << std::endl;
-    settings::default_MMType = static_cast<MMMultType>(best);
-}
-
-template <class T>
-void MVTest(size_t length)
-{
-    std::string type(typeid(T).name());
-    std::cout << std::endl;
-    std::cout << "Matrix-Vector multiplication performance test with " << type << std::endl;
-    std::cout << "---------------------------------------------------" << std::string( type.length(), '-') << std::endl;
-
-    std::chrono::time_point<std::chrono::high_resolution_clock> start, end;
-    std::chrono::duration<double> elapsed_time;
-    double result_times[3];
-    Matrix<T> big_matrix((T)2, length, length);
-    Matrix<T> big_vector((T)2, length, 1);
-
-    for(int i = 0; i < 3; ++i)
-    {
-        settings::default_MVType = static_cast<MVMultType>(i);
-        start = std::chrono::high_resolution_clock::now();
-        big_matrix * big_vector;
-        end = std::chrono::high_resolution_clock::now();
-        elapsed_time = end-start;
-        result_times[i] = elapsed_time.count();
-        std::cout << "Time for " << length << " x " << length << " matrix-vector multiplication with method ";
-        std::cout << settings::MVMultTypeName[i] << " : " << result_times[i]*1000 << " milliseconds" << std::endl;
-    }
-
-    std::cout << "---------------------------------------------" << std::endl;
-    int best = std::distance(result_times, std::min_element(result_times, result_times+3));
-    std::cout << "Best performance achieved by " << settings::MVMultTypeName[best] << " with ";
-    std::cout << result_times[best]*1000 << " milliseconds" << std::endl << std::endl;
-    settings::default_MVType = static_cast<MVMultType>(best);
-}
-
-template <class T>
-void VMTest(size_t length)
-{
-    std::string type(typeid(T).name());
-    std::cout << std::endl;
-    std::cout << "Vector-Matrix multiplication performance test with " << type << std::endl;
-    std::cout << "---------------------------------------------------" << std::string( type.length(), '-') << std::endl;
-
-    std::chrono::time_point<std::chrono::high_resolution_clock> start, end;
-    std::chrono::duration<double> elapsed_time;
-    double result_times[2];
-    Matrix<T> big_matrix((T)2, length, length);
-    Matrix<T> big_vector((T)2, 1, length);
-
-    for(int i = 0; i < 2; ++i)
-    {
-        settings::default_VMType = static_cast<VMMultType>(i);
-        start = std::chrono::high_resolution_clock::now();
-        big_vector * big_matrix;
-        end = std::chrono::high_resolution_clock::now();
-        elapsed_time = end-start;
-        result_times[i] = elapsed_time.count();
-        std::cout << "Time for " << length << " x " << length << " vector-matrix multiplication with method ";
-        std::cout << settings::VMMultTypeName[i] << " : " << result_times[i]*1000 << " milliseconds" << std::endl;
-    }
-
-    std::cout << "---------------------------------------------" << std::endl;
-    int best = std::distance(result_times, std::min_element(result_times, result_times+2));
-    std::cout << "Best performance achieved by " << settings::VMMultTypeName[best] << " with ";
-    std::cout << result_times[best]*1000 << " milliseconds" << std::endl << std::endl;
-    settings::default_VMType = static_cast<VMMultType>(best);
-}
-
-template <class T>
-void Time(size_t length)
-{
-    MMTest<T>(length);
-    MVTest<T>(16*length);
-    VMTest<T>(16*length);
-}
 
 template <class T>
 void Optimizations(size_t length)

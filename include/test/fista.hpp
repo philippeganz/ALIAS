@@ -3,7 +3,7 @@
 /// \brief Test suite to validate the FISTA class.
 /// \author Philippe Ganz <philippe.ganz@gmail.com>
 /// \version 0.5.0
-/// \date 2018-01-12
+/// \date 2018-10-14
 /// \copyright GPL-3.0
 ///
 
@@ -11,7 +11,6 @@
 #define ASTROQUT_TEST_FISTA_HPP
 
 #include "fista/poisson.hpp"
-#include "utils/settings.hpp"
 
 #include <chrono>
 #include <iostream>
