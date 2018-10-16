@@ -109,7 +109,7 @@ public:
         , data_(nullptr)
     {
 #ifdef DEBUG
-        std::cout << "Matrix : Empty constructor called" << std::endl;
+        std::cout << "Matrix : Empty constructor called with " << height_ << ", " << width_ << std::endl;
 #endif // DEBUG
         if(this->length_ != 0)
         {
@@ -193,6 +193,7 @@ public:
 
         U* reinterpret_memblock = (U*) memblock;
 
+        #pragma omp parallel for simd
         for(size_t i = 0; i < this->length_; ++i)
             data_[i] = reinterpret_memblock[i];
 
@@ -245,6 +246,7 @@ public:
         width_ = 1;
         length_ = height_;
 
+        #pragma omp parallel for simd
         for(size_t i = 0; i < length_; ++i)
             data_[i] = reinterpret_memblock[i];
 

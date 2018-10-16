@@ -25,10 +25,10 @@ void Chandra()
     options.MC_max = 10000;
     options.fista_params.iter_max = 1000;
 
-    Matrix<double> solution = WS::Solve("data/512_chandra/F.data",
-                                        "data/512_chandra/E.data",
-                                        "data/512_chandra/O.data",
-                                        "data/512_chandra/AstroQUT/" + std::to_string(options.MC_max) + "/solution.data",
+    Matrix<double> solution = WS::Solve(std::string("data/512_chandra/F.data"),
+                                        std::string("data/512_chandra/E.data"),
+                                        std::string("data/512_chandra/O.data"),
+                                        std::string("data/512_chandra/AstroQUT/" + std::to_string(options.MC_max) + "/solution.data"),
                                         options);
 
     std::cout << std::endl;
@@ -50,10 +50,10 @@ void Sym256()
     options.MC_max = 5000;
     options.fista_params.iter_max = 1000;
 
-    Matrix<double> solution = WS::Solve("data/256/M256truefPS1B1W1S1Erealnk24forcepos2/result1.data",
-                                        "data/256/E.data",
-                                        "data/256/O.data",
-                                        "data/256/M256truefPS1B1W1S1Erealnk24forcepos2/solution1.data",
+    Matrix<double> solution = WS::Solve(std::string("data/256/M256truefPS1B1W1S1Erealnk24forcepos2/result1.data"),
+                                        std::string("data/256/E.data"),
+                                        std::string("data/256/O.data"),
+                                        std::string("data/256/M256truefPS1B1W1S1Erealnk24forcepos2/solution1.data"),
                                         options);
 
 }
