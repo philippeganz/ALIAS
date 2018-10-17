@@ -56,7 +56,7 @@ public:
         , length_(height*width)
     {
 #ifdef DEBUG
-        std::cout << "LinearOp : Full member constructor called" << std::endl;
+        std::cout << "LinearOp : Full member constructor called with " << height << ", " << width << ", and length = " << length_ << std::endl;
 #endif // DEBUG
     }
 
