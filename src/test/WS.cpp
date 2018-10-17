@@ -2,8 +2,8 @@
 /// \file src/test/WS.cpp
 /// \brief Test suite to test the WS method.
 /// \author Philippe Ganz <philippe.ganz@gmail.com>
-/// \version 0.5.0
-/// \date 2018-09-02
+/// \version 0.6.0
+/// \date 2018-10-14
 /// \copyright GPL-3.0
 ///
 
@@ -50,11 +50,14 @@ void Sym256()
     options.MC_max = 5000;
     options.fista_params.iter_max = 1000;
 
-    Matrix<double> solution = WS::Solve("data/256/M256truefPS1B1W1S1Erealnk24forcepos2/result1.data",
-                                        "data/256/E.data",
-                                        "data/256/O.data",
-                                        "data/256/M256truefPS1B1W1S1Erealnk24forcepos2/solution1.data",
-                                        options);
+    for(size_t i = 10; i <=24; ++i)
+    {
+        Matrix<double> solution = WS::Solve("data/256/M256truefPS1B1W1S1Erealnk24forcepos2/result" + std::to_string(i) + ".data",
+                                            "data/256/E.data",
+                                            "data/256/O.data",
+                                            "data/256/M256truefPS1B1W1S1Erealnk24forcepos2/solution" + std::to_string(i) + ".data",
+                                            options);
+    }
 
 }
 

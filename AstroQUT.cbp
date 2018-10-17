@@ -101,6 +101,7 @@
 			<Add option="-fopenmp" />
 		</Linker>
 		<Unit filename=".gitignore" />
+		<Unit filename="Makefile" />
 		<Unit filename="include/WS/astroQUT.hpp" />
 		<Unit filename="include/const.hpp" />
 		<Unit filename="include/fista/poisson.hpp" />
