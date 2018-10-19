@@ -134,7 +134,7 @@ static void Standardize(const Matrix<double> mu_hat,
     {
         std::default_random_engine generator(rnd() + omp_get_team_num() + std::chrono::system_clock::now().time_since_epoch().count());
         if((options.MC_max >= 100 && MC_id % (options.MC_max/100) == 0) || options.MC_max < 100)
-            std::cout << "\r" + std::to_string(1+std::lround(MC_id*100.0/(double)options.MC_max)) + "/100";
+            std::cout << "\r" + std::to_string(1+std::lround(MC_id*100.0/(double)options.MC_max)) + "/100" << std::flush;
 
         Matrix<double> rnd_result = astro.WtAtBt(MCCompute(mu_hat, generator), false, true, true, false).Abs();
 
@@ -205,7 +205,7 @@ static void Lambda(const Matrix<double> mu_hat,
         std::default_random_engine generator(rnd() + omp_get_thread_num() + std::chrono::system_clock::now().time_since_epoch().count());
 
         if((options.MC_max >= 100 && MC_id % (options.MC_max/100) == 0) || options.MC_max < 100)
-            std::cout << "\r" + std::to_string(1+std::lround(MC_id*100.0/(double)options.MC_max)) + "/100";
+            std::cout << "\r" + std::to_string(1+std::lround(MC_id*100.0/(double)options.MC_max)) + "/100" << std::flush;
 
         Matrix<double> rnd_result = astro.WtAtBt(MCCompute(mu_hat, generator)).Abs();
 
@@ -300,7 +300,7 @@ static Matrix<double> EstimateNonZero(const Matrix<double>& picture,
     for(size_t i = 0; i < non_zero_elements_amount; ++i)
     {
         if((non_zero_elements_amount >= 100 && i % (non_zero_elements_amount/100) == 0) || non_zero_elements_amount < 100)
-            std::cout << "\r" + std::to_string(1+std::lround(i*100.0/(double)non_zero_elements_amount)) + "/100";
+            std::cout << "\r" + std::to_string(1+std::lround(i*100.0/(double)non_zero_elements_amount)) + "/100" << std::flush;
         identity[non_zero_elements_indices[i]] = 1.0;
         Matrix<double> local_result = astro * identity;
         identity[non_zero_elements_indices[i]] = 0.0;
