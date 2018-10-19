@@ -102,7 +102,7 @@ static void BetaZero(const Matrix<double>& picture,
 
     Matrix<double> non_zero_values(picture.Height(), picture.Width());
     size_t non_zero_values_amount = 0;
-    #pragma omp parallel for simd
+
     for(size_t i = 0; i < picture.Length(); ++i)
         if( ! IsEqual(picture[i], 0.0) )
             non_zero_values[non_zero_values_amount++] = picture[i];
@@ -146,7 +146,7 @@ static void Standardize(const Matrix<double> mu_hat,
 
     options.standardize = Matrix<double>(1.0, options.model_size, 1);
 
-    #pragma omp parallel for simd
+    #pragma omp parallel for
     for(size_t i = 0; i < options.pic_size*2; ++i)
     {
         // partial sort
