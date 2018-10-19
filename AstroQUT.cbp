@@ -94,7 +94,6 @@
 			<Add option="-m64" />
 			<Add option="-fopenmp -std=c++17 -march=native -mno-sse5" />
 			<Add directory="include" />
-			<Add directory="extern_include/eigen-eigen-5a0156e40feb" />
 		</Compiler>
 		<Linker>
 			<Add option="-m64" />
