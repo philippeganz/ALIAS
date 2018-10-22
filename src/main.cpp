@@ -9,7 +9,8 @@
 ///
 
 #include "const.hpp"
-#include "test.hpp"
+//#include "test.hpp"
+#include "WS/astroQUT.hpp"
 
 #include <cstdlib>
 #include <iostream>
@@ -18,42 +19,42 @@
 
 int main( int argc, char **argv )
 {
-
-    try
-    {
-        astroqut::test::MatrixTest<double>();
-    }
-    catch (const std::exception& err)
-    {
-        std::cerr << err.what() << std::endl;
-        std::cerr << "Matrix tests failed! Please refer to the individual test results for more details." << std::endl;
-        return EXIT_FAILURE;
-    }
-
-    try
-    {
-        astroqut::test::OperatorTest();
-    }
-    catch (const std::exception& err)
-    {
-        std::cerr << err.what() << std::endl;
-        std::cerr << "Operator tests failed! Please refer to the individual test results for more details." << std::endl;
-        return EXIT_FAILURE;
-    }
-
-    try
-    {
-        astroqut::test::FISTATest();
-    }
-    catch (const std::exception& err)
-    {
-        std::cerr << err.what() << std::endl;
-        std::cerr << "FISTA tests failed! Please refer to the individual test results for more details." << std::endl;
-        return EXIT_FAILURE;
-    }
-
+//
+//    try
+//    {
+//        astroqut::test::MatrixTest<double>();
+//    }
+//    catch (const std::exception& err)
+//    {
+//        std::cerr << err.what() << std::endl;
+//        std::cerr << "Matrix tests failed! Please refer to the individual test results for more details." << std::endl;
+//        return EXIT_FAILURE;
+//    }
+//
+//    try
+//    {
+//        astroqut::test::OperatorTest();
+//    }
+//    catch (const std::exception& err)
+//    {
+//        std::cerr << err.what() << std::endl;
+//        std::cerr << "Operator tests failed! Please refer to the individual test results for more details." << std::endl;
+//        return EXIT_FAILURE;
+//    }
+//
+//    try
+//    {
+//        astroqut::test::FISTATest();
+//    }
+//    catch (const std::exception& err)
+//    {
+//        std::cerr << err.what() << std::endl;
+//        std::cerr << "FISTA tests failed! Please refer to the individual test results for more details." << std::endl;
+//        return EXIT_FAILURE;
+//    }
+//
 //    astroqut::test::astro::Chandra();
-    astroqut::test::astro::Sym256();
+//    astroqut::test::astro::Sym256();
 
 //    if( argc != 6 )
 //    {
@@ -63,15 +64,22 @@ int main( int argc, char **argv )
 //        std::cerr << "  background - Path to the background image or an integer >= 0 in which case we consider constant background;" << std::endl;
 //        std::cerr << "  solution - Path to the solution file;" << std::endl;
 //        std::cerr << "  size - Width of the picture;" << std::endl;
-//        std::cerr << "  bootstrap - Width of the picture;" << std::endl;
 //        std::cerr << "  option file - Path to the parameters file." << std::endl << std::endl;
 //        return EXIT_FAILURE;
 //    }
-//
-//    size_t picture_size = strtol(argv[4], nullptr, 0);
-//    astroqut::Matrix<double> source(std::string(argv[1]), picture_size, picture_size);
-//    astroqut::Matrix<double> sensitivity(std::string(argv[2]), picture_size, picture_size);
-//    astroqut::Matrix<double> background(std::string(argv[3]), picture_size, picture_size);
+
+    astroqut::WS::Parameters<double> options;
+    options.bootstrap_max = 1;
+    options.resample_windows_size = 4;
+    options.pic_size = strtol(argv[5], nullptr, 0);
+    options.MC_max = 5000;
+    options.fista_params.iter_max = 1000;
+
+    astroqut::WS::Solve(std::string(argv[1]),
+                        std::string(argv[2]),
+                        std::string(argv[3]),
+                        std::string(argv[4]),
+                        options);
 
     return EXIT_SUCCESS;
 }

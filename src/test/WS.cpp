@@ -44,19 +44,46 @@ void Sym256()
     std::cout << std::endl << std::endl << "Test with 256x256 simulated data." << std::endl;
 
     WS::Parameters<double> options;
-    options.bootstrap_max = 3;
+    options.bootstrap_max = 1;
     options.resample_windows_size = 4;
     options.pic_size = 256;
     options.MC_max = 5000;
     options.fista_params.iter_max = 1000;
 
-    for(size_t i = 10; i <=24; ++i)
+    for(size_t i = 1; i <=24; ++i)
     {
-        Matrix<double> solution = WS::Solve("data/256/M256truefPS1B1W1S1Erealnk24forcepos2/result" + std::to_string(i) + ".data",
-                                            "data/256/E.data",
-                                            "data/256/O.data",
-                                            "data/256/M256truefPS1B1W1S1Erealnk24forcepos2/solution" + std::to_string(i) + ".data",
-                                            options);
+        WS::Solve("data/256/M256blockssymPS1B1W1S1Erealnk24forcepos2/result" + std::to_string(i) + ".data",
+                  "data/256/E.data",
+                  "data/256/O.data",
+                  "data/256/M256blockssymPS1B1W1S1Erealnk24forcepos2/solution" + std::to_string(i) + ".data",
+                  options);
+    }
+
+    for(size_t i = 1; i <=24; ++i)
+    {
+        WS::Solve("data/256/M256f4PS1B1W1S1Erealnk24forcepos2/result" + std::to_string(i) + ".data",
+                  "data/256/E.data",
+                  "data/256/O.data",
+                  "data/256/M256f4PS1B1W1S1Erealnk24forcepos2/solution" + std::to_string(i) + ".data",
+                  options);
+    }
+
+    for(size_t i = 1; i <=24; ++i)
+    {
+        WS::Solve("data/256/M256f4symPS1B1W1S1Erealnk24forcepos2/result" + std::to_string(i) + ".data",
+                  "data/256/E.data",
+                  "data/256/O.data",
+                  "data/256/M256f4symPS1B1W1S1Erealnk24forcepos2/solution" + std::to_string(i) + ".data",
+                  options);
+    }
+
+    for(size_t i = 1; i <=24; ++i)
+    {
+        WS::Solve("data/256/M256truefPS1B1W1S1Erealnk24forcepos2/result" + std::to_string(i) + ".data",
+                  "data/256/E.data",
+                  "data/256/O.data",
+                  "data/256/M256truefPS1B1W1S1Erealnk24forcepos2/solution" + std::to_string(i) + ".data",
+                  options);
     }
 
 }
