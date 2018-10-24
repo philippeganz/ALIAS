@@ -72,7 +72,7 @@ int main( int argc, char **argv )
     options.bootstrap_max = 1;
     options.resample_windows_size = 4;
     options.pic_size = strtol(argv[5], nullptr, 0);
-    options.MC_max = 5000;
+    options.MC_max =  strtol(argv[6], nullptr, 0);
     options.fista_params.iter_max = 1000;
 
     astroqut::WS::Solve(std::string(argv[1]),

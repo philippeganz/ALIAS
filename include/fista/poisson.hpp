@@ -31,7 +31,7 @@ struct Parameters
      *  Parameters with default values
      */
     Parameters() noexcept
-        : tol(1e-10)
+        : tol(1e-6)
         , iter_max(2000)
         , init_value{}
         , indices(Matrix<size_t>(0,1,1))
