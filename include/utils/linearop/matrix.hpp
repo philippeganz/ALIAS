@@ -4,7 +4,7 @@
 /// \details Provide matrix container with multiple matrix operations used in the whole project.
 /// \author Philippe Ganz <philippe.ganz@gmail.com> 2017-2018
 /// \version 0.6.0
-/// \date 2018-10-14
+/// \date 2018-10-27
 /// \copyright GPL-3.0
 ///
 
@@ -415,7 +415,7 @@ public:
      *  \param end Last element (not-included) of partial matrix
      *  \return A new matrix with the partial data
      */
-    Matrix Partial(size_t start, size_t end)
+    Matrix Partial(size_t start, size_t end) const
     {
         Matrix result(end-start, 1);
         std::copy(data_+start, data_+end, result.Data());

@@ -4,7 +4,7 @@
 /// \author Jairo Diaz <jairo.diaz@unige.ch> 2016-2017
 /// \author Philippe Ganz <philippe.ganz@gmail.com> 2017-2018
 /// \version 0.6.0
-/// \date 2018-10-14
+/// \date 2018-10-27
 /// \copyright GPL-3.0
 ///
 

@@ -3,7 +3,7 @@
 /// \brief Combination of all operators to create the main operator
 /// \author Philippe Ganz <philippe.ganz@gmail.com> 2017-2018
 /// \version 0.5.0
-/// \date 2018-07-07
+/// \date 2018-10-27
 /// \copyright GPL-3.0
 ///
 

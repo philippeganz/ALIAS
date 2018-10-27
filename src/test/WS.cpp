@@ -22,8 +22,9 @@ void Chandra()
     WS::Parameters<double> options;
     options.resample_windows_size = 4;
     options.pic_size = 512;
-    options.MC_max = 10000;
+    options.MC_max = 1000;
     options.fista_params.iter_max = 1000;
+    options.fista_params.log_period = 1;
 
     Matrix<double> solution = WS::Solve("data/512_chandra/F.data",
                                         "data/512_chandra/E.data",

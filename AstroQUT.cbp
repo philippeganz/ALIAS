@@ -52,6 +52,7 @@
 				<Option object_output="obj/ReleaseO3/" />
 				<Option type="1" />
 				<Option compiler="gcc" />
+				<Option parameters="data/256/M256blockssymPS1B1W1S1Erealnk24forcepos2/result1.data data/256/E.data data/256/O.data data/256/M256blockssymPS1B1W1S1Erealnk24forcepos2/solution1.data 256" />
 				<Compiler>
 					<Add option="-O3" />
 				</Compiler>

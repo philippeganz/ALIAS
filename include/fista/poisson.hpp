@@ -4,7 +4,7 @@
 /// \author Hatef Monajemi <monajemi@stanford.edu> 2012-2014
 /// \author Philippe Ganz <philippe.ganz@gmail.com> 2017-2018
 /// \version 0.6.0
-/// \date 2018-09-02
+/// \date 2018-10-27
 /// \copyright GPL-3.0
 ///
 
@@ -196,6 +196,7 @@ Matrix<T> Solve(const Operator<T>& A,
         }
     }
 
+    std::cout << std::string(80, '-') << std::endl;
     std::cout << std::setw(5) << k << " | " << std::scientific << std::setprecision(10) << std::setw(20) << std::abs(tol) << " | " << std::setw(20) << f_lasso_next << " | " << std::defaultfloat << std::setw(13) << Lf << " | " << std::setw(8) << x.NonZeroAmount() << std::endl << std::endl << std::endl;
 
     if(k < options.iter_max)
