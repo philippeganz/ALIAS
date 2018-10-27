@@ -74,16 +74,14 @@ static Matrix<double> Resample(Matrix<double> picture, size_t resample_windows_s
 }
 
 static Matrix<double> MCCompute(const Matrix<double>& mu_hat,
+                                std::vector<std::poisson_distribution<int>>& mu_hat_dist,
                                 std::default_random_engine generator)
 {
     Matrix<double> mu_hat_rnd(mu_hat.Height(), mu_hat.Width());
 
     #pragma omp simd
     for(size_t i = 0; i < mu_hat.Length(); ++i)
-    {
-        std::poisson_distribution<int> poisson_gen(mu_hat[i]);
-        mu_hat_rnd[i] = poisson_gen(generator);
-    }
+        mu_hat_rnd[i] = mu_hat_dist[i](generator);
 
     mu_hat_rnd -= mu_hat;
     mu_hat_rnd /= mu_hat;
@@ -96,7 +94,7 @@ static void BetaZero(const Matrix<double>& picture,
                      Parameters<double>& options)
 {
     std::cout << "Computing beta0..." << std::endl;
-    Matrix<double> x0(0.0, options.model_size, 1);
+    Matrix<double> x0(0.0, options.pic_size*2, 1);
     x0[0] = 1;
     Matrix<double> null_model = astro.BAW(x0, false, true, true, false);
 
@@ -120,7 +118,8 @@ static void BetaZero(const Matrix<double>& picture,
     std::cout << "beta0 = " << std::scientific << options.beta0 << std::endl;
 }
 
-static void Standardize(const Matrix<double> mu_hat,
+static void Standardize(const Matrix<double>& mu_hat,
+                        std::vector<std::poisson_distribution<int>>& mu_hat_dist,
                         const Matrix<double>& background,
                         const AstroOperator<double>& astro,
                         Parameters<double>& options)
@@ -136,7 +135,7 @@ static void Standardize(const Matrix<double> mu_hat,
         if((options.MC_max >= 100 && MC_id % (options.MC_max/100) == 0) || options.MC_max < 100)
             std::cout << "\r" + std::to_string(1+std::lround(MC_id*100.0/(double)options.MC_max)) + "/100" << std::flush;
 
-        Matrix<double> rnd_result = astro.WtAtBt(MCCompute(mu_hat, generator), false, true, true, false).Abs();
+        Matrix<double> rnd_result = astro.WtAtBt(MCCompute(mu_hat, mu_hat_dist, generator), false, true, true, false).Abs();
 
         #pragma omp simd
         for(size_t i = 0; i < rnd_result.Height(); ++i )
@@ -185,7 +184,8 @@ static void Standardize(const Matrix<double> mu_hat,
         }
 }
 
-static void Lambda(const Matrix<double> mu_hat,
+static void Lambda(const Matrix<double>& mu_hat,
+                   std::vector<std::poisson_distribution<int>>& mu_hat_dist,
                    AstroOperator<double>& astro,
                    Parameters<double>& options)
 {
@@ -207,7 +207,7 @@ static void Lambda(const Matrix<double> mu_hat,
         if((options.MC_max >= 100 && MC_id % (options.MC_max/100) == 0) || options.MC_max < 100)
             std::cout << "\r" + std::to_string(1+std::lround(MC_id*100.0/(double)options.MC_max)) + "/100" << std::flush;
 
-        Matrix<double> rnd_result = astro.WtAtBt(MCCompute(mu_hat, generator)).Abs();
+        Matrix<double> rnd_result = astro.WtAtBt(MCCompute(mu_hat, mu_hat_dist, generator)).Abs();
 
         // compute max value for each MC simulation in wavelet and spline results
         WS_max_values[MC_id] = *std::max_element(&rnd_result[0], &rnd_result[options.pic_size*2]);
@@ -248,12 +248,16 @@ static void StandardizeAndRegularize(const Matrix<double>& background,
     initial_guess[0] = 1.0;
     Matrix<double> u = astro.BAW(initial_guess, false, true, true, false);
     Matrix<double> mu_hat = background + u*options.beta0;
+    std::vector<std::poisson_distribution<int>> mu_hat_dist(mu_hat.Length());
+    #pragma omp parallel for simd
+    for(size_t i = 0; i < mu_hat.Length(); ++i)
+        mu_hat_dist[i] = std::poisson_distribution<int>(mu_hat[i]);
 
     astro.Transpose();
 
-    Standardize(mu_hat, background, astro, options);
+    Standardize(mu_hat, mu_hat_dist, background, astro, options);
 
-    Lambda(mu_hat, astro, options);
+    Lambda(mu_hat, mu_hat_dist, astro, options);
 
     astro.Transpose();
     astro.Standardize(options.standardize);
@@ -398,7 +402,7 @@ static Matrix<double> SolveWS(const Matrix<double>& picture,
         total_time += elapsed_time_NZ.count();
     }
 
-    std::cout << "Total time: "   << total_time << " seconds" << std::endl << std::endl;
+    std::cout << std::endl << "Total time: "   << total_time << " seconds" << std::endl << std::endl;
 
     return solution/options.standardize;
 }
@@ -410,8 +414,8 @@ Matrix<double> Solve(std::string picture_path,
                      Parameters<double>& options )
 {
     options.model_size = (options.pic_size + 2) * options.pic_size;
-    options.MC_quantile_PF = (size_t) (options.MC_max * (1.0 - 1.0/(std::sqrt(PI*std::log(options.pic_size)))) - 1.0);
-    options.MC_quantile_PS = (size_t) (options.MC_max * (1.0 - 1.0/(options.pic_size*options.pic_size)) - 1.0);
+    options.MC_quantile_PF = (size_t) (options.MC_max * (1.0 - 1.0/(std::sqrt(PI*std::log(options.pic_size)))));
+    options.MC_quantile_PS = (size_t) (options.MC_max * (1.0 - 1.0/(options.pic_size*options.pic_size)));
 
     // result matrix containing a solution on each row
     Matrix<double> result(options.bootstrap_max, options.model_size);
