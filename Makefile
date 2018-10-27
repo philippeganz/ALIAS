@@ -1,7 +1,7 @@
 CC := g++
 CFLAGS := -std=c++17 -O3 -fopenmp -pedantic -Wall -m64 -march=native -mno-sse5
 
-PROJECTNAME := AstroQUT
+PROJECTNAME := ALIAS
 
 SOURCEDIR := src
 SOURCES := $(shell find $(SOURCEDIR) -name '*.cpp')
