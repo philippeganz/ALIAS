@@ -70,7 +70,7 @@ public:
                 AbelTransform<T>(wavelet_amount, pic_size*pic_size, radius).Transpose() :
                 AbelTransform<T>(wavelet_amount, pic_size*pic_size, radius))
         , bluring_(Blur<T>(params.blur_thresh, params.blur_R0, params.blur_alpha))
-        , sensitivity_(sensitivity.Transpose())
+        , sensitivity_(sensitivity)
         , standardize_(standardize)
         , spline_(transposed ?
                   Spline<T>(pic_size).Transpose() :
@@ -105,7 +105,7 @@ public:
         , pic_size_(pic_size)
         , abel_( transposed ? abel : abel.Clone()->Transpose() )
         , bluring_(blur)
-        , sensitivity_(sensitivity.Transpose())
+        , sensitivity_(sensitivity)
         , standardize_(standardize)
         , spline_( transposed ? spline : spline.Clone()->Transpose() )
         , wavelet_( transposed ? wavelet : wavelet.Clone()->Transpose() )
