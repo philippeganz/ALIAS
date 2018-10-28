@@ -34,7 +34,7 @@ struct Parameters
         , bootstrap_max(1)
         , wavelet{3,8}
         , center_offset_max{0}
-        , resample_windows_size(1)
+        , resample_windows_size(4)
         , MC_max(100)
         , MC_quantile_PF(80)
         , MC_quantile_PS(99)
