@@ -115,7 +115,7 @@ static void BetaZero(const Matrix<double>& picture,
     double null_model_sum = null_model.Sum();
 
     options.beta0 = non_zero_values_amount*non_zero_values_median/null_model_sum;
-    std::cout << "beta0 = " << std::scientific << options.beta0 << std::endl;
+    std::cout << "beta0 = " << std::scientific << options.beta0 << std::endl << std::endl;
 }
 
 static void Standardize(const Matrix<double>& mu_hat,
@@ -353,12 +353,13 @@ static Matrix<double> SolveWS(const Matrix<double>& picture,
     Matrix<double> solution;
     bool first = true;
     double prev_beta0 = std::numeric_limits<double>::infinity();
+    double refine_max = 5;
     double total_time = 0;
 
     std::cout << "Computing wavelet and spline estimates." << std::endl;
-    while( std::abs(options.beta0-prev_beta0)/options.beta0 > 0.1 )
+    while( std::abs(options.beta0-prev_beta0)/options.beta0 > 0.1 || refine_max-- > 0 )
     {
-        std::cout << "beta0 ratio = " << std::abs(options.beta0-prev_beta0)/options.beta0 << ". Continuing..." << std::endl;
+        std::cout << "beta0 ratio = " << std::abs(options.beta0-prev_beta0)/options.beta0 << ". Continuing..." << std::endl << std::endl;
         prev_beta0 = options.beta0;
 
         start = std::chrono::high_resolution_clock::now();
@@ -413,6 +414,16 @@ Matrix<double> Solve(std::string picture_path,
                      std::string solution_path,
                      Parameters<double>& options )
 {
+    std::cout << std::string(80, '=') << std::endl;
+    std::cout << "                     Astrophysics Lasso Inverse Abel Solver                     " << std::endl << std::endl;
+    std::cout << "Picture:     " << picture_path << std::endl;
+    std::cout << "Sensitivity: " << sensitivity_path << std::endl;
+    std::cout << "Background:  " << background_path << std::endl;
+    std::cout << "Solution:    " << solution_path << std::endl;
+    std::cout << std::string(80, '=') << std::endl << std::endl;
+
+    std::cout << "Running solver with " << omp_get_max_threads() << " threads for parallel computing." << std::endl << std::endl;
+
     options.model_size = (options.pic_size + 2) * options.pic_size;
     options.MC_quantile_PF = (size_t) (options.MC_max * (1.0 - 1.0/(std::sqrt(PI*std::log(options.pic_size)))));
     options.MC_quantile_PS = (size_t) (options.MC_max * (1.0 - 1.0/(options.pic_size*options.pic_size)));
@@ -435,9 +446,9 @@ Matrix<double> Solve(std::string picture_path,
     {
         if(bootstrap_current == 0)
         {
-            std::cout << std::string(80, '=') << std::endl;
+            std::cout << std::string(80, '-') << std::endl;
             std::cout << "Computing solution without bootstrapping." << std::endl;
-            std::cout << std::string(80, '=') << std::endl << std::endl;
+            std::cout << std::string(80, '-') << std::endl << std::endl;
         }
         else
         {
@@ -488,12 +499,12 @@ Matrix<double> Solve(std::string picture_path,
             }
 
             // solve with bootstrap
-            std::cout << std::string(80, '=') << std::endl;
+            std::cout << std::string(80, '-') << std::endl;
             std::cout << "Computing with bootstrapping:" << std::endl;
             std::cout << "Wavelets: " << options.wavelet[0] << ", " << options.wavelet[1] << std::endl;
             std::cout << "Center: " << offset_vert << ", " << offset_horiz << std::endl;
             std::cout << "Resample windows size: " << options.resample_windows_size << std::endl << std::endl;
-            std::cout << std::string(80, '=') << std::endl << std::endl;
+            std::cout << std::string(80, '-') << std::endl << std::endl;
         }
 
         Matrix<double> solution = SolveWS(picture, sensitivity, background, options);
