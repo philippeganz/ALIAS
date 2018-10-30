@@ -357,7 +357,7 @@ static Matrix<double> SolveWS(const Matrix<double>& picture,
     double total_time = 0;
 
     std::cout << "Computing wavelet and spline estimates." << std::endl;
-    while( std::abs(options.beta0-prev_beta0)/options.beta0 > 0.1 && refine_max-- > 0 )
+    while( refine_max-- > 0 && std::abs(options.beta0-prev_beta0)/options.beta0 > 0.1 )
     {
         std::cout << "beta0 ratio = " << std::abs(options.beta0-prev_beta0)/options.beta0 << ". ";
         std::cout << "refines remaining: " << refine_max << ". ";
