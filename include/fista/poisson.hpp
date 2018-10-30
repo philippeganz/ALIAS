@@ -204,7 +204,7 @@ Matrix<T> Solve(const Operator<T>& A,
     else
         std::cout << "FISTA: did not converge after " << k << " iterations" << std::endl;
 
-    std::cout << "FISTA: Relative error: " << std::abs(tol) << std::endl;
+    std::cout << "FISTA: Relative error: " << std::abs(tol) << std::endl << std::endl;
 
     x_next_woi.Data(nullptr); // release pointer
 

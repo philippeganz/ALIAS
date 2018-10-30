@@ -353,13 +353,15 @@ static Matrix<double> SolveWS(const Matrix<double>& picture,
     Matrix<double> solution;
     bool first = true;
     double prev_beta0 = std::numeric_limits<double>::infinity();
-    double refine_max = 5;
+    size_t refine_max = 5;
     double total_time = 0;
 
     std::cout << "Computing wavelet and spline estimates." << std::endl;
     while( std::abs(options.beta0-prev_beta0)/options.beta0 > 0.1 && refine_max-- > 0 )
     {
-        std::cout << "beta0 ratio = " << std::abs(options.beta0-prev_beta0)/options.beta0 << ". Continuing..." << std::endl << std::endl;
+        std::cout << "beta0 ratio = " << std::abs(options.beta0-prev_beta0)/options.beta0 << ". ";
+        std::cout << "refines remaining: " << refine_max << ". ";
+        std::cout << "Continuing..." << std::endl << std::endl;
         prev_beta0 = options.beta0;
 
         start = std::chrono::high_resolution_clock::now();
@@ -392,16 +394,21 @@ static Matrix<double> SolveWS(const Matrix<double>& picture,
         solution = EstimateNonZero(picture, background, solution_static, astro, options);
         end = std::chrono::high_resolution_clock::now();
         std::chrono::duration<double> elapsed_time_NZ = end-start;
-        options.beta0 = solution[0]/options.standardize[0];
-        std::cout << "New beta0 = " << options.beta0 << std::endl;
+
         std::cout << std::defaultfloat << std::endl;
         std::cout << "Time for MC simulations: " << elapsed_time_MC.count() << " seconds" << std::endl;
         total_time += elapsed_time_MC.count();
         std::cout << "Time for FISTA solver: " << elapsed_time_FISTA.count() << " seconds" << std::endl;
         total_time += elapsed_time_FISTA.count();
-        std::cout << "Time for GLM fit on non zero elements: " << elapsed_time_NZ.count() << " seconds" << std::endl;
+        std::cout << "Time for GLM fit on non zero elements: " << elapsed_time_NZ.count() << " seconds" << std::endl << std::endl;
         total_time += elapsed_time_NZ.count();
+
+        options.beta0 = solution[0]/options.standardize[0];
+        std::cout << "New beta0 = " << options.beta0 << std::endl;
     }
+    std::cout << "beta0 ratio = " << std::abs(options.beta0-prev_beta0)/options.beta0 << ". ";
+    std::cout << "refines remaining: " << refine_max << ". ";
+    std::cout << "Stopping." << std::endl << std::endl;
 
     std::cout << std::endl << "Total time: "   << total_time << " seconds" << std::endl << std::endl;
 
