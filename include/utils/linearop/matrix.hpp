@@ -4,7 +4,7 @@
 /// \details Provide matrix container with multiple matrix operations used in the whole project.
 /// \author Philippe Ganz <philippe.ganz@gmail.com> 2017-2018
 /// \version 0.6.0
-/// \date 2018-10-27
+/// \date 2019-01-19
 /// \copyright GPL-3.0
 ///
 
@@ -78,7 +78,7 @@ template <class T>
 std::ostream& operator<<(std::ostream& os, const Matrix<T>& mat);
 #endif // VERBOSE
 
-template <class T>
+template <class T = double>
 class Matrix : public LinearOp
 {
 public:
@@ -510,7 +510,9 @@ public:
     /** Cast operator
      *  \return A casted copy of this
      */
-    template <class U, typename std::enable_if_t<std::is_arithmetic<U>::value>* = nullptr>
+    template <class U, class S = T, typename std::enable_if_t<(std::is_arithmetic<S>::value && std::is_arithmetic<U>::value) ||
+                                                              (std::is_arithmetic<S>::value && is_complex<U>{}) ||
+                                                              (is_complex<S>{} && is_complex<U>{})                              >* = nullptr>
     operator Matrix<U>() const
     {
         Matrix<U> result(this->height_, this->width_);
@@ -518,6 +520,17 @@ public:
         #pragma omp parallel for simd
         for(size_t i = 0; i < this->length_; ++i)
             result[i] = (U) data_[i];
+
+        return result;
+    }
+    template <class U, class S = T, typename std::enable_if_t<is_complex<S>{} && std::is_arithmetic<U>::value>* = nullptr>
+    operator Matrix<U>() const
+    {
+        Matrix<U> result(this->height_, this->width_);
+
+        #pragma omp parallel for simd
+        for(size_t i = 0; i < this->length_; ++i)
+            result[i] = (U) data_[i].real();
 
         return result;
     }
