@@ -153,52 +153,68 @@ public:
     /** 2D Fast Fourier Transform
      *  \brief Computes 2 FFT in a row
      *  \param input Matrix to be transformed
-     *  \param result Resulting matrix, sides must be a power of 2
-     *  \author Philippe Ganz <philippe.ganz@gmail.com> 2018
+     *  \author Philippe Ganz <philippe.ganz@gmail.com> 2018-2019
      */
-    Matrix<std::complex<T>> FFT2D( const Matrix<T>& input ) const
+    Matrix<std::complex<T>> FFT2D( const Matrix<std::complex<T>>& input ) const
     {
-#ifdef DO_ARGCHECKS
-        height = (size_t) std::pow(2,(std::ceil(std::log2(input.Height()))));
-        width = (size_t) std::pow(2,(std::ceil(std::log2(input.Width()))));
-        if ( height != input.Height() || width != input.Width() )
-        {
-            std::cerr << "Picture must be of size a power of 2." << std::endl;
-            throw;
-        }
-#endif // DO_ARGCHECKS
-
-        // transform input into complex format
-        Matrix<std::complex<T>> result(input);
+        Matrix<std::complex<T>> result(0, this->Height(), this->Width());
 
         // compute a 1D FFT for every row of the input
-        for( size_t row = 0; row < result.Height(); ++row )
+        for( size_t row = 0; row < input.Height(); ++row )
         {
-            Matrix<std::complex<T>> result_row(&result[row*result.Width()], result.Width(), 1);
-            result_row = FFT(result_row);
+            Matrix<std::complex<T>> input_row(input.Data() + row*input.Width(), input.Width(), 1);
+            Matrix<std::complex<T>> result_row(result.Data() + row*result.Width(), result.Width(), 1);
+            Matrix<std::complex<T>> result_row_freq_domain = FFT(input_row);
+            result_row = result_row_freq_domain;
+            input_row.Data(nullptr);
             result_row.Data(nullptr);
         }
 
         // transpose the result in-place
-        std::move(result.Transpose());
+        std::move(result).Transpose();
 
         // compute a 1D FFT for every row of the transposed intermediate result, i.e. the columns of the previous FFT
         for( size_t row = 0; row < result.Height(); ++row )
         {
-            Matrix<std::complex<T>> result_row(&result[row*result.Width()], result.Width(), 1);
-            result_row = FFT(result_row);
+            Matrix<std::complex<T>> result_row(result.Data() + row*result.Width(), result.Width(), 1);
+            Matrix<std::complex<T>> result_row_freq_domain = FFT(result_row);
+            result_row = result_row_freq_domain;
             result_row.Data(nullptr);
         }
 
-        // transpose again for the final result
-        std::move(result.Transpose());
-
+        std::move(result).Transpose();
         return result;
     }
 
-    Matrix<T> IFFT2D( const Matrix<std::complex<T>>& input ) const
+    Matrix<std::complex<T>> IFFT2D( const Matrix<std::complex<T>>& input ) const
     {
+        Matrix<std::complex<T>> result(this->Height(), this->Width());
 
+        // compute a 1D IFFT for every row of the input
+        for( size_t row = 0; row < input.Height(); ++row )
+        {
+            Matrix<std::complex<T>> input_row(input.Data() + row*input.Width(), input.Width(), 1);
+            Matrix<std::complex<T>> result_row(result.Data() + row*result.Width(), result.Width(), 1);
+            Matrix<std::complex<T>> result_row_time_domain = IFFT(input_row);
+            result_row = result_row_time_domain;
+            input_row.Data(nullptr);
+            result_row.Data(nullptr);
+        }
+
+        // transpose the result in-place
+        std::move(result).Transpose();
+
+        // compute a 1D IFFT for every row of the transposed intermediate result, i.e. the columns of the previous IFFT
+        for( size_t row = 0; row < result.Height(); ++row )
+        {
+            Matrix<std::complex<T>> result_row(result.Data() + row*result.Width(), result.Width(), 1);
+            Matrix<std::complex<T>> result_row_time_domain = IFFT(result_row);
+            result_row = result_row_time_domain;
+            result_row.Data(nullptr);
+        }
+
+        std::move(result).Transpose();
+        return result;
     }
 };
 
