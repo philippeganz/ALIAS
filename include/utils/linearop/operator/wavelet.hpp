@@ -4,7 +4,7 @@
 /// \details Provide the Wavelet transform operator
 /// \author Philippe Ganz <philippe.ganz@gmail.com> 2017-2018
 /// \version 0.6.0
-/// \date 2018-09-30
+/// \date 2019-01-19
 /// \copyright GPL-3.0
 ///
 
@@ -19,7 +19,7 @@ namespace astroqut
 enum WaveletType{haar, beylkin, coiflet, daubechies, symmlet, vaidyanathan, battle};
 enum FilterType{low, high};
 
-template<class T>
+template<class T = double>
 class Wavelet : public Operator<T>
 {
 private:

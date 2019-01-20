@@ -2,8 +2,8 @@
 /// \file include/utils/linearop/operator/matmult/blur.hpp
 /// \brief Blurring operator class header
 /// \author Philippe Ganz <philippe.ganz@gmail.com> 2017-2018
-/// \version 0.5.0
-/// \date 2018-04-22
+/// \version 0.6.0
+/// \date 2019-01-19
 /// \copyright GPL-3.0
 ///
 
@@ -15,7 +15,7 @@
 namespace astroqut
 {
 
-template<class T>
+template<class T = double>
 class Blur : public Convolution<T>
 {
 private:
@@ -68,12 +68,14 @@ public:
             {
                 T j_squared = j*j;
                 result[(i+mask_size)*(2*mask_size+1) + (j+mask_size)] = std::pow(1 + (i_squared + j_squared)/radius_squared, -alpha);
-    #ifdef DEBUG
+#ifdef DEBUG
                 std::cout << result.Data()[(i+mask_size)*(2*mask_size+1) + (j+mask_size)] << std::endl;
-    #endif // DEBUG
+#endif // DEBUG
             }
         }
-        return result/result.Sum();
+        result /= result.Sum();
+
+        return result;
     }
 };
 

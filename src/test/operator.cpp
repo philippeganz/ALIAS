@@ -3,7 +3,7 @@
 /// \brief Test suite to validate the operator classes
 /// \author Philippe Ganz <philippe.ganz@gmail.com>
 /// \version 0.6.0
-/// \date 2018-09-30
+/// \date 2019-01-19
 /// \copyright GPL-3.0
 ///
 

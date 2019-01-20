@@ -2,8 +2,8 @@
 /// \file include/utils/linearop/operator/astrooperator.hpp
 /// \brief Combination of all operators to create the main operator
 /// \author Philippe Ganz <philippe.ganz@gmail.com> 2017-2018
-/// \version 0.5.0
-/// \date 2018-10-27
+/// \version 0.6.0
+/// \date 2019-01-19
 /// \copyright GPL-3.0
 ///
 
@@ -19,7 +19,7 @@
 namespace astroqut
 {
 
-template<class T>
+template<class T = double>
 class AstroOperator : public Operator<T>
 {
 private:

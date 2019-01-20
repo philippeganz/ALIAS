@@ -24,7 +24,7 @@ namespace astroqut{
 namespace fista{
 namespace poisson{
 
-template<class T>
+template<class T = double>
 struct Parameters
 {
     /** Default constructor

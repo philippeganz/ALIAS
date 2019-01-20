@@ -2,8 +2,8 @@
 /// \file include/utils/linearop/operator/matmult/spline.hpp
 /// \brief Spline operator class header
 /// \author Philippe Ganz <philippe.ganz@gmail.com> 2017-2018
-/// \version 0.5.0
-/// \date 2018-06-17
+/// \version 0.6.0
+/// \date 2019-01-19
 /// \copyright GPL-3.0
 ///
 
@@ -15,7 +15,7 @@
 namespace astroqut
 {
 
-template<class T>
+template<class T = double>
 class Spline : public MatMult<T>
 {
 private:

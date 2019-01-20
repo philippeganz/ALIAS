@@ -2,8 +2,8 @@
 /// \file src/test/fista.cpp
 /// \brief Implementation of the FISTA class test suite.
 /// \author Philippe Ganz <philippe.ganz@gmail.com>
-/// \version 0.5.0
-/// \date 2018-07-01
+/// \version 0.6.0
+/// \date 2019-01-19
 /// \copyright GPL-3.0
 ///
 

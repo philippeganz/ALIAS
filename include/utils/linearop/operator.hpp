@@ -3,8 +3,8 @@
 /// \brief Operator class header
 /// \details Provide operator container with operator-vector operations
 /// \author Philippe Ganz <philippe.ganz@gmail.com> 2017-2018
-/// \version 0.3.0
-/// \date 2018-06-02
+/// \version 0.6.0
+/// \date 2019-01-19
 /// \copyright GPL-3.0
 ///
 
@@ -19,7 +19,7 @@
 namespace astroqut
 {
 
-template<class T>
+template<class T = double>
 class Operator : public LinearOp
 {
 protected:

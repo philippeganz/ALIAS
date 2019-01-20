@@ -3,8 +3,8 @@
 /// \brief Convolution class header
 /// \details Provide a convolution operator
 /// \author Philippe Ganz <philippe.ganz@gmail.com> 2017-2018
-/// \version 0.5.0
-/// \date 2018-04-22
+/// \version 0.6.0
+/// \date 2019-01-19
 /// \copyright GPL-3.0
 ///
 
@@ -16,7 +16,7 @@
 namespace astroqut
 {
 
-template <class T>
+template <class T = double>
 class Convolution : public Operator<T>
 {
 public:
@@ -33,8 +33,10 @@ public:
     Convolution(Matrix<T> data)
         : Operator<T>(data, data.Height(), data.Width(), false)
     {
+#ifdef DO_ARGCHECKS
         if( this->height_ % 2 != 1 || this->width_ % 2 != 1 )
             throw std::invalid_argument("The filter size for the convolution needs to be odd in both dimensions.");
+#endif // DO_ARGCHECKS
     }
 
     /** Clone function
@@ -117,8 +119,6 @@ public:
         return result;
     }
 };
-
-
 
 } // namespace astroqut
 
