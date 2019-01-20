@@ -263,7 +263,7 @@ public:
      *  \param height Height of the data
      *  \param width Width of the data
      */
-    template <class U, typename std::enable_if_t<std::is_arithmetic<U>::value || std::is_same<T, U>{}>* = nullptr>
+    template <class U, typename std::enable_if_t<std::is_arithmetic<U>::value || is_complex<U>{}>* = nullptr>
     Matrix(U number, size_t height, size_t width)
         : Matrix(height, width)
     {
@@ -1744,7 +1744,7 @@ Matrix<T> operator/(const Matrix<T>& mat, U number)
  *  \return A reference to mat
  */
 template <class T, class U, typename std::enable_if_t<std::is_arithmetic<U>::value || is_complex<U>{}>* = nullptr>
-Matrix<T> operator/(const Matrix<T>&& first, U number)
+Matrix<T> operator/(Matrix<T>&& first, U number)
 {
     return std::move(first /= number);
 }

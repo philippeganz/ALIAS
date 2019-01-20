@@ -23,13 +23,13 @@ void Chandra()
     options.resample_windows_size = 4;
     options.pic_size = 512;
     options.MC_max = 1000;
+    options.blurring_filter = "data/512_chandra/blurring.data";
     options.fista_params.iter_max = 1000;
     options.fista_params.log_period = 1;
 
     Matrix<double> solution = WS::Solve("data/512_chandra/F.data",
                                         "data/512_chandra/E.data",
                                         "data/512_chandra/O.data",
-                                        "data/512_chandra/blurring.data",
                                         "data/512_chandra/AstroQUT/" + std::to_string(options.MC_max) + "/solution.data",
                                         options);
 
@@ -50,6 +50,7 @@ void Sym256()
     options.resample_windows_size = 4;
     options.pic_size = 256;
     options.MC_max = 5000;
+    options.blurring_filter = "data/512_chandra/blurring.data";
     options.fista_params.iter_max = 1000;
 
     for(size_t i = 1; i <=24; ++i)
@@ -57,7 +58,6 @@ void Sym256()
         WS::Solve("data/256/M256blockssymPS1B1W1S1Erealnk24forcepos2/result" + std::to_string(i) + ".data",
                   "data/256/E.data",
                   "data/256/O.data",
-                  "data/256/blurring.data",
                   "data/256/M256blockssymPS1B1W1S1Erealnk24forcepos2/solution" + std::to_string(i) + ".data",
                   options);
     }
@@ -67,7 +67,6 @@ void Sym256()
         WS::Solve("data/256/M256f4PS1B1W1S1Erealnk24forcepos2/result" + std::to_string(i) + ".data",
                   "data/256/E.data",
                   "data/256/O.data",
-                  "data/256/blurring.data",
                   "data/256/M256f4PS1B1W1S1Erealnk24forcepos2/solution" + std::to_string(i) + ".data",
                   options);
     }
@@ -77,7 +76,6 @@ void Sym256()
         WS::Solve("data/256/M256f4symPS1B1W1S1Erealnk24forcepos2/result" + std::to_string(i) + ".data",
                   "data/256/E.data",
                   "data/256/O.data",
-                  "data/256/blurring.data",
                   "data/256/M256f4symPS1B1W1S1Erealnk24forcepos2/solution" + std::to_string(i) + ".data",
                   options);
     }
@@ -87,7 +85,6 @@ void Sym256()
         WS::Solve("data/256/M256truefPS1B1W1S1Erealnk24forcepos2/result" + std::to_string(i) + ".data",
                   "data/256/E.data",
                   "data/256/O.data",
-                  "data/256/blurring.data",
                   "data/256/M256truefPS1B1W1S1Erealnk24forcepos2/solution" + std::to_string(i) + ".data",
                   options);
     }

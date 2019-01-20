@@ -13,7 +13,7 @@
 #include "utils/linearop/operator/abeltransform.hpp"
 #include "utils/linearop/operator/astrooperator.hpp"
 #include "utils/linearop/operator/convolution.hpp"
-#include "utils/linearop/operator/convolution/blur.hpp"
+#include "utils/linearop/operator/blurring.hpp"
 #include "utils/linearop/operator/matmult/spline.hpp"
 #include "utils/linearop/operator/wavelet.hpp"
 

@@ -11,7 +11,7 @@
 #define ASTROQUT_UTILS_OPERATOR_ASTROOPERATOR_HPP
 
 #include "utils/linearop/operator/abeltransform.hpp"
-#include "utils/linearop/operator/convolution/blur.hpp"
+#include "utils/linearop/operator/blurring.hpp"
 #include "utils/linearop/operator/matmult/spline.hpp"
 #include "utils/linearop/operator/wavelet.hpp"
 #include "WS/astroQUT.hpp"
@@ -25,7 +25,7 @@ class AstroOperator : public Operator<T>
 private:
     size_t pic_size_;
     AbelTransform<T> abel_;
-    Blur<T> bluring_;
+    Blurring<T> blurring_;
     Matrix<T> sensitivity_;
     Matrix<T> standardize_;
     Spline<T> spline_;
@@ -37,7 +37,7 @@ public:
     AstroOperator()
         : pic_size_()
         , abel_()
-        , bluring_()
+        , blurring_()
         , sensitivity_()
         , standardize_()
         , spline_()
@@ -69,7 +69,7 @@ public:
         , abel_(transposed ?
                 AbelTransform<T>(wavelet_amount, pic_size*pic_size, radius).Transpose() :
                 AbelTransform<T>(wavelet_amount, pic_size*pic_size, radius))
-        , bluring_(Blur<T>(params.blur_thresh, params.blur_R0, params.blur_alpha))
+        , blurring_(Blurring<T>(params.blurring_filter, pic_size))
         , sensitivity_(sensitivity)
         , standardize_(standardize)
         , spline_(transposed ?
@@ -92,7 +92,7 @@ public:
      */
     AstroOperator(size_t pic_size,
                   const AbelTransform<T> abel,
-                  const Blur<T> blur,
+                  const Blurring<T> blurring,
                   const Matrix<T> sensitivity,
                   const Matrix<T> standardize,
                   const Spline<T> spline,
@@ -104,7 +104,7 @@ public:
                       transposed)
         , pic_size_(pic_size)
         , abel_( transposed ? abel : abel.Clone()->Transpose() )
-        , bluring_(blur)
+        , blurring_(blurring)
         , sensitivity_(sensitivity)
         , standardize_(standardize)
         , spline_( transposed ? spline : spline.Clone()->Transpose() )
@@ -142,13 +142,13 @@ public:
         abel_ = abel;
     }
 
-    Blur<T> Bluring() const
+    Blurring<T> Blur() const
     {
-        return bluring_;
+        return blurring_;
     }
-    void Bluring(const Blur<T> bluring)
+    void Blur(const Blurring<T> blurring)
     {
-        bluring_ = bluring;
+        blurring_ = blurring;
     }
 
     Matrix<T> Sensitivity() const
@@ -267,7 +267,7 @@ public:
             result += source_ps;
 
         // B(AWx + ps)
-        result = bluring_ * result;
+        result = blurring_ * result;
         result.Height(pic_size_*pic_size_);
         result.Width(1);
 
@@ -317,7 +317,7 @@ public:
         BEtx.Width(pic_size_);
 
         // B * Etx
-        BEtx = bluring_ * BEtx;
+        BEtx = blurring_ * BEtx;
         BEtx.Height(pic_size_*pic_size_);
         BEtx.Width(1);
 

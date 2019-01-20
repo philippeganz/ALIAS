@@ -28,9 +28,7 @@ struct Parameters
     Parameters()
         : pic_size(0)
         , model_size(0)
-        , blur_thresh(0.01)
-        , blur_alpha(1.449)
-        , blur_R0(2.2364)
+        , blurring_filter(std::string("data/blurring.data"))
         , bootstrap_max(1)
         , wavelet{3,8}
         , center_offset_max{0}
@@ -59,9 +57,7 @@ struct Parameters
 
     size_t pic_size; //!< Member variable "pic_size" side of picture in pixel
     size_t model_size; //!< Member variable "model_size" wavelet + spline + point sources
-    T blur_thresh; //!< Member variable "blur_thresh" threshold for bluring mask size
-    T blur_alpha; //!< Member variable "blur_alpha" alpha in psf
-    T blur_R0; //!< Member variable "blur_R0" r0 in psf
+    std::string blurring_filter; //!< Member variable "blurring_filter" path to the blurring filter data file
     size_t bootstrap_max; //!< Member variable "bootstrap_max" total amount of bootstraps computations, 0 for no bootstrapping
     size_t wavelet[2]; //!< Member variable "wavelet" wavelet type and wavelet parameter
     size_t center_offset_max; //!< Member variable "center_offset" offset in pixel of how much to deviate from center
@@ -78,7 +74,6 @@ struct Parameters
 Matrix<double> Solve(std::string picture_path,
                      std::string sensitivity_path,
                      std::string background_path,
-                     std::string blurring_path,
                      std::string solution_path,
                      Parameters<double>& options );
 

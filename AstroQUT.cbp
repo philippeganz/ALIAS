@@ -120,8 +120,8 @@
 		<Unit filename="include/utils/linearop/operator.hpp" />
 		<Unit filename="include/utils/linearop/operator/abeltransform.hpp" />
 		<Unit filename="include/utils/linearop/operator/astrooperator.hpp" />
+		<Unit filename="include/utils/linearop/operator/blurring.hpp" />
 		<Unit filename="include/utils/linearop/operator/convolution.hpp" />
-		<Unit filename="include/utils/linearop/operator/convolution/blur.hpp" />
 		<Unit filename="include/utils/linearop/operator/fourier.hpp" />
 		<Unit filename="include/utils/linearop/operator/matmult.hpp" />
 		<Unit filename="include/utils/linearop/operator/matmult/spline.hpp" />

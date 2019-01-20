@@ -418,7 +418,6 @@ static Matrix<double> SolveWS(const Matrix<double>& picture,
 Matrix<double> Solve(std::string picture_path,
                      std::string sensitivity_path,
                      std::string background_path,
-                     std::string blurring_path,
                      std::string solution_path,
                      Parameters<double>& options )
 {
@@ -427,6 +426,7 @@ Matrix<double> Solve(std::string picture_path,
     std::cout << "Picture:     " << picture_path << std::endl;
     std::cout << "Sensitivity: " << sensitivity_path << std::endl;
     std::cout << "Background:  " << background_path << std::endl;
+    std::cout << "Blurring:    " << options.blurring_filter << std::endl;
     std::cout << "Solution:    " << solution_path << std::endl;
     std::cout << std::string(80, '=') << std::endl << std::endl;
 
