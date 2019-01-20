@@ -31,15 +31,9 @@ public:
      */
     Fourier()
         : Operator<T>(0, 0)
-    {}
-
-    /** Full member constructor
-     *  \param data Array containing data used by the operator
-     *  \param height Height of the operator
-     *  \param width Width of the operator
-     */
-    Fourier(const Matrix<T>& data, size_t height, size_t width) noexcept
-        : Operator<T>(data, height, width, false)
+        , depth_max(0)
+        , bit_reverse_table()
+        , roots_of_unity()
     {}
 
     /** Build constructor
@@ -76,7 +70,6 @@ public:
             for(size_t col = 0; col < depth_length/2; ++col)
             {
                 roots_of_unity[std::pow(2,depth-1) + col] = std::exp( std::complex(0.0, - 2.0 * PI * col / depth_length ) );
-                std::cout << roots_of_unity[std::pow(2,depth-1) + col] << std::endl;
             }
         }
     }
@@ -126,16 +119,17 @@ public:
     Matrix<std::complex<T>> FFT( const Matrix<std::complex<T>>& signal ) const
     {
         // bit reversal step
-        Matrix<std::complex<T>> flipped_signal(signal.Length(), 1);
-        for( size_t i = 0; i < signal.Length(); ++i )
-            flipped_signal[i] = signal[bit_reverse_table[i]];
+        Matrix<std::complex<T>> flipped_signal(0, this->Width(), 1);
+        for( size_t i = 0; i < this->Width(); ++i )
+            if( bit_reverse_table[i] < signal.Length() )
+                flipped_signal[i] = signal[bit_reverse_table[i]];
 
         // iterative radix-2 FFT
         for( size_t depth = 1; depth <= depth_max; ++depth )
         {
             size_t depth_length = std::pow(2,depth);
             for( size_t row = 0; row < this->Width(); row += depth_length )
-                #pragma omp for simd
+                #pragma omp parallel for simd
                 for( size_t col = 0; col < depth_length/2; ++col )
                 {
                     std::complex<T> e_k = flipped_signal[ row + col ];
@@ -149,9 +143,8 @@ public:
 
     Matrix<std::complex<T>> IFFT( const Matrix<std::complex<T>>& signal ) const
     {
-        Matrix<std::complex<T>> signal_fft = FFT(signal);
-        signal_fft /= signal.Length();
-        #pragma omp for simd
+        Matrix<std::complex<T>> signal_fft = FFT(signal) / signal.Length();
+        #pragma omp parallel for simd
         for( size_t i = 1; i < signal.Length()/2; ++i )
             std::swap(signal_fft[i], signal_fft[signal.Length() - i]);
         return signal_fft;
@@ -163,7 +156,7 @@ public:
      *  \param result Resulting matrix, sides must be a power of 2
      *  \author Philippe Ganz <philippe.ganz@gmail.com> 2018
      */
-    Matrix<std::complex<T>> FFT2D(const Matrix<T>& input)
+    Matrix<std::complex<T>> FFT2D( const Matrix<T>& input ) const
     {
 #ifdef DO_ARGCHECKS
         height = (size_t) std::pow(2,(std::ceil(std::log2(input.Height()))));
@@ -175,22 +168,35 @@ public:
         }
 #endif // DO_ARGCHECKS
 
+        // transform input into complex format
         Matrix<std::complex<T>> result(input);
 
         // compute a 1D FFT for every row of the input
-        FFT();
+        for( size_t row = 0; row < result.Height(); ++row )
+        {
+            Matrix<std::complex<T>> result_row(&result[row*result.Width()], result.Width(), 1);
+            result_row = FFT(result_row);
+            result_row.Data(nullptr);
+        }
 
         // transpose the result in-place
         std::move(result.Transpose());
 
-        // compute the second 1D FFT by running the auxiliary function directly
-        FFT(result.Data(), result.Length());
+        // compute a 1D FFT for every row of the transposed intermediate result, i.e. the columns of the previous FFT
+        for( size_t row = 0; row < result.Height(); ++row )
+        {
+            Matrix<std::complex<T>> result_row(&result[row*result.Width()], result.Width(), 1);
+            result_row = FFT(result_row);
+            result_row.Data(nullptr);
+        }
 
         // transpose again for the final result
         std::move(result.Transpose());
+
+        return result;
     }
 
-    Matrix<T> IFFT2D(const Matrix<std::complex<T>>& input)
+    Matrix<T> IFFT2D( const Matrix<std::complex<T>>& input ) const
     {
 
     }
