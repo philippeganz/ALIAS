@@ -4,7 +4,7 @@
 /// \author Jairo Diaz <jairo.diaz@unige.ch> 2016-2017
 /// \author Philippe Ganz <philippe.ganz@gmail.com> 2017-2018
 /// \version 0.6.0
-/// \date 2018-10-27
+/// \date 2019-01-19
 /// \copyright GPL-3.0
 ///
 
@@ -418,6 +418,7 @@ static Matrix<double> SolveWS(const Matrix<double>& picture,
 Matrix<double> Solve(std::string picture_path,
                      std::string sensitivity_path,
                      std::string background_path,
+                     std::string blurring_path,
                      std::string solution_path,
                      Parameters<double>& options )
 {

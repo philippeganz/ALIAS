@@ -4,7 +4,7 @@
 /// \author Jairo Diaz <jairo.diaz@unige.ch> MATLAB version 2016-2017
 /// \author Philippe Ganz <philippe.ganz@gmail.com> 2017-2018
 /// \version 0.6.0
-/// \date 2018-10-14
+/// \date 2019-01-19
 /// \copyright GPL-3.0
 ///
 
@@ -19,7 +19,7 @@ namespace astroqut
 namespace WS
 {
 
-template<class T>
+template<class T = double>
 struct Parameters
 {
     /** Default constructor
@@ -78,6 +78,7 @@ struct Parameters
 Matrix<double> Solve(std::string picture_path,
                      std::string sensitivity_path,
                      std::string background_path,
+                     std::string blurring_path,
                      std::string solution_path,
                      Parameters<double>& options );
 

@@ -3,7 +3,7 @@
 /// \brief Test suite to test the WS method.
 /// \author Philippe Ganz <philippe.ganz@gmail.com>
 /// \version 0.6.0
-/// \date 2018-10-14
+/// \date 2019-01-19
 /// \copyright GPL-3.0
 ///
 
@@ -29,6 +29,7 @@ void Chandra()
     Matrix<double> solution = WS::Solve("data/512_chandra/F.data",
                                         "data/512_chandra/E.data",
                                         "data/512_chandra/O.data",
+                                        "data/512_chandra/blurring.data",
                                         "data/512_chandra/AstroQUT/" + std::to_string(options.MC_max) + "/solution.data",
                                         options);
 
@@ -56,6 +57,7 @@ void Sym256()
         WS::Solve("data/256/M256blockssymPS1B1W1S1Erealnk24forcepos2/result" + std::to_string(i) + ".data",
                   "data/256/E.data",
                   "data/256/O.data",
+                  "data/256/blurring.data",
                   "data/256/M256blockssymPS1B1W1S1Erealnk24forcepos2/solution" + std::to_string(i) + ".data",
                   options);
     }
@@ -65,6 +67,7 @@ void Sym256()
         WS::Solve("data/256/M256f4PS1B1W1S1Erealnk24forcepos2/result" + std::to_string(i) + ".data",
                   "data/256/E.data",
                   "data/256/O.data",
+                  "data/256/blurring.data",
                   "data/256/M256f4PS1B1W1S1Erealnk24forcepos2/solution" + std::to_string(i) + ".data",
                   options);
     }
@@ -74,6 +77,7 @@ void Sym256()
         WS::Solve("data/256/M256f4symPS1B1W1S1Erealnk24forcepos2/result" + std::to_string(i) + ".data",
                   "data/256/E.data",
                   "data/256/O.data",
+                  "data/256/blurring.data",
                   "data/256/M256f4symPS1B1W1S1Erealnk24forcepos2/solution" + std::to_string(i) + ".data",
                   options);
     }
@@ -83,6 +87,7 @@ void Sym256()
         WS::Solve("data/256/M256truefPS1B1W1S1Erealnk24forcepos2/result" + std::to_string(i) + ".data",
                   "data/256/E.data",
                   "data/256/O.data",
+                  "data/256/blurring.data",
                   "data/256/M256truefPS1B1W1S1Erealnk24forcepos2/solution" + std::to_string(i) + ".data",
                   options);
     }

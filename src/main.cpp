@@ -4,7 +4,7 @@
 /// \details Handle the user input, calls the preparation tools and the solver.
 /// \author Philippe Ganz <philippe.ganz@gmail.com>
 /// \version 0.6.0
-/// \date 2019-01-11
+/// \date 2019-01-19
 /// \copyright GPL-3.0
 ///
 
@@ -40,7 +40,7 @@ int main( int argc, char **argv )
             {"result",      required_argument, nullptr, 'r'},
             {"size",        required_argument, nullptr, 's'},
             {"bootstrap",   required_argument, nullptr, 'x'},
-            {0, 0, 0, 0}
+            {nullptr,       0,                 nullptr, 0}
         };
         /* getopt_long stores the option index here. */
         int option_index = 0;
