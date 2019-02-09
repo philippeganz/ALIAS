@@ -2,12 +2,12 @@
 <CodeBlocks_project_file>
 	<FileVersion major="1" minor="6" />
 	<Project>
-		<Option title="AstroQUT" />
+		<Option title="ALIAS" />
 		<Option pch_mode="2" />
 		<Option compiler="gcc" />
 		<Build>
 			<Target title="Debug">
-				<Option output="bin/Debug/AstroQUT" prefix_auto="1" extension_auto="1" />
+				<Option output="bin/Debug/ALIAS" prefix_auto="1" extension_auto="1" />
 				<Option object_output="obj/Debug/" />
 				<Option type="1" />
 				<Option compiler="gcc" />
@@ -17,7 +17,7 @@
 				</Compiler>
 			</Target>
 			<Target title="DebugOg">
-				<Option output="bin/DebugOg/AstroQUT" prefix_auto="1" extension_auto="1" />
+				<Option output="bin/DebugOg/ALIAS" prefix_auto="1" extension_auto="1" />
 				<Option object_output="obj/DebugOg/" />
 				<Option type="1" />
 				<Option compiler="gcc" />
@@ -32,7 +32,7 @@
 				</Linker>
 			</Target>
 			<Target title="ReleaseO1">
-				<Option output="bin/ReleaseO1/AstroQUT" prefix_auto="1" extension_auto="1" />
+				<Option output="bin/ReleaseO1/ALIAS" prefix_auto="1" extension_auto="1" />
 				<Option object_output="obj/ReleaseO1/" />
 				<Option type="1" />
 				<Option compiler="gcc" />
@@ -42,7 +42,7 @@
 				</Compiler>
 			</Target>
 			<Target title="ReleaseO2">
-				<Option output="bin/ReleaseO2/AstroQUT" prefix_auto="1" extension_auto="1" />
+				<Option output="bin/ReleaseO2/ALIAS" prefix_auto="1" extension_auto="1" />
 				<Option object_output="obj/ReleaseO2/" />
 				<Option type="1" />
 				<Option compiler="gcc" />
@@ -52,7 +52,7 @@
 				</Compiler>
 			</Target>
 			<Target title="ReleaseO3">
-				<Option output="bin/ReleaseO3/AstroQUT" prefix_auto="1" extension_auto="1" />
+				<Option output="bin/ReleaseO3/ALIAS" prefix_auto="1" extension_auto="1" />
 				<Option object_output="obj/ReleaseO3/" />
 				<Option type="1" />
 				<Option compiler="gcc" />
@@ -62,7 +62,7 @@
 				</Compiler>
 			</Target>
 			<Target title="ReleaseO3Static">
-				<Option output="bin/ReleaseO3Static/AstroQUT" prefix_auto="1" extension_auto="1" />
+				<Option output="bin/ReleaseO3Static/ALIAS" prefix_auto="1" extension_auto="1" />
 				<Option object_output="obj/ReleaseO3Static/" />
 				<Option type="1" />
 				<Option compiler="gcc" />
