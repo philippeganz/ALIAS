@@ -20,7 +20,7 @@
 #include <limits>
 #include <numeric>
 
-namespace astroqut{
+namespace alias{
 namespace fista{
 namespace poisson{
 
@@ -213,7 +213,7 @@ Matrix<T> Solve(const Operator<T>& A,
 
 } // namespace poisson
 } // namespace fista
-} // namespace astroqut
+} // namespace alias
 
 #endif // ASTROQUT_FISTA_POISSON_HPP
 

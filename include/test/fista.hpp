@@ -16,7 +16,7 @@
 #include <iostream>
 #include <random>
 
-namespace astroqut{
+namespace alias{
 namespace test{
 namespace fista{
 
@@ -26,6 +26,6 @@ void Time(size_t length);
 
 } // namespace fista
 } // namespace test
-} // namespace astroqut
+} // namespace alias
 
 #endif // ASTROQUT_TEST_FISTA_HPP

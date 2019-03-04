@@ -3,13 +3,13 @@
 /// \brief Test suite to test the WS method.
 /// \author Philippe Ganz <philippe.ganz@gmail.com>
 /// \version 0.6.0
-/// \date 2019-01-19
+/// \date 2019-03
 /// \copyright GPL-3.0
 ///
 
 #include "test/WS.hpp"
 
-namespace astroqut{
+namespace alias{
 namespace test{
 namespace astro{
 
@@ -93,4 +93,4 @@ void Sym256()
 
 } // namespace astro
 } // namespace test
-} // namespace astroqut
+} // namespace alias

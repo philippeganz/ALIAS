@@ -21,7 +21,7 @@
 #include <iostream>
 #include <random>
 
-namespace astroqut{
+namespace alias{
 namespace test{
 namespace oper{
 
@@ -48,6 +48,6 @@ bool AstroTestTransposed();
 
 } // namespace oper
 } // namespace test
-} // namespace astroqut
+} // namespace alias
 
 #endif // ASTROQUT_TEST_OPERATOR_HPP

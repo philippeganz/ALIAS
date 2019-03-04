@@ -4,7 +4,7 @@
 /// \author Jairo Diaz <jairo.diaz@unige.ch> 2016-2017
 /// \author Philippe Ganz <philippe.ganz@gmail.com> 2017-2018
 /// \version 0.6.0
-/// \date 2019-01-19
+/// \date 2019-03
 /// \copyright GPL-3.0
 ///
 
@@ -18,7 +18,7 @@
 
 #include <omp.h>
 
-namespace astroqut
+namespace alias
 {
 namespace WS
 {
@@ -508,7 +508,7 @@ Matrix<double> Solve(std::string picture_path,
 
             // solve with bootstrap
             std::cout << std::string(80, '-') << std::endl;
-            std::cout << "Computing with bootstrapping:" << std::endl;
+            std::cout << "Computing with bootstrapping " << "(" << bootstrap_current + 1 << "/" << options.bootstrap_max << "):" << std::endl;
             std::cout << "Wavelets: " << options.wavelet[0] << ", " << options.wavelet[1] << std::endl;
             std::cout << "Center: " << offset_vert << ", " << offset_horiz << std::endl;
             std::cout << "Resample windows size: " << options.resample_windows_size << std::endl << std::endl;
@@ -529,7 +529,7 @@ Matrix<double> Solve(std::string picture_path,
         Matrix<double> fhat = fhatw + fhats;
         std::copy(fhat.Data(), fhat.Data()+fhat.Length(), result_fhat.Data()+bootstrap_current*fhat.Length());
 
-        Matrix<double> fhat_cropped = fhat.Partial(std::lround((options.pic_size/2)*(1-1/std::sqrt(2)))-1, std::lround((options.pic_size/2)*(1+1/std::sqrt(2)))+1);
+        Matrix<double> fhat_cropped = fhat.Partial(std::lround((options.pic_size/2)*(1-1/std::sqrt(2)))-1, std::lround((options.pic_size/2)*(1+1/std::sqrt(2))));
         std::copy(fhat_cropped.Data(), fhat_cropped.Data()+fhat_cropped.Length(), result_fhat_cropped.Data()+bootstrap_current*fhat_cropped.Length());
 
         ++bootstrap_current;
@@ -541,4 +541,4 @@ Matrix<double> Solve(std::string picture_path,
 }
 
 } // namespace WS
-} // namespace astroqut
+} // namespace alias

@@ -16,7 +16,7 @@
 #include <iostream>
 #include <typeinfo>
 
-namespace astroqut{
+namespace alias{
 namespace test{
 namespace matrix{
 
@@ -365,6 +365,6 @@ bool CC()
 
 } // namespace matrix
 } // namespace test
-} // namespace astroqut
+} // namespace alias
 
 #endif // ASTROQUT_TEST_MATRIX_HPP

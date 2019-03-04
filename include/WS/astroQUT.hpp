@@ -4,7 +4,7 @@
 /// \author Jairo Diaz <jairo.diaz@unige.ch> MATLAB version 2016-2017
 /// \author Philippe Ganz <philippe.ganz@gmail.com> 2017-2018
 /// \version 0.6.0
-/// \date 2019-01-19
+/// \date 2019-03
 /// \copyright GPL-3.0
 ///
 
@@ -14,7 +14,7 @@
 #include "fista/poisson.hpp"
 #include "utils/linearop/matrix.hpp"
 
-namespace astroqut
+namespace alias
 {
 namespace WS
 {
@@ -33,9 +33,9 @@ struct Parameters
         , wavelet{3,8}
         , center_offset_max{0}
         , resample_windows_size(4)
-        , MC_max(100)
-        , MC_quantile_PF(80)
-        , MC_quantile_PS(99)
+        , MC_max(1000)
+        , MC_quantile_PF(800)
+        , MC_quantile_PS(999)
         , beta0(std::numeric_limits<double>::infinity())
         , lambda(1.0)
         , standardize{}
@@ -78,7 +78,7 @@ Matrix<double> Solve(std::string picture_path,
                      Parameters<double>& options );
 
 } // namespace WS
-} // namespace astroqut
+} // namespace alias
 
 #endif // ASTROQUT_WS_ASTROQUT_HPP
 

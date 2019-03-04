@@ -3,13 +3,13 @@
 /// \brief Test suite specializations to validate the Matrix class with particular types
 /// \author Philippe Ganz <philippe.ganz@gmail.com>
 /// \version 0.6.0
-/// \date 2019-01-19
+/// \date 2019-03
 /// \copyright GPL-3.0
 ///
 
 #include "test/matrix.hpp"
 
-namespace astroqut
+namespace alias
 {
 namespace test
 {
@@ -218,4 +218,4 @@ bool Input()
 
 } // namespace matrix
 } // namespace test
-} // namespace astroqut
+} // namespace alias

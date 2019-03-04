@@ -12,7 +12,7 @@
 
 #include "WS/astroQUT.hpp"
 
-namespace astroqut
+namespace alias
 {
 namespace test
 {
@@ -24,6 +24,6 @@ void Sym256();
 
 } // namespace astro
 } // namespace test
-} // namespace astroqut
+} // namespace alias
 
 #endif // ASTROQUT_TEST_WS_HPP

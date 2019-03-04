@@ -19,7 +19,7 @@
 #include <iostream>
 #include <random>
 
-namespace astroqut{
+namespace alias{
 namespace test{
 
 template <class T>
@@ -63,6 +63,6 @@ bool OperatorTest();
 bool FISTATest();
 
 } // namespace test
-} // namespace astroqut
+} // namespace alias
 
 #endif // ASTROQUT_TEST_HPP

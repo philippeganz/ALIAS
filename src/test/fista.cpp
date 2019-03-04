@@ -3,13 +3,13 @@
 /// \brief Implementation of the FISTA class test suite.
 /// \author Philippe Ganz <philippe.ganz@gmail.com>
 /// \version 0.6.0
-/// \date 2019-01-19
+/// \date 2019-03
 /// \copyright GPL-3.0
 ///
 
 #include "test/fista.hpp"
 
-namespace astroqut{
+namespace alias{
 namespace test{
 namespace fista{
 
@@ -22,8 +22,8 @@ bool SmallExample()
     double u_data[3] = {3.0,2.0,1.0};
     const Matrix<double> u(u_data, 3, 3, 1);
     double b_data[3] = {1.0,1.0,2.0};
-    const astroqut::Matrix<double> b(b_data, 3, 3, 1);
-    astroqut::fista::poisson::Parameters<double> options;
+    const alias::Matrix<double> b(b_data, 3, 3, 1);
+    alias::fista::poisson::Parameters<double> options;
     options.log_period = 20;
     double tols[3] = {1e-4, 1e-8, 1e-12};
 
@@ -42,7 +42,7 @@ bool SmallExample()
         std::cout << "and u = " << u;
 
         options.tol = tols[i];
-        Matrix<double> actual_result = astroqut::fista::poisson::Solve(A, u, b, 1.0, options);
+        Matrix<double> actual_result = alias::fista::poisson::Solve(A, u, b, 1.0, options);
 
         std::cout << "Result from MATLAB computation" << expected_result[i];
         std::cout << "Result from this computation" << actual_result;
@@ -93,14 +93,14 @@ void Time(size_t length)
     }
     Matrix<double> b(b_data, test_height, 1);
 
-    astroqut::fista::poisson::Parameters<double> options;
+    alias::fista::poisson::Parameters<double> options;
     options.tol = 1e-8;
     options.log_period = 1;
 
     std::chrono::time_point<std::chrono::high_resolution_clock> start, end;
     start = std::chrono::high_resolution_clock::now();
 
-    astroqut::fista::poisson::Solve(A, u, b, 1.0, options);
+    alias::fista::poisson::Solve(A, u, b, 1.0, options);
 
     end = std::chrono::high_resolution_clock::now();
     std::chrono::duration<double> elapsed_time = end-start;
@@ -111,4 +111,4 @@ void Time(size_t length)
 
 } // namespace matrix
 } // namespace test
-} // namespace astroqut
+} // namespace alias

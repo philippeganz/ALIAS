@@ -9,7 +9,7 @@
 
 #include "test.hpp"
 
-namespace astroqut{
+namespace alias{
 namespace test{
 
 bool OperatorTest()
@@ -52,4 +52,4 @@ bool FISTATest()
 }
 
 } // namespace test
-} // namespace astroqut
+} // namespace alias
