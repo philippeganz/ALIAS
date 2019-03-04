@@ -2,8 +2,8 @@
 /// \file include/test/fista.hpp
 /// \brief Test suite to validate the FISTA class.
 /// \author Philippe Ganz <philippe.ganz@gmail.com>
-/// \version 0.5.0
-/// \date 2018-10-14
+/// \version 0.6.0
+/// \date 2019-03
 /// \copyright GPL-3.0
 ///
 
