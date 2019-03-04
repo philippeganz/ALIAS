@@ -3,7 +3,7 @@
 /// \brief Blurring operator class header
 /// \author Philippe Ganz <philippe.ganz@gmail.com> 2017-2019
 /// \version 0.6.0
-/// \date 2019-01-20
+/// \date 2019-02-25
 /// \copyright GPL-3.0
 ///
 
@@ -17,7 +17,7 @@
 #endif // BLURRING_CONVOLUTION
 
 
-namespace astroqut
+namespace alias
 {
 
 template<class T = double>
@@ -25,11 +25,11 @@ class Blurring : public Operator<T>
 {
 private:
 #ifdef BLURRING_CONVOLUTION
-    Convolution<T> convolution;
+    Convolution<T> convolution_;
 #else
-    size_t filter_size;
-    Fourier<T> fourier;
-    Matrix<std::complex<T>> filter_freq_domain;
+    size_t filter_size_;
+    Fourier<T> fourier_;
+    Matrix<std::complex<T>> filter_freq_domain_;
 #endif // BLURRING_CONVOLUTION
 
 public:
@@ -37,46 +37,128 @@ public:
     /** Default constructor
      */
     Blurring()
-    {}
+        : Operator<T>()
+#ifdef BLURRING_CONVOLUTION
+        , convolution_()
+#else
+        , filter_size_(0)
+        , fourier_()
+        , filter_freq_domain_()
+#endif // BLURRING_CONVOLUTION
+    {
+#ifdef DEBUG
+        std::cout << "Blurring : Default constructor called" << std::endl;
+#endif // DEBUG
+    }
+
+    /** Copy constructor
+     *  \param other Object to copy from
+     */
+    Blurring(const Blurring& other)
+        : Operator<T>(other)
+#ifdef BLURRING_CONVOLUTION
+        , convolution_(other.convolution_)
+#else
+        , filter_size_(other.filter_size_)
+        , fourier_(other.fourier_)
+        , filter_freq_domain_(other.filter_freq_domain_)
+#endif // BLURRING_CONVOLUTION
+    {
+#ifdef DEBUG
+        std::cout << "Blurring : Copy constructor called" << std::endl;
+#endif // DEBUG
+    }
+
+    /** Move constructor
+     *  \param other Object to move from
+     */
+    Blurring(Blurring&& other)
+        : Blurring()
+    {
+#ifdef DEBUG
+        std::cout << "Blurring : Move constructor called" << std::endl;
+#endif // DEBUG
+        swap(*this, other);
+    }
+
+    /** Generate constructor
+     *  \param threshold Threshold for blurring mask size
+     *  \param R0 Core radius of the PSF
+     *  \param alpha Decrease speed of the PSF
+     *  \param pic_size Size of the picture the operator is acting on
+     */
+    explicit Blurring(T threshold, T R0, T alpha, size_t pic_size)
+        : Operator<T>(pic_size, pic_size)
+#ifdef BLURRING_CONVOLUTION
+        , convolution_(Generate(threshold, R0, alpha))
+#else
+        , filter_size_(0)
+        , fourier_()
+        , filter_freq_domain_()
+#endif // BLURRING_CONVOLUTION
+    {
+#ifdef DEBUG
+        std::cout << "Blurring : Generate constructor called with threshold=" << threshold << ", R0=" << R0 << ", alpha=" << alpha << ", pic_size=" << pic_size << std::endl;
+#endif // DEBUG
+
+#ifndef BLURRING_CONVOLUTION
+        Matrix<T> filter = Generate(threshold, R0, alpha);
+
+        *this = Blurring(filter, pic_size);
+#endif // BLURRING_CONVOLUTION
+    }
 
     /** Full member constructor
      *  \param data Blurring filter matrix
      *  \param pic_size Size of the picture the operator is acting on
      */
-    Blurring(Matrix<T> data, size_t pic_size)
-        : Operator<T>(data, pic_size, pic_size)
-        , filter_size(0)
-        , fourier()
-        , filter_freq_domain()
-    {}
+    explicit Blurring(const Matrix<T>& filter, size_t pic_size)
+        : Operator<T>(pic_size, pic_size)
+#ifdef BLURRING_CONVOLUTION
+        , convolution_(filter)
+#else
+        , filter_size_(filter.Width())
+        , fourier_(std::pow(2,std::ceil(std::log2(pic_size + filter_size_ - 1))))
+        , filter_freq_domain_()
+#endif // BLURRING_CONVOLUTION
+    {
+#ifdef DEBUG
+        std::cout << "Blurring : Full member constructor called with filter=" << &filter << ", pic_size=" << pic_size << std::endl;
+#endif // DEBUG
+
+#ifndef BLURRING_CONVOLUTION
+        filter_freq_domain_ = fourier_.FFT2D(filter);
+#endif // BLURRING_CONVOLUTION
+    }
 
     /** File constructor
      *  \brief Loads the blurring filter from a file
      *  \param path Path to the blurring filter
      *  \param pic_size Width of the target picture
      */
-    Blurring(std::string& path, size_t pic_size)
+    explicit Blurring(const std::string& path, size_t pic_size)
         : Operator<T>(pic_size, pic_size)
-        , filter_size(0)
-        , fourier()
-        , filter_freq_domain()
+#ifdef BLURRING_CONVOLUTION
+        , convolution_()
+#else
+        , filter_size_(0)
+        , fourier_()
+        , filter_freq_domain_()
+#endif // BLURRING_CONVOLUTION
     {
+#ifdef DEBUG
+        std::cout << "Blurring : File constructor called with path=" << path << ", pic_size=" << pic_size << std::endl;
+#endif // DEBUG
+
         // load raw data from file
         Matrix<T> filter(path);
 
         // determine the filter's size
-        filter_size = std::sqrt(filter.Length());
+        size_t filter_size = std::sqrt(filter.Length());
         filter.Height(filter_size);
         filter.Width(filter_size);
 
-#ifdef BLURRING_CONVOLUTION
-        convolution = Convolution(filter);
-#else
-        // determine the closest upper power of two of pic_size + filter_size - 1
-        size_t convolution_size = std::pow(2,std::ceil(std::log2(pic_size + filter_size - 1)));
-        fourier = Fourier(convolution_size);
-        filter_freq_domain = fourier.FFT2D(filter);
-#endif // BLURRING_CONVOLUTION
+        *this = Blurring(filter, pic_size);
     }
 
     /** Clone function
@@ -90,7 +172,30 @@ public:
     /** Default destructor
      */
     virtual ~Blurring()
-    {}
+    {
+#ifdef DEBUG
+        std::cout << "Blurring : Destructor called" << std::endl;
+#endif // DEBUG
+    }
+
+    /** Valid instance test
+     *  \return Throws an error message if instance is not valid.
+     */
+    bool IsValid() const override final
+    {
+        if( this->height_ != 0 &&
+            this->width_ != 0 &&
+#ifdef BLURRING_CONVOLUTION
+            convolution_.IsValid() )
+#else
+            filter_size_ != 0 &&
+            fourier_.IsValid() &&
+            filter_freq_domain_.IsValid() )
+#endif // BLURRING_CONVOLUTION
+            return true;
+
+        throw std::invalid_argument("Blurring dimensions must be non-zero and members shall be valid!");
+    }
 
     /** Generate a blurring filter
      *  \brief Builds a blurring filter to be used in a convolution
@@ -111,14 +216,41 @@ public:
             {
                 T j_squared = j*j;
                 result[(i+mask_size)*(2*mask_size+1) + (j+mask_size)] = std::pow(1 + (i_squared + j_squared)/radius_squared, -alpha);
-#ifdef DEBUG
-                std::cout << result.Data()[(i+mask_size)*(2*mask_size+1) + (j+mask_size)] << std::endl;
-#endif // DEBUG
             }
         }
         result /= result.Sum();
 
         return result;
+    }
+
+    /** Swap function
+     *  \param first First object to swap
+     *  \param second Second object to swap
+     */
+    friend void swap(Blurring& first, Blurring& second) noexcept
+    {
+        using std::swap;
+
+        swap(static_cast<Operator<T>&>(first), static_cast<Operator<T>&>(second));
+
+#ifdef BLURRING_CONVOLUTION
+        swap(first.convolution_, second.convolution_);
+#else
+        swap(first.filter_size_, second.filter_size_);
+        swap(first.fourier_, second.fourier_);
+        swap(first.filter_freq_domain_, second.filter_freq_domain_);
+#endif // BLURRING_CONVOLUTION
+    }
+
+    /** Copy assignment operator
+     *  \param other Object to assign to current object
+     *  \return A reference to this
+     */
+    Blurring& operator=(Blurring other)
+    {
+        swap(*this, other);
+
+        return *this;
     }
 
     Matrix<T> operator*(const Matrix<T>& other) const
@@ -132,18 +264,17 @@ public:
 #endif // DO_ARGCHECKS
 
 #ifdef BLURRING_CONVOLUTION
-        return convolution * other;
+        return convolution_ * other;
 #else
-        Matrix<std::complex<T>> other_freq_domain = fourier.FFT2D(other);
-        Matrix<std::complex<T>> full_result = fourier.IFFT2D( filter_freq_domain & other_freq_domain );
+        Matrix<std::complex<T>> other_freq_domain = fourier_.FFT2D(other);
+        Matrix<std::complex<T>> full_result = fourier_.IFFT2D( filter_freq_domain_ & other_freq_domain );
         Matrix<T> result(other.Height(), other.Width());
-
-        size_t offset = filter_size - 1;
+        size_t filter_offset = (filter_size_ - 1) / 2;
 
         #pragma omp parallel for simd
         for(size_t row = 0; row < other.Height(); ++row)
             for(size_t col = 0; col < other.Width(); ++col)
-                result[row*other.Width() + col] = full_result[(row+offset)*other.Width() + (col+offset)].real();
+                result[row*other.Width() + col] = full_result[(row+filter_offset)*full_result.Width() + (col+filter_offset)].real();
 
         return result;
 #endif // BLURRING_CONVOLUTION
@@ -151,6 +282,6 @@ public:
     }
 };
 
-} // namespace astroqut
+} // namespace alias
 
 #endif // ASTROQUT_UTILS_OPERATOR_BLUR_HPP
