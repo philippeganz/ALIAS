@@ -11,7 +11,7 @@
 				<Option object_output="obj/Debug/" />
 				<Option type="1" />
 				<Option compiler="gcc" />
-				<Option parameters="data/256/M256blockssymPS1B1W1S1Erealnk24forcepos2/result1.data data/256/E.data data/256/O.data data/256/M256blockssymPS1B1W1S1Erealnk24forcepos2/solution1.data 256 1000 1" />
+				<Option parameters="-f data/256/M256blockssymPS1B1W1S1Erealnk24forcepos2/result1.data -e data/256/E.data -o data/256/O.data -b data/blurring.data -r data/256/M256blockssymPS1B1W1S1Erealnk24forcepos2/solution1.data -s 256 -x 1" />
 				<Compiler>
 					<Add option="-g" />
 				</Compiler>
@@ -21,7 +21,7 @@
 				<Option object_output="obj/DebugOg/" />
 				<Option type="1" />
 				<Option compiler="gcc" />
-				<Option parameters="data/256/M256blockssymPS1B1W1S1Erealnk24forcepos2/result1.data data/256/E.data data/256/O.data data/256/M256blockssymPS1B1W1S1Erealnk24forcepos2/solution1.data 256 1000 1" />
+				<Option parameters="-f data/256/M256blockssymPS1B1W1S1Erealnk24forcepos2/result1.data -e data/256/E.data -o data/256/O.data -b data/blurring.data -r data/256/M256blockssymPS1B1W1S1Erealnk24forcepos2/solution1.data -s 256 -x 1" />
 				<Compiler>
 					<Add option="-pg" />
 					<Add option="-Og" />
@@ -36,7 +36,7 @@
 				<Option object_output="obj/ReleaseO1/" />
 				<Option type="1" />
 				<Option compiler="gcc" />
-				<Option parameters="data/256/M256blockssymPS1B1W1S1Erealnk24forcepos2/result1.data data/256/E.data data/256/O.data data/256/M256blockssymPS1B1W1S1Erealnk24forcepos2/solution1.data 256 1000 1" />
+				<Option parameters="-f data/256/M256blockssymPS1B1W1S1Erealnk24forcepos2/result1.data -e data/256/E.data -o data/256/O.data -b data/blurring.data -r data/256/M256blockssymPS1B1W1S1Erealnk24forcepos2/solution1.data -s 256 -x 1" />
 				<Compiler>
 					<Add option="-O1" />
 				</Compiler>
@@ -46,7 +46,7 @@
 				<Option object_output="obj/ReleaseO2/" />
 				<Option type="1" />
 				<Option compiler="gcc" />
-				<Option parameters="data/256/M256blockssymPS1B1W1S1Erealnk24forcepos2/result1.data data/256/E.data data/256/O.data data/256/M256blockssymPS1B1W1S1Erealnk24forcepos2/solution1.data 256 1000 1" />
+				<Option parameters="-f data/256/M256blockssymPS1B1W1S1Erealnk24forcepos2/result1.data -e data/256/E.data -o data/256/O.data -b data/blurring.data -r data/256/M256blockssymPS1B1W1S1Erealnk24forcepos2/solution1.data -s 256 -x 1" />
 				<Compiler>
 					<Add option="-O2" />
 				</Compiler>
@@ -56,7 +56,7 @@
 				<Option object_output="obj/ReleaseO3/" />
 				<Option type="1" />
 				<Option compiler="gcc" />
-				<Option parameters="data/256/M256blockssymPS1B1W1S1Erealnk24forcepos2/result1.data data/256/E.data data/256/O.data data/256/M256blockssymPS1B1W1S1Erealnk24forcepos2/solution1.data 256 1000 1" />
+				<Option parameters="-f data/256/M256blockssymPS1B1W1S1Erealnk24forcepos2/result1.data -e data/256/E.data -o data/256/O.data -b data/blurring.data -r data/256/M256blockssymPS1B1W1S1Erealnk24forcepos2/solution1.data -s 256 -x 1" />
 				<Compiler>
 					<Add option="-O3" />
 				</Compiler>
@@ -66,7 +66,7 @@
 				<Option object_output="obj/ReleaseO3Static/" />
 				<Option type="1" />
 				<Option compiler="gcc" />
-				<Option parameters="data/256/M256blockssymPS1B1W1S1Erealnk24forcepos2/result1.data data/256/E.data data/256/O.data data/256/M256blockssymPS1B1W1S1Erealnk24forcepos2/solution1.data 256 1000 1" />
+				<Option parameters="-f data/256/M256blockssymPS1B1W1S1Erealnk24forcepos2/result1.data -e data/256/E.data -o data/256/O.data -b data/blurring.data -r data/256/M256blockssymPS1B1W1S1Erealnk24forcepos2/solution1.data -s 256 -x 1" />
 				<Compiler>
 					<Add option="-O3" />
 				</Compiler>
