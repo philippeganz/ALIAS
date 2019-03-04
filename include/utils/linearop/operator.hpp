@@ -4,7 +4,7 @@
 /// \details Provide operator container with operator-vector operations
 /// \author Philippe Ganz <philippe.ganz@gmail.com> 2017-2018
 /// \version 0.6.0
-/// \date 2019-01-19
+/// \date 2019-02-25
 /// \copyright GPL-3.0
 ///
 
@@ -16,7 +16,7 @@
 #include <functional>
 #include <utility>
 
-namespace astroqut
+namespace alias
 {
 
 template<class T = double>
@@ -55,13 +55,12 @@ public:
      *  \param other Object to copy from
      */
     Operator(Operator&& other)
-        : LinearOp(other.height_, other.width_)
-        , data_(std::move(other.data_))
-        , transposed_(other.transposed_)
+        : LinearOp()
     {
 #ifdef DEBUG
         std::cout << "Operator : Move constructor called" << std::endl;
 #endif // DEBUG
+        swap(*this, other);
     }
 
     /** Empty constructor
@@ -70,11 +69,11 @@ public:
      */
     Operator(size_t height, size_t width) noexcept
         : LinearOp(height, width)
-        , data_(nullptr, 0, 0)
+        , data_()
         , transposed_(false)
     {
 #ifdef DEBUG
-        std::cout << "Operator : Empty constructor called" << std::endl;
+        std::cout << "Operator : Empty constructor called with height=" << height << ", width=" << width << std::endl;
 #endif // DEBUG
     }
 
@@ -90,7 +89,7 @@ public:
         , transposed_(transposed)
     {
 #ifdef DEBUG
-        std::cout << "Operator : Full member constructor called" << std::endl;
+        std::cout << "Operator : Full member constructor called with data=" << &data << ", height=" << height << ", width=" << width << ", transposed=" << transposed << std::endl;
 #endif // DEBUG
     }
 
@@ -104,7 +103,7 @@ public:
     virtual ~Operator()
     {
 #ifdef DEBUG
-        std::cout << "Operator : Default destructor called" << std::endl;
+        std::cout << "Operator : Destructor called" << std::endl;
 #endif // DEBUG
     }
 
@@ -139,7 +138,6 @@ public:
         }
     }
 
-
     /** Transpose in-place
      *   \return A reference to this
      */
@@ -160,20 +158,15 @@ public:
 
     /** Comparison operator equal
      *  \param other Object to compare to
-     *  \return True if both object are the same element-wise, False else
+     *  \return True if both object are the same, False otherwise
      */
     bool operator==(const Operator& other) const noexcept
     {
-        if( this->height_ != other.height_ ||
-            this->width_ != other.width_ )
-        {
-            return false;
-        }
-
-        if( data_ == other.data_ )
-        {
+        if( this->height_ == other.height_ && this->width_ == other.width_ &&
+            data_ == other.data_ )
             return true;
-        }
+
+        return false;
     }
 
     /** Comparison operator not-equal
@@ -185,43 +178,22 @@ public:
         return !(*this == other);
     }
 
-    /** Copy assignment operator
-     *  \param other Object to assign to current object
-     *  \return A reference to this
+    /** Swap function
+     *  \param first First object to swap
+     *  \param second Second object to swap
      */
-    Operator& operator=(const Operator& other)
+    friend void swap(Operator& first, Operator& second) noexcept
     {
-        if( this != &other )
-        {
-            this->height_ = other.height_;
-            this->width_ = other.width_;
-            this->length_ = other.length_;
-            data_ = other.data_;
-            transposed_ = other.transposed_;
-        }
-        return *this;
-    }
+        using std::swap;
 
-    /** Move assignment operator
-     *  \param other Object to move to current object
-     *  \return A reference to this
-     */
-    Operator& operator=(Operator&& other) noexcept
-    {
-        if( this != &other )
-        {
-            this->height_ = other.height_;
-            this->width_ = other.width_;
-            this->length_ = other.length_;
-            std::swap(data_, other.data_);
-            transposed_ = other.transposed_;
-        }
-        return *this;
+        swap(static_cast<LinearOp&>(first), static_cast<LinearOp&>(second));
+        std::swap(first.data_, second.data_);
+        std::swap(first.transposed_, second.transposed_);
     }
 
     virtual Matrix<T> operator*(const Matrix<T>& other) const = 0;
 };
 
-} // namespace astroqut
+} // namespace alias
 
 #endif // ASTROQUT_UTILS_OPERATOR_HPP

@@ -4,7 +4,7 @@
 /// \details Provide the Wavelet transform operator
 /// \author Philippe Ganz <philippe.ganz@gmail.com> 2017-2018
 /// \version 0.6.0
-/// \date 2019-01-19
+/// \date 2019-03
 /// \copyright GPL-3.0
 ///
 
@@ -13,7 +13,7 @@
 
 #include "utils/linearop/operator.hpp"
 
-namespace astroqut
+namespace alias
 {
 
 enum WaveletType{haar, beylkin, coiflet, daubechies, symmlet, vaidyanathan, battle};
@@ -33,12 +33,43 @@ public:
     /** Default constructor
      */
     Wavelet()
-        : Operator<T>(0, 0)
+        : Operator<T>()
         , wavelet_type_((WaveletType) 0)
         , parameter_(0)
         , low_pass_filter_(Matrix<T>())
         , high_pass_filter_(Matrix<T>())
-    {}
+    {
+#ifdef DEBUG
+        std::cout << "Wavelet : Default constructor called" << std::endl;
+#endif // DEBUG
+    }
+
+    /** Copy constructor
+     *  \param other Object to copy from
+     */
+    Wavelet(const Wavelet& other)
+        : Operator<T>(other)
+        , wavelet_type_(other.wavelet_type_)
+        , parameter_(other.parameter_)
+        , low_pass_filter_(other.low_pass_filter_)
+        , high_pass_filter_(other.high_pass_filter_)
+    {
+#ifdef DEBUG
+        std::cout << "Wavelet : Copy constructor called" << std::endl;
+#endif // DEBUG
+    }
+
+    /** Move constructor
+     *  \param other Object to move from
+     */
+    Wavelet(Wavelet&& other)
+        : Wavelet()
+    {
+#ifdef DEBUG
+        std::cout << "Wavelet : Move constructor called" << std::endl;
+#endif // DEBUG
+        swap(*this, other);
+    }
 
     /** Full member constructor
      *  \param low_pass_filter QMF matrix for low pass filtering
@@ -47,13 +78,17 @@ public:
      *  \param parameter Integer parameter specific to each wavelet type
      *  \param transposed Transposition state of the operator
      */
-    Wavelet(Matrix<T>&& low_pass_filter, Matrix<T>&& high_pass_filter, WaveletType wavelet_type, int parameter, bool transposed = false)
+    explicit Wavelet(Matrix<T>&& low_pass_filter, Matrix<T>&& high_pass_filter, WaveletType wavelet_type, int parameter, bool transposed = false)
         : Operator<T>(Matrix<T>(), 1, 1, transposed)
         , wavelet_type_(wavelet_type)
         , parameter_(parameter)
         , low_pass_filter_(low_pass_filter)
         , high_pass_filter_(high_pass_filter)
-    {}
+    {
+#ifdef DEBUG
+        std::cout << "Wavelet : Full member constructor called" << std::endl;
+#endif // DEBUG
+    }
 
     /** Build constructor
      *  \brief Builds the Wavelet operator with the qmf matrix corresponding to type and parameter
@@ -61,7 +96,7 @@ public:
      *  \param parameter Integer parameter specific to each wavelet type
      *  \param transposed Transposition state of the operator
      */
-    Wavelet(WaveletType wavelet_type, int parameter, bool transposed = false)
+    explicit Wavelet(WaveletType wavelet_type, int parameter, bool transposed = false)
         : Operator<T>(Matrix<T>(), 1, 1, transposed)
         , wavelet_type_(wavelet_type)
         , parameter_(parameter)
@@ -69,8 +104,7 @@ public:
         , high_pass_filter_(MakeONFilter(wavelet_type, parameter, high))
     {
 #ifdef DEBUG
-    std::cout << std::endl << "Low pass filter :" << low_pass_filter_;
-    std::cout << std::endl << "High pass filter :" << high_pass_filter_;
+    std::cout << "Wavelet : Build constructor called" << std::endl;
 #endif // DEBUG
     }
 
@@ -85,7 +119,11 @@ public:
     /** Default destructor
      */
     virtual ~Wavelet()
-    {}
+    {
+#ifdef DEBUG
+        std::cout << "Wavelet : Destructor called" << std::endl;
+#endif // DEBUG
+    }
 
     /** Valid instance test
      *  \return Throws an error message if instance is not valid.
@@ -100,6 +138,32 @@ public:
         {
             throw std::invalid_argument("Filters shall not be empty!");
         }
+    }
+
+    /** Swap function
+     *  \param first First object to swap
+     *  \param second Second object to swap
+     */
+    friend void swap(Wavelet& first, Wavelet& second) noexcept
+    {
+        using std::swap;
+
+        swap(static_cast<Operator<T>&>(first), static_cast<Operator<T>&>(second));
+        swap(first.wavelet_type_, second.wavelet_type_);
+        swap(first.parameter_, second.parameter_);
+        swap(first.low_pass_filter_, second.low_pass_filter_);
+        swap(first.high_pass_filter_, second.high_pass_filter_);
+    }
+
+    /** Copy assignment operator
+     *  \param other Object to assign to current object
+     *  \return A reference to this
+     */
+    Wavelet& operator=(Wavelet other)
+    {
+        swap(*this, other);
+
+        return *this;
     }
 
     Matrix<T> operator*(const Matrix<T>& other) const override final
@@ -594,6 +658,6 @@ public:
     }
 };
 
-} // namespace astroqut
+} // namespace alias
 
 #endif // ASTROQUT_UTILS_OPERATOR_WAVELET_HPP

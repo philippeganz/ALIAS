@@ -3,8 +3,8 @@
 /// \brief LinearOp class header
 /// \details Provide generic linear operator base class.
 /// \author Philippe Ganz <philippe.ganz@gmail.com> 2017-2018
-/// \version 0.3.1
-/// \date 2018-10-14
+/// \version 0.6.0
+/// \date 2019-02-25
 /// \copyright GPL-3.0
 ///
 
@@ -17,7 +17,7 @@
 #include <iostream>
 #include <stdexcept>
 
-namespace astroqut
+namespace alias
 {
 
 /** Types of argument tests
@@ -46,6 +46,31 @@ public:
 #endif // DEBUG
     }
 
+    /** Copy constructor
+     *  \param other Object to copy from
+     */
+    LinearOp(const LinearOp& other)
+        : height_(other.height_)
+        , width_(other.width_)
+        , length_(other.length_)
+    {
+#ifdef DEBUG
+        std::cout << "LinearOp : Copy constructor called" << std::endl;
+#endif // DEBUG
+    }
+
+    /** Move constructor
+     *  \param other Object to copy from
+     */
+    LinearOp(LinearOp&& other)
+        : LinearOp()
+    {
+#ifdef DEBUG
+        std::cout << "LinearOp : Move constructor called" << std::endl;
+#endif // DEBUG
+        swap(*this, other);
+    }
+
     /** Full member constructor
      *  \param height Height of the data
      *  \param width Width of the data
@@ -56,7 +81,7 @@ public:
         , length_(height*width)
     {
 #ifdef DEBUG
-        std::cout << "LinearOp : Full member constructor called with " << height << ", " << width << ", and length = " << length_ << std::endl;
+        std::cout << "LinearOp : Full member constructor called with height=" << height << ", width=" << width << std::endl;
 #endif // DEBUG
     }
 
@@ -65,7 +90,7 @@ public:
     virtual ~LinearOp()
     {
 #ifdef DEBUG
-        std::cout << "LinearOp : Default destructor called" << std::endl;
+        std::cout << "LinearOp : Destructor called" << std::endl;
 #endif // DEBUG
     }
 
@@ -166,7 +191,20 @@ public:
         }
     }
 
+    /** Swap function
+     *  \param first First object to swap
+     *  \param second Second object to swap
+     */
+    friend void swap(LinearOp& first, LinearOp& second) noexcept
+    {
+        using std::swap;
+
+        std::swap(first.height_, second.height_);
+        std::swap(first.width_, second.width_);
+        std::swap(first.length_, second.length_);
+    }
+
 };
-} // namespace astroqut
+} // namespace alias
 
 #endif // ASTROQUT_UTILS_LINEAROP_HPP

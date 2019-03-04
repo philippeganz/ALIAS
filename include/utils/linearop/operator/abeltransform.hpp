@@ -4,7 +4,7 @@
 /// \details Provide the Abel transform operator
 /// \author Philippe Ganz <philippe.ganz@gmail.com> 2017-2018
 /// \version 0.6.0
-/// \date 2019-01-19
+/// \date 2019-03
 /// \copyright GPL-3.0
 ///
 
@@ -17,7 +17,7 @@
     #include <sstream>
 #endif // DEBUG
 
-namespace astroqut
+namespace alias
 {
 
 template<class T = double>
@@ -32,21 +32,54 @@ public:
     /** Default constructor
      */
     AbelTransform()
-        : Operator<T>(0, 0)
+        : Operator<T>()
         , pic_side_(0)
         , wavelet_amount_(0)
-    {}
+    {
+#ifdef DEBUG
+        std::cerr << "AbelTransform : Default constructor called." << std::endl;
+#endif // DEBUG
+    }
+
+    /** Copy constructor
+     *  \param other Object to copy from
+     */
+    AbelTransform(const AbelTransform& other)
+        : Operator<T>(other)
+        , pic_side_(other.pic_side_)
+        , wavelet_amount_(other.wavelet_amount_)
+    {
+#ifdef DEBUG
+        std::cout << "AbelTransform : Copy constructor called" << std::endl;
+#endif // DEBUG
+    }
+
+    /** Move constructor
+     *  \param other Object to move from
+     */
+    AbelTransform(AbelTransform&& other)
+        : AbelTransform()
+    {
+#ifdef DEBUG
+        std::cout << "AbelTransform : Move constructor called" << std::endl;
+#endif // DEBUG
+        swap(*this, other);
+    }
 
     /** Full member constructor
      *  \param data Matrix containing the upper left component of the Abel transform.
      *  \param height Height of the full Abel matrix
      *  \param width Width of the full Abel matrix
      */
-    AbelTransform(Matrix<T> data, size_t height, size_t width)
+    explicit AbelTransform(Matrix<T> data, size_t height, size_t width)
         : Operator<T>(data, height, width, false)
         , pic_side_(height)
         , wavelet_amount_(height)
-    {}
+    {
+#ifdef DEBUG
+        std::cout << "AbelTransform : Full member constructor called" << std::endl;
+#endif // DEBUG
+    }
 
     /** Build constructor
      *  \brief Builds an Abel transform matrix with diagonal radius
@@ -54,12 +87,15 @@ public:
      *  \param pixel_amount Total amount of pixels of the target picture
      *  \param radius Amount of pixels from centre to border of galaxy, typically pixel_amount/2
      */
-    AbelTransform(unsigned int wavelets_amount, unsigned int pixel_amount, unsigned int radius)
+    explicit AbelTransform(unsigned int wavelets_amount, unsigned int pixel_amount, unsigned int radius)
         : Operator<T>(Matrix<T>((T) 0, pixel_amount/4, wavelets_amount/2), pixel_amount, wavelets_amount, false)
         , pic_side_(std::sqrt(pixel_amount))
         , wavelet_amount_(wavelets_amount)
     {
         Generate(this->data_, radius);
+#ifdef DEBUG
+        std::cout << "AbelTransform : Build constructor called" << std::endl;
+#endif // DEBUG
     }
 
     /** Clone function
@@ -73,7 +109,11 @@ public:
     /** Default destructor
      */
     virtual ~AbelTransform()
-    {}
+    {
+#ifdef DEBUG
+        std::cout << "AbelTransform : Destructor called" << std::endl;
+#endif // DEBUG
+    }
 
     /** Valid instance test
      *  \return Throws an error message if instance is not valid.
@@ -82,14 +122,35 @@ public:
     {
         if( this->height_ != 0 && this->width_ != 0 &&
             !this->data_.IsEmpty() )
-        {
             return true;
-        }
-        else
-        {
-            throw std::invalid_argument("Operator dimensions must be non-zero and data shall not be nullptr!");
-        }
+
+        throw std::invalid_argument("Operator dimensions must be non-zero and data shall not be nullptr!");
     }
+
+    /** Swap function
+     *  \param first First object to swap
+     *  \param second Second object to swap
+     */
+    friend void swap(AbelTransform& first, AbelTransform& second) noexcept
+    {
+        using std::swap;
+
+        swap(static_cast<Operator<T>&>(first), static_cast<Operator<T>&>(second));
+        swap(first.pic_side_, second.pic_side_);
+        swap(first.wavelet_amount_, second.wavelet_amount_);
+    }
+
+    /** Copy assignment operator
+     *  \param other Object to assign to current object
+     *  \return A reference to this
+     */
+    AbelTransform& operator=(AbelTransform other)
+    {
+        swap(*this, other);
+
+        return *this;
+    }
+
 
     Matrix<T> operator*(const Matrix<T>& other) const override final
     {
@@ -107,13 +168,9 @@ public:
         Matrix<T> result( 0.0, this->Height(), other.Width() );
 
         if(!this->transposed_)
-        {
             Forward(other, result);
-        }
         else
-        {
             Transposed(other, result);
-        }
 
         return result;
     }
@@ -288,6 +345,6 @@ public:
     }
 };
 
-} // namespace astroqut
+} // namespace alias
 
 #endif // ASTROQUT_UTILS_OPERATOR_ABELTRANSFORM_HPP

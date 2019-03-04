@@ -3,7 +3,7 @@
 /// \brief Matrix Multiplication class header
 /// \author Philippe Ganz <philippe.ganz@gmail.com> 2017-2018
 /// \version 0.6.0
-/// \date 2019-01-19
+/// \date 2019-03
 /// \copyright GPL-3.0
 ///
 
@@ -12,7 +12,7 @@
 
 #include "utils/linearop/operator.hpp"
 
-namespace astroqut
+namespace alias
 {
 
 template <class T = double>
@@ -23,11 +23,34 @@ public:
     /** Default constructor
      */
     MatMult()
-        : Operator<T>(0, 0)
+        : Operator<T>()
     {
 #ifdef DEBUG
         std::cout << "MatMult : Default constructor called" << std::endl;
 #endif // DEBUG
+    }
+
+    /** Copy constructor
+     *  \param other Object to copy from
+     */
+    MatMult(const MatMult& other)
+        : Operator<T>(other)
+    {
+#ifdef DEBUG
+        std::cout << "MatMult : Copy constructor called" << std::endl;
+#endif // DEBUG
+    }
+
+    /** Move constructor
+     *  \param other Object to move from
+     */
+    MatMult(MatMult&& other)
+        : MatMult()
+    {
+#ifdef DEBUG
+        std::cout << "MatMult : Move constructor called" << std::endl;
+#endif // DEBUG
+        swap(*this, other);
     }
 
     /** Full member constructor
@@ -35,7 +58,7 @@ public:
      *  \param height Height of the operator
      *  \param width Width of the operator
      */
-    MatMult(Matrix<T> data, size_t height, size_t width)
+    explicit MatMult(Matrix<T> data, size_t height, size_t width)
         : Operator<T>(data, height, width, false)
     {
 #ifdef DEBUG
@@ -56,7 +79,7 @@ public:
     virtual ~MatMult()
     {
 #ifdef DEBUG
-        std::cout << "MatMult : Default destructor called" << std::endl;
+        std::cout << "MatMult : Destructor called" << std::endl;
 #endif // DEBUG
     }
 
@@ -75,6 +98,28 @@ public:
         {
             throw std::invalid_argument("Operator dimensions must be non-zero and function shall not be nullptr!");
         }
+    }
+
+    /** Swap function
+     *  \param first First object to swap
+     *  \param second Second object to swap
+     */
+    friend void swap(MatMult& first, MatMult& second) noexcept
+    {
+        using std::swap;
+
+        swap(static_cast<Operator<T>&>(first), static_cast<Operator<T>&>(second));
+    }
+
+    /** Copy assignment operator
+     *  \param other Object to assign to current object
+     *  \return A reference to this
+     */
+    MatMult& operator=(MatMult other)
+    {
+        swap(*this, other);
+
+        return *this;
     }
 
     Matrix<T> operator*(const Matrix<T>& other) const override final
@@ -106,6 +151,6 @@ public:
 
 };
 
-} // namespace astroqut
+} // namespace alias
 
 #endif // ASTROQUT_UTILS_OPERATOR_MATMULT_HPP

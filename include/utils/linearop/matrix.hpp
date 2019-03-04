@@ -4,7 +4,7 @@
 /// \details Provide matrix container with multiple matrix operations used in the whole project.
 /// \author Philippe Ganz <philippe.ganz@gmail.com> 2017-2018
 /// \version 0.6.0
-/// \date 2019-01-19
+/// \date 2019-03
 /// \copyright GPL-3.0
 ///
 
@@ -26,7 +26,7 @@
 #include <string>
 #include <type_traits>
 
-namespace astroqut
+namespace alias
 {
 template<class T> struct is_complex : std::false_type {};
 template<class T> struct is_complex<std::complex<T>> : std::true_type {};
@@ -109,8 +109,9 @@ public:
         , data_(nullptr)
     {
 #ifdef DEBUG
-        std::cout << "Matrix : Empty constructor called with " << height_ << ", " << width_ << std::endl;
+        std::cout << "Matrix : Empty constructor called with height=" << height << ", width=" << width << std::endl;
 #endif // DEBUG
+
         if(this->length_ != 0)
         {
             try
@@ -140,6 +141,10 @@ public:
         : LinearOp(height, width)
         , data_(data)
     {
+#ifdef DEBUG
+        std::cout << "Matrix : Full member constructor called with data=" << data << ", height=" << height << ", width=" << width << std::endl;
+#endif // DEBUG
+
 #ifdef DO_ARGCHECKS
         if( !IsAligned(data, sizeof(T)) )
         {
@@ -147,9 +152,6 @@ public:
             throw;
         }
 #endif // DO_ARGCHECKS
-#ifdef DEBUG
-        std::cout << "Matrix : Full member constructor called" << std::endl;
-#endif // DEBUG
     }
 
     /** Full member constructor
@@ -162,12 +164,12 @@ public:
     Matrix(const U data[], size_t length, size_t height, size_t width)
         : Matrix(height, width)
     {
+#ifdef DEBUG
+        std::cout << "Matrix : Full member constructor called with data=" << data << ", length=" << length << ", height=" << height << ", width=" << width << std::endl;
+#endif // DEBUG
         #pragma omp parallel for simd
         for(size_t i = 0; i < length; ++i)
             data_[i] = (T) data[i];
-#ifdef DEBUG
-        std::cout << "Matrix : Full member constructor called" << std::endl;
-#endif // DEBUG
     }
 
     /** File constructor with known size
@@ -179,6 +181,10 @@ public:
     Matrix(const std::string filename, size_t height, size_t width, U __attribute__((unused)) dummy = 0)
         : Matrix(height, width)
     {
+#ifdef DEBUG
+        std::cout << "Matrix : File constructor with known size called with filename=" << filename << ", height=" << height << ", width=" << width << std::endl;
+#endif // DEBUG
+
         std::ifstream file(filename, std::ios::binary | std::ios::in | std::ios::ate);
 
         size_t file_size = file.tellg();
@@ -199,10 +205,6 @@ public:
 
         delete[] memblock;
         file.close();
-
-#ifdef DEBUG
-        std::cout << "Matrix : File constructor called" << std::endl;
-#endif // DEBUG
     }
 
     /** File constructor raw
@@ -212,6 +214,10 @@ public:
     Matrix(const std::string filename, U __attribute__((unused)) dummy = 0)
         : data_(nullptr)
     {
+#ifdef DEBUG
+        std::cout << "Matrix : File constructor raw called with filename=" << filename << std::endl;
+#endif // DEBUG
+
         std::ifstream file(filename, std::ios::binary | std::ios::in | std::ios::ate);
 
         size_t file_size = file.tellg();
@@ -252,10 +258,6 @@ public:
 
         delete[] memblock;
         file.close();
-
-#ifdef DEBUG
-        std::cout << "Matrix : File constructor called" << std::endl;
-#endif // DEBUG
     }
 
     /** Constant number constructor
@@ -268,7 +270,7 @@ public:
         : Matrix(height, width)
     {
 #ifdef DEBUG
-        std::cout << "Matrix : Constant number constructor called" << std::endl;
+        std::cout << "Matrix : Constant number constructor called with number=" << number << ", height=" << height << ", width=" << width << std::endl;
 #endif // DEBUG
         if( omp_get_max_threads() > 1 )
         {
@@ -291,6 +293,7 @@ public:
 #ifdef DEBUG
         std::cout << "Matrix : Copy constructor called" << std::endl;
 #endif // DEBUG
+
         *this = other;
     }
 
@@ -303,6 +306,7 @@ public:
 #ifdef DEBUG
         std::cout << "Matrix : Move constructor called" << std::endl;
 #endif // DEBUG
+
         other.Data(nullptr);
     }
 
@@ -362,13 +366,9 @@ public:
         if( this->height_ == 0 &&
             this->width_ == 0 &&
             data_ == nullptr)
-        {
             return true;
-        }
-        else
-        {
-            return false;
-        }
+
+        return false;
     }
 
     /** Valid instance test
@@ -379,13 +379,9 @@ public:
         if( this->height_ != 0 &&
             this->width_ != 0 &&
             data_ != nullptr )
-        {
             return true;
-        }
-        else
-        {
-            throw std::invalid_argument("Matrix dimensions must be non-zero and data shall not be empty!");
-        }
+
+        throw std::invalid_argument("Matrix dimensions must be non-zero and data shall not be empty!");
     }
 
     /** Negativity test
@@ -410,15 +406,36 @@ public:
     }
 
     /** Partial matrix creator
-     *  \brief Generates a new matrix from the current one with data in [start,end)
+     *  \brief Generates a new matrix from the current one with data in [start,end]
      *  \param start First element of partial matrix
-     *  \param end Last element (not-included) of partial matrix
+     *  \param end Last element of partial matrix
      *  \return A new matrix with the partial data
      */
     Matrix Partial(size_t start, size_t end) const
     {
-        Matrix result(end-start, 1);
-        std::copy(data_+start, data_+end, result.Data());
+        Matrix result(end-start+1, 1);
+        std::copy(data_+start, data_+end+1, result.Data());
+        return result;
+    }
+
+    /** Partial 2D matrix creator
+     *  \brief Generates a new matrix from the current one with data in [(row, col), (row, col)]
+     *  \param row_start Starting row, included
+     *  \param row_end Last row, included
+     *  \param col_start Starting column, included
+     *  \param col_end Last column, included
+     *  \return A new matrix with the partial data
+     */
+    Matrix Partial2D(size_t row_start, size_t row_end, size_t col_start, size_t col_end) const
+    {
+        size_t height = row_end-row_start+1;
+        size_t width = col_end-col_start+1;
+        Matrix result(height, width);
+
+        #pragma omp parallel for simd
+        for(size_t row = 0; row < height; ++row)
+            for(size_t col = 0; col < width; ++col)
+                result[row*width + col] = data_[(row+row_start)*this->width_ + (col+col_start)];
         return result;
     }
 
@@ -1791,11 +1808,13 @@ std::ostream& operator<<(std::ostream& os, const Matrix<T>& mat)
     }
 #endif // DO_ARGCHECKS
 
+    size_t width = sizeof(T) * 1.5;
+
     for( size_t i = 0; i < mat.Height(); ++i )
     {
         os << std::endl;
         for( size_t j = 0; j < mat.Width(); ++j )
-            os << std::setw(10) << mat[i*mat.Width() + j] << " ";
+            os << std::setw(width) << mat[i*mat.Width() + j] << " ";
     }
     os << std::endl;
     return os;
@@ -1965,6 +1984,6 @@ static inline void VectorMatrixMult(const Matrix<T>& vect, const Matrix<T>& mat,
             result[j] += vect[i] * mat[i*mat.Width() + j];
 }
 
-} // namespace astroqut
+} // namespace alias
 
 #endif // ASTROQUT_UTILS_MATRIX_HPP
