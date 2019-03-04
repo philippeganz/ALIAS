@@ -4,45 +4,40 @@
 /// \details Handle the user input, calls the preparation tools and the solver.
 /// \author Philippe Ganz <philippe.ganz@gmail.com>
 /// \version 0.6.0
-/// \date 2019-01-19
+/// \date 2019-03
 /// \copyright GPL-3.0
 ///
 
 #include "const.hpp"
 #include "WS/astroQUT.hpp"
 
-#include "utils/linearop/operator/fourier.hpp"
-
 #include <cstdlib>
 #include <getopt.h>
 #include <iostream>
 #include <string>
 
+void usage()
+{
+    std::cerr << std::endl << "usage : ASTROQUT -f|--source SOURCE -e|--sensitivity SENSITIVITY -o|--background BACKGROUND -b|--blurring BLURRING -r|--result RESULT -s|--size SIZE -x|--bootstrap BOOTSTRAP" << std::endl << std::endl;
+    std::cerr << "  SOURCE - Path to the source image;" << std::endl;
+    std::cerr << "  SENSITIVITY - Path to the sensitivity image;" << std::endl;
+    std::cerr << "  BACKGROUND - Path to the background image;" << std::endl;
+    std::cerr << "  BLURRING - Path to the blurring filter, defaults to data/blurring.data;" << std::endl;
+    std::cerr << "  RESULT - Path to the solution file;" << std::endl;
+    std::cerr << "  SIZE - Width of the picture;" << std::endl;
+    std::cerr << "  BOOTSTRAP - Amount of bootstraps to perform." << std::endl << std::endl;
+}
 
 int main( int argc, char **argv )
 {
-    double base_data[12] = {0,1,2,3,4,5,6,7,8,9,10,11};
-    astroqut::Matrix<double> base_mat(base_data, 12, 12, 1);
-    astroqut::Fourier<double> fourier(16);
-    std::cout << base_mat;
-    std::cout << fourier.FFT(base_mat);
-    std::cout << (astroqut::Matrix<double>) fourier.IFFT(fourier.FFT(base_mat)).Partial(0,12);
-
-    double base_data2[25] = {0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24};
-    astroqut::Matrix<double> base_mat2(base_data2, 25, 5, 5);
-    astroqut::Fourier<double> fourier2(8);
-    std::cout << base_mat2;
-    std::cout << fourier2.FFT2D(base_mat2);
-    std::cout << (astroqut::Matrix<double>) fourier2.IFFT2D(fourier2.FFT2D(base_mat2));
-
-
-
-
-    astroqut::WS::Parameters<double> options;
+    alias::WS::Parameters<double> options;
     std::string source;
     std::string sensitivity;
     std::string background;
+    std::string blurring;
     std::string result;
+    size_t pic_size = 0;
+    size_t bootstrap_max = 0;
 
     int c;
 
@@ -83,7 +78,7 @@ int main( int argc, char **argv )
             break;
 
         case 'b':
-            options.blurring_filter = std::string(optarg);
+            blurring = std::string(optarg);
             break;
 
         case 'r':
@@ -91,31 +86,36 @@ int main( int argc, char **argv )
             break;
 
         case 's':
-            options.pic_size = strtoul(optarg, nullptr, 0);
+            pic_size = strtoul(optarg, nullptr, 0);
             break;
 
         case 'x':
-            options.bootstrap_max = strtoul(optarg, nullptr, 0);
+            bootstrap_max = strtoul(optarg, nullptr, 0);
             break;
 
         default:
-            std::cerr << "usage : ASTROQUT -f source -e sensitivity -o background -b blurring -r result -s size -x bootstrap" << std::endl << std::endl;
-            std::cerr << "  source - Path to the source image;" << std::endl;
-            std::cerr << "  sensitivity - Path to the sensitivity image;" << std::endl;
-            std::cerr << "  background - Path to the background image;" << std::endl;
-            std::cerr << "  blurring - Path to the blurring filter;" << std::endl;
-            std::cerr << "  result - Path to the solution file;" << std::endl;
-            std::cerr << "  size - Width of the picture;" << std::endl;
-            std::cerr << "  bootstrap - Amount of bootstraps to perform." << std::endl << std::endl;
+            usage();
             return EXIT_FAILURE;
         }
     }
 
-    astroqut::WS::Solve(source,
-                        sensitivity,
-                        background,
-                        result,
-                        options);
+    if( source.compare("") == 0 ||
+        sensitivity.compare("") == 0 ||
+        background.compare("") == 0 ||
+        blurring.compare("") == 0 ||
+        result.compare("") == 0 ||
+        pic_size == 0 ||
+        bootstrap_max == 0)
+    {
+        usage();
+        return EXIT_FAILURE;
+    }
+
+    options.blurring_filter = blurring;
+    options.pic_size = pic_size;
+    options.bootstrap_max = bootstrap_max;
+
+    alias::WS::Solve(source, sensitivity, background, result, options);
 
     return EXIT_SUCCESS;
 }
