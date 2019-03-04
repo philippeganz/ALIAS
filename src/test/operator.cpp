@@ -3,13 +3,13 @@
 /// \brief Test suite to validate the operator classes
 /// \author Philippe Ganz <philippe.ganz@gmail.com>
 /// \version 0.6.0
-/// \date 2019-01-19
+/// \date 2019-03
 /// \copyright GPL-3.0
 ///
 
 #include "test/operator.hpp"
 
-namespace astroqut
+namespace alias
 {
 namespace test
 {
@@ -65,7 +65,7 @@ void ConvolutionTime(size_t data_length, size_t filter_length)
     {
         A_data[i] = distribution(generator);
     }
-    astroqut::Matrix<int> A(A_data, test_height, test_width);
+    alias::Matrix<int> A(A_data, test_height, test_width);
 
     Matrix<int>::matrix_t * f_data = (int*) _mm_malloc(sizeof(int)*filter_length*filter_length, sizeof(int));; // destroyed when u is destroyed
     #pragma omp parallel for simd
@@ -73,7 +73,7 @@ void ConvolutionTime(size_t data_length, size_t filter_length)
     {
         f_data[i] = distribution(generator);
     }
-    astroqut::Convolution f(Matrix<int>(f_data, filter_length, filter_length));
+    alias::Convolution f(Matrix<int>(f_data, filter_length, filter_length));
 
     std::chrono::time_point<std::chrono::high_resolution_clock> start, end;
     start = std::chrono::high_resolution_clock::now();
@@ -253,7 +253,7 @@ void AbelTime(size_t pic_size)
     {
         target_data[i] = distribution(generator);
     }
-    astroqut::Matrix<double> target(target_data, test_height, test_width);
+    alias::Matrix<double> target(target_data, test_height, test_width);
 
     std::chrono::time_point<std::chrono::high_resolution_clock> start, end;
     start = std::chrono::high_resolution_clock::now();
@@ -425,7 +425,20 @@ bool BlurTest()
 {
     std::cout << "Blur filter test : ";
 
-    return true;
+    double blur_data[25] = {0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24};
+    Matrix<double> data(blur_data, 25, 5, 5);
+    double filter_data[9] = {1,1,1,1,-8,1,1,1,1};
+    Matrix<double> filter(filter_data, 9, 3, 3);
+    double result_data[25] = {12,12,9,6,-12,-12,0,0,0,-30,-27,0,0,0,-45,-42,0,0,0,-60,-108,-78,-81,-84,-132};
+    Matrix<double> expected_result(result_data, 25, 5, 5);
+
+    Blurring<double> blur(filter, 5);
+
+    bool test_result = Compare(expected_result, blur * data);
+
+    std::cout << ( test_result ? "Success" : "Failure") << std::endl;
+
+    return test_result;
 }
 
 bool AstroTest()
@@ -476,4 +489,4 @@ bool AstroTestTransposed()
 
 } // namespace oper
 } // namespace test
-} // namespace astroqut
+} // namespace alias
