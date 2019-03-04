@@ -3,8 +3,8 @@
 /// \brief FISTA (Fast Iterative Shrinkage Tresholding Algorithm) solver for Poisson distributed noise.
 /// \author Hatef Monajemi <monajemi@stanford.edu> 2012-2014
 /// \author Philippe Ganz <philippe.ganz@gmail.com> 2017-2018
-/// \version 0.5.0
-/// \date 2018-07-17
+/// \version 0.6.0
+/// \date 2018-10-27
 /// \copyright GPL-3.0
 ///
 
@@ -20,11 +20,11 @@
 #include <limits>
 #include <numeric>
 
-namespace astroqut{
+namespace alias{
 namespace fista{
 namespace poisson{
 
-template<class T>
+template<class T = double>
 struct Parameters
 {
     /** Default constructor
@@ -36,7 +36,7 @@ struct Parameters
         , init_value{}
         , indices(Matrix<size_t>(0,1,1))
         , log(true)
-        , log_period(10)
+        , log_period(20)
     {}
 
     T tol; //!< Member variable "tol"
@@ -46,16 +46,6 @@ struct Parameters
     bool log; //!< Member variable "log"
     unsigned int log_period; //!< Member variable "log_period"
 };
-
-template<class T>
-static void RemoveNeg(Matrix<T>& mat, Matrix<size_t> indices)
-{
-    for(size_t i = 0; i < indices.Length(); ++i)
-    {
-        if(mat[indices[i]] < 0)
-            mat[indices[i]] = (T)0;
-    }
-}
 
 /** Poisson distributed noise solver
  *  \param A Explicit regression matrix
@@ -110,12 +100,12 @@ Matrix<T> Solve(const Operator<T>& A,
 {
     std::cout << std::defaultfloat;
     std::cout << std::string(37, '*') << " FISTA " << std::string(36, '*') << std::endl;
-    std::cout << "A : " << A.Height() << "x" << A.Width() << " matrix";
-    std::cout << ", u : " << u.Height() << " vector";
-    std::cout << ", b : " << b.Height() << " vector" << std::endl;
-    std::cout << "lambda :" << lambda << ", tol :" << options.tol << std::endl;
+    std::cout << "A: " << A.Height() << "x" << A.Width() << " matrix";
+    std::cout << ", u: " << u.Length() << " vector";
+    std::cout << ", b: " << b.Length() << " vector" << std::endl;
+    std::cout << "lambda:" << lambda << ", tol:" << options.tol << std::endl;
     std::cout << std::string(80, '*') << std::endl << std::endl;
-    std::cout << " iter" << " | " << "         tol        " << " | " << "       FLasso       " << " | " << "     Lf      " << " | " << " lambda " << std::endl;
+    std::cout << " iter" << " | " << "         tol        " << " | " << "       FLasso       " << " | " << "     Lf      " << " | " << "  NNZ   " << std::endl;
     std::cout << std::string(80, '-') << std::endl;
     std::cout << std::scientific;
 
@@ -159,7 +149,7 @@ Matrix<T> Solve(const Operator<T>& A,
             x_next = y - (grad_current/L_bar);
             x_next_woi.Data(x_next.Data()+1); // points to second element of new x_next
             std::move(x_next_woi).Shrink(lambda/L_bar); //cast to an rvalue to allow in-place shrinkage
-            RemoveNeg(x_next, options.indices);
+            std::move(x_next).RemoveNeg(options.indices);
             Ax_nextu = (A*x_next)+u;
             if( Ax_nextu.ContainsNeg() ) // skip function evaluation if we have negative values
                 continue;
@@ -196,24 +186,25 @@ Matrix<T> Solve(const Operator<T>& A,
         {
             if( k % (options.log_period * 50) == 0 )
             {
-                std::cout << std::endl << " iter" << " | " << "         tol        " << " | " << "       FLasso       " << " | " << "     Lf      " << " | " << " lambda " << std::endl;
+                std::cout << std::endl << " iter" << " | " << "         tol        " << " | " << "       FLasso       " << " | " << "     Lf      " << " | " << "  NNZ  " << std::endl;
                 std::cout << std::string(80, '-') << std::endl;
             }
             if( k % options.log_period == 0 )
             {
-                std::cout << std::setw(5) << k << " | " << std::scientific << std::setprecision(10) << std::setw(20) << tol << " | " << std::setw(20) << f_lasso_next << " | " << std::defaultfloat << std::setw(13) << Lf << " | " << std::setw(8) << lambda << std::endl;
+                std::cout << std::setw(5) << k << " | " << std::scientific << std::setprecision(10) << std::setw(20) << tol << " | " << std::setw(20) << f_lasso_next << " | " << std::defaultfloat << std::setw(13) << Lf << " | " << std::setw(8) << x.NonZeroAmount() << std::endl;
             }
         }
     }
 
-    std::cout << std::setw(5) << k << " | " << std::scientific << std::setprecision(10) << std::setw(20) << std::abs(tol) << " | " << std::setw(20) << f_lasso_next << " | " << std::defaultfloat << std::setw(13) << Lf << " | " << std::setw(8) << lambda << std::endl << std::endl << std::endl;
+    std::cout << std::string(80, '-') << std::endl;
+    std::cout << std::setw(5) << k << " | " << std::scientific << std::setprecision(10) << std::setw(20) << std::abs(tol) << " | " << std::setw(20) << f_lasso_next << " | " << std::defaultfloat << std::setw(13) << Lf << " | " << std::setw(8) << x.NonZeroAmount() << std::endl << std::endl << std::endl;
 
     if(k < options.iter_max)
         std::cout << "FISTA: converged in " << k << " iterations" << std::endl;
     else
         std::cout << "FISTA: did not converge after " << k << " iterations" << std::endl;
 
-    std::cout << "FISTA: Relative error: " << std::abs(tol) << std::endl;
+    std::cout << "FISTA: Relative error: " << std::abs(tol) << std::endl << std::endl;
 
     x_next_woi.Data(nullptr); // release pointer
 
@@ -222,7 +213,7 @@ Matrix<T> Solve(const Operator<T>& A,
 
 } // namespace poisson
 } // namespace fista
-} // namespace astroqut
+} // namespace alias
 
 #endif // ASTROQUT_FISTA_POISSON_HPP
 

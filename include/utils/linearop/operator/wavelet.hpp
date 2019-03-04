@@ -3,8 +3,8 @@
 /// \brief Wavelet transform class header
 /// \details Provide the Wavelet transform operator
 /// \author Philippe Ganz <philippe.ganz@gmail.com> 2017-2018
-/// \version 0.5.0
-/// \date 2018-06-17
+/// \version 0.6.0
+/// \date 2019-03
 /// \copyright GPL-3.0
 ///
 
@@ -13,13 +13,13 @@
 
 #include "utils/linearop/operator.hpp"
 
-namespace astroqut
+namespace alias
 {
 
 enum WaveletType{haar, beylkin, coiflet, daubechies, symmlet, vaidyanathan, battle};
 enum FilterType{low, high};
 
-template<class T>
+template<class T = double>
 class Wavelet : public Operator<T>
 {
 private:
@@ -33,12 +33,43 @@ public:
     /** Default constructor
      */
     Wavelet()
-        : Operator<T>(0, 0)
+        : Operator<T>()
         , wavelet_type_((WaveletType) 0)
         , parameter_(0)
         , low_pass_filter_(Matrix<T>())
         , high_pass_filter_(Matrix<T>())
-    {}
+    {
+#ifdef DEBUG
+        std::cout << "Wavelet : Default constructor called" << std::endl;
+#endif // DEBUG
+    }
+
+    /** Copy constructor
+     *  \param other Object to copy from
+     */
+    Wavelet(const Wavelet& other)
+        : Operator<T>(other)
+        , wavelet_type_(other.wavelet_type_)
+        , parameter_(other.parameter_)
+        , low_pass_filter_(other.low_pass_filter_)
+        , high_pass_filter_(other.high_pass_filter_)
+    {
+#ifdef DEBUG
+        std::cout << "Wavelet : Copy constructor called" << std::endl;
+#endif // DEBUG
+    }
+
+    /** Move constructor
+     *  \param other Object to move from
+     */
+    Wavelet(Wavelet&& other)
+        : Wavelet()
+    {
+#ifdef DEBUG
+        std::cout << "Wavelet : Move constructor called" << std::endl;
+#endif // DEBUG
+        swap(*this, other);
+    }
 
     /** Full member constructor
      *  \param low_pass_filter QMF matrix for low pass filtering
@@ -47,13 +78,17 @@ public:
      *  \param parameter Integer parameter specific to each wavelet type
      *  \param transposed Transposition state of the operator
      */
-    Wavelet(Matrix<T>&& low_pass_filter, Matrix<T>&& high_pass_filter, WaveletType wavelet_type, int parameter, bool transposed = false)
+    explicit Wavelet(Matrix<T>&& low_pass_filter, Matrix<T>&& high_pass_filter, WaveletType wavelet_type, int parameter, bool transposed = false)
         : Operator<T>(Matrix<T>(), 1, 1, transposed)
         , wavelet_type_(wavelet_type)
         , parameter_(parameter)
         , low_pass_filter_(low_pass_filter)
         , high_pass_filter_(high_pass_filter)
-    {}
+    {
+#ifdef DEBUG
+        std::cout << "Wavelet : Full member constructor called" << std::endl;
+#endif // DEBUG
+    }
 
     /** Build constructor
      *  \brief Builds the Wavelet operator with the qmf matrix corresponding to type and parameter
@@ -61,7 +96,7 @@ public:
      *  \param parameter Integer parameter specific to each wavelet type
      *  \param transposed Transposition state of the operator
      */
-    Wavelet(WaveletType wavelet_type, int parameter, bool transposed = false)
+    explicit Wavelet(WaveletType wavelet_type, int parameter, bool transposed = false)
         : Operator<T>(Matrix<T>(), 1, 1, transposed)
         , wavelet_type_(wavelet_type)
         , parameter_(parameter)
@@ -69,8 +104,7 @@ public:
         , high_pass_filter_(MakeONFilter(wavelet_type, parameter, high))
     {
 #ifdef DEBUG
-    std::cout << std::endl << "Low pass filter :" << low_pass_filter_;
-    std::cout << std::endl << "High pass filter :" << high_pass_filter_;
+    std::cout << "Wavelet : Build constructor called" << std::endl;
 #endif // DEBUG
     }
 
@@ -85,7 +119,11 @@ public:
     /** Default destructor
      */
     virtual ~Wavelet()
-    {}
+    {
+#ifdef DEBUG
+        std::cout << "Wavelet : Destructor called" << std::endl;
+#endif // DEBUG
+    }
 
     /** Valid instance test
      *  \return Throws an error message if instance is not valid.
@@ -100,6 +138,32 @@ public:
         {
             throw std::invalid_argument("Filters shall not be empty!");
         }
+    }
+
+    /** Swap function
+     *  \param first First object to swap
+     *  \param second Second object to swap
+     */
+    friend void swap(Wavelet& first, Wavelet& second) noexcept
+    {
+        using std::swap;
+
+        swap(static_cast<Operator<T>&>(first), static_cast<Operator<T>&>(second));
+        swap(first.wavelet_type_, second.wavelet_type_);
+        swap(first.parameter_, second.parameter_);
+        swap(first.low_pass_filter_, second.low_pass_filter_);
+        swap(first.high_pass_filter_, second.high_pass_filter_);
+    }
+
+    /** Copy assignment operator
+     *  \param other Object to assign to current object
+     *  \return A reference to this
+     */
+    Wavelet& operator=(Wavelet other)
+    {
+        swap(*this, other);
+
+        return *this;
     }
 
     Matrix<T> operator*(const Matrix<T>& other) const override final
@@ -118,19 +182,11 @@ public:
 
         if(!this->transposed_)
         {
-            #pragma omp parallel for
-            for( size_t i = 0; i < other.Width(); ++i )
-            {
-                IWT_PO(other, result, i, 0, temp_1, temp_2);
-            }
+            IWT_PO(other, result, 0, 0, temp_1, temp_2);
         }
         else
         {
-            #pragma omp parallel for
-            for( size_t i = 0; i < other.Width(); ++i )
-            {
-                FWT_PO(other, result, i, 0, temp_1, temp_2);
-            }
+            FWT_PO(other, result, 0, 0, temp_1, temp_2);
         }
 
         delete[] temp_1;
@@ -407,12 +463,8 @@ public:
         }
 
         if( filter_type == high )
-        {
             for( size_t i = 1; i < data_size; i += 2 )
-            {
                 data[i] = -data[i];
-            }
-        }
 
         Matrix<T> result(data, data_size, data_size, 1);
         return result/result.Norm(two);
@@ -424,8 +476,8 @@ public:
      *  \param wcoef Result array, must be the same size as signal.
      *  \param column Column to transform
      *  \param coarsest_level Coarsest level of the wavelet transform
-     *  \param intermediate Temporary array of size 1 x Height of signal
-     *  \param intermediate_temp Temporary array of size 1 x Height of signal
+     *  \param intermediate Temporary array of size Height of signal
+     *  \param intermediate_temp Temporary array of size Height of signal
      *  \author David Donoho <donoho@stat.stanford.edu> 1993
      *  \author Philippe Ganz <philippe.ganz@gmail.com> 2018
      */
@@ -437,7 +489,6 @@ public:
                 T* intermediate_temp ) const
     {
         size_t level_max = (size_t) std::ceil(std::log2(signal.Height()));
-        size_t level_offset = signal.Height();
 
     #ifdef DO_ARGCHECKS
         if( (size_t) std::pow(2,level_max) != signal.Length() )
@@ -448,23 +499,27 @@ public:
 
         if( coarsest_level >= level_max )
         {
-            std::cerr << "The coarsest level must be in the [, " << level_max << ") range." << std::endl;
+            std::cerr << "The coarsest level must be in the [0, " << level_max << ") range." << std::endl;
             throw;
         }
 
         if( column >= signal.Width() )
         {
-            std::cerr << "The column must be in the [, " << signal.Width() << ") range." << std::endl;
+            std::cerr << "The column must be in the [0, " << signal.Width() << ") range." << std::endl;
             throw;
         }
     #endif // DO_ARGCHECKS
 
+        #pragma omp parallel for simd
         for( size_t i = 0; i < signal.Height(); ++i )
             intermediate[i] = signal[i*wcoef.Width() + column];
 
-        for( size_t level = level_max; level > coarsest_level; --level )
+        for( size_t level = level_max, level_size = signal.Height();
+             level > coarsest_level;
+             --level, level_size /= 2 )
         {
-            for( size_t pass_index = 0; pass_index < level_offset/2; ++pass_index )
+            #pragma omp parallel for
+            for( size_t pass_index = 0; pass_index < level_size/2; ++pass_index )
             {
                 T low_pass_local_coef = 0.0;
                 size_t low_pass_offset = 2*pass_index;
@@ -476,26 +531,26 @@ public:
                     low_pass_local_coef += low_pass_filter_[filter_index] * intermediate[low_pass_offset];
 
                     ++low_pass_offset;
-                    if( low_pass_offset >= level_offset )
-                        low_pass_offset -= level_offset;
+                    if( low_pass_offset >= level_size )
+                        low_pass_offset -= level_size;
 
                     high_pass_local_coef += high_pass_filter_[filter_index] * intermediate[high_pass_offset];
 
                     --high_pass_offset;
                     if( high_pass_offset < 0 )
-                        high_pass_offset += level_offset;
+                        high_pass_offset += level_size;
                 }
 
                 intermediate_temp[pass_index] = low_pass_local_coef;
-                intermediate_temp[pass_index + level_offset/2] = high_pass_local_coef;
+                intermediate_temp[pass_index + level_size/2] = high_pass_local_coef;
             }
 
-            for( size_t i = 0; i < level_offset; ++i )
+            #pragma omp parallel for simd
+            for( size_t i = 0; i < level_size; ++i )
                 intermediate[i] = intermediate_temp[i];
-
-            level_offset /= 2;
         }
 
+        #pragma omp parallel for simd
         for( size_t i = 0; i < signal.Height(); ++i )
             wcoef[i*wcoef.Width() + column] = intermediate[i];
     }
@@ -506,8 +561,8 @@ public:
      *  \param signal Result array, must be the same size as wcoef.
      *  \param column Column to transform, -1 to transform all
      *  \param coarsest_level Coarsest level of the wavelet transform
-     *  \param intermediate Temporary array of size 1 x Height of signal
-     *  \param intermediate_temp Temporary array of size 1 x Height of signal
+     *  \param intermediate Temporary array of size Height of signal
+     *  \param intermediate_temp Temporary array of size Height of signal
      *  \author David Donoho <donoho@stat.stanford.edu> 1993
      *  \author Philippe Ganz <philippe.ganz@gmail.com> 2018
      */
@@ -519,10 +574,6 @@ public:
                 T* intermediate_temp ) const
     {
         size_t level_max = (size_t) std::ceil(std::log2(signal.Height()));
-        size_t level_offset = 1;
-        size_t filter_length = low_pass_filter_.Length();
-        size_t filter_length_half_even = (filter_length + 1) / 2;
-        size_t filter_length_half_odd = filter_length / 2;
 
     #ifdef DO_ARGCHECKS
         if( (size_t) std::pow(2,level_max) != signal.Length() )
@@ -544,79 +595,69 @@ public:
         }
     #endif // DO_ARGCHECKS
 
+        #pragma omp parallel for simd
         for( size_t i = 0; i < (size_t) std::pow(2, coarsest_level); ++i )
-        {
             intermediate[i] = wcoef[i*wcoef.Width() + column];
-        }
 
-        for( size_t level = (size_t) std::pow(2, coarsest_level); level <= level_max; ++level )
+        for( size_t level = (size_t) std::pow(2, coarsest_level), level_size = 1;
+             level <= level_max;
+             ++level, level_size *= 2 )
         {
-            for( size_t pass_index = 0; pass_index < level_offset; ++pass_index )
+            #pragma omp parallel for
+            for( size_t pass_index = 0; pass_index < level_size; ++pass_index )
             {
                 T even_local_coef = 0.0;
                 int low_pass_offset = pass_index;
                 T odd_local_coef = 0.0;
                 size_t high_pass_offset = pass_index;
 
-                for( size_t filter_index = 0; filter_index < filter_length_half_even; ++filter_index )
+                for( size_t filter_index = 0; filter_index < (low_pass_filter_.Length() + 1) / 2; ++filter_index )
                 {
                     even_local_coef += low_pass_filter_[2*filter_index] * intermediate[low_pass_offset];
 
                     --low_pass_offset;
                     if( low_pass_offset < 0 )
-                    {
-                        low_pass_offset += level_offset;
-                    }
+                        low_pass_offset += level_size;
 
-                    odd_local_coef += high_pass_filter_[2*filter_index] * wcoef[(level_offset + high_pass_offset)*wcoef.Width() + column];
+                    odd_local_coef += high_pass_filter_[2*filter_index] * wcoef[(level_size + high_pass_offset)*wcoef.Width() + column];
 
                     ++high_pass_offset;
-                    if( high_pass_offset >= level_offset )
-                    {
-                        high_pass_offset -= level_offset;
-                    }
+                    if( high_pass_offset >= level_size )
+                        high_pass_offset -= level_size;
                 }
 
                 low_pass_offset = pass_index;
                 high_pass_offset = pass_index;
-                for( size_t filter_index = 0; filter_index < filter_length_half_odd; ++filter_index )
+                for( size_t filter_index = 0; filter_index < low_pass_filter_.Length() / 2; ++filter_index )
                 {
                     odd_local_coef += low_pass_filter_[2*filter_index+1] * intermediate[low_pass_offset];
 
                     --low_pass_offset;
                     if( low_pass_offset < 0 )
-                    {
-                        low_pass_offset += level_offset;
-                    }
+                        low_pass_offset += level_size;
 
-                    even_local_coef += high_pass_filter_[2*filter_index+1] * wcoef[(level_offset + high_pass_offset)*wcoef.Width() + column];
+                    even_local_coef += high_pass_filter_[2*filter_index+1] * wcoef[(level_size + high_pass_offset)*wcoef.Width() + column];
 
                     ++high_pass_offset;
-                    if( high_pass_offset >= level_offset )
-                    {
-                        high_pass_offset -= level_offset;
-                    }
+                    if( high_pass_offset >= level_size )
+                        high_pass_offset -= level_size;
                 }
 
                 intermediate_temp[2*pass_index] = even_local_coef;
                 intermediate_temp[2*pass_index + 1] = odd_local_coef;
             }
 
-            for( size_t i = 0; i < 2*level_offset; ++i )
-            {
+            #pragma omp parallel for simd
+            for( size_t i = 0; i < 2*level_size; ++i )
                 intermediate[i] = intermediate_temp[i];
-            }
-
-            level_offset *= 2;
         }
 
+        #pragma omp parallel for simd
         for( size_t i = 0; i < signal.Height(); ++i )
-        {
             signal[i*signal.Width() + column] = intermediate[i];
-        }
     }
 };
 
-} // namespace astroqut
+} // namespace alias
 
 #endif // ASTROQUT_UTILS_OPERATOR_WAVELET_HPP

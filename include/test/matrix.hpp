@@ -2,8 +2,8 @@
 /// \file include/test/matrix.hpp
 /// \brief Test suite to validate the Matrix class.
 /// \author Philippe Ganz <philippe.ganz@gmail.com>
-/// \version 0.5.0
-/// \date 2018-03-30
+/// \version 0.6.0
+/// \date 2018-10-14
 /// \copyright GPL-3.0
 ///
 
@@ -11,135 +11,28 @@
 #define ASTROQUT_TEST_MATRIX_HPP
 
 #include "utils/linearop/matrix.hpp"
-#include "utils/settings.hpp"
 
 #include <chrono>
 #include <iostream>
 #include <typeinfo>
 
-namespace astroqut{
+namespace alias{
 namespace test{
 namespace matrix{
-
-template <class T>
-void MMTest(size_t length)
-{
-    std::string type(typeid(T).name());
-    std::cout << std::endl;
-    std::cout << "Matrix-Matrix multiplication performance test with " << type << std::endl;
-    std::cout << "---------------------------------------------------" << std::string( type.length(), '-') << std::endl;
-
-    std::chrono::time_point<std::chrono::high_resolution_clock> start, end;
-    std::chrono::duration<double> elapsed_time;
-    double result_times[2];
-    Matrix<T> big_matrix((T)2, length, length);
-
-    for(int i = 0; i < 2; ++i)
-    {
-        settings::default_MMType = static_cast<MMMultType>(i);
-        start = std::chrono::high_resolution_clock::now();
-        big_matrix * big_matrix;
-        end = std::chrono::high_resolution_clock::now();
-        elapsed_time = end-start;
-        result_times[i] = elapsed_time.count();
-        std::cout << "Time for " << length << " x " << length << " with method ";
-        std::cout << settings::MMMultTypeName[i] << " : " << result_times[i]*1000 << " milliseconds" << std::endl;
-    }
-
-    std::cout << "---------------------------------------------" << std::endl;
-    int best = std::distance(result_times, std::min_element(result_times, result_times+2));
-    std::cout << "Best performance achieved by " << settings::MMMultTypeName[best] << " with ";
-    std::cout << result_times[best]*1000 << " milliseconds" << std::endl << std::endl;
-    settings::default_MMType = static_cast<MMMultType>(best);
-}
-
-template <class T>
-void MVTest(size_t length)
-{
-    std::string type(typeid(T).name());
-    std::cout << std::endl;
-    std::cout << "Matrix-Vector multiplication performance test with " << type << std::endl;
-    std::cout << "---------------------------------------------------" << std::string( type.length(), '-') << std::endl;
-
-    std::chrono::time_point<std::chrono::high_resolution_clock> start, end;
-    std::chrono::duration<double> elapsed_time;
-    double result_times[3];
-    Matrix<T> big_matrix((T)2, length, length);
-    Matrix<T> big_vector((T)2, length, 1);
-
-    for(int i = 0; i < 3; ++i)
-    {
-        settings::default_MVType = static_cast<MVMultType>(i);
-        start = std::chrono::high_resolution_clock::now();
-        big_matrix * big_vector;
-        end = std::chrono::high_resolution_clock::now();
-        elapsed_time = end-start;
-        result_times[i] = elapsed_time.count();
-        std::cout << "Time for " << length << " x " << length << " matrix-vector multiplication with method ";
-        std::cout << settings::MVMultTypeName[i] << " : " << result_times[i]*1000 << " milliseconds" << std::endl;
-    }
-
-    std::cout << "---------------------------------------------" << std::endl;
-    int best = std::distance(result_times, std::min_element(result_times, result_times+3));
-    std::cout << "Best performance achieved by " << settings::MVMultTypeName[best] << " with ";
-    std::cout << result_times[best]*1000 << " milliseconds" << std::endl << std::endl;
-    settings::default_MVType = static_cast<MVMultType>(best);
-}
-
-template <class T>
-void VMTest(size_t length)
-{
-    std::string type(typeid(T).name());
-    std::cout << std::endl;
-    std::cout << "Vector-Matrix multiplication performance test with " << type << std::endl;
-    std::cout << "---------------------------------------------------" << std::string( type.length(), '-') << std::endl;
-
-    std::chrono::time_point<std::chrono::high_resolution_clock> start, end;
-    std::chrono::duration<double> elapsed_time;
-    double result_times[2];
-    Matrix<T> big_matrix((T)2, length, length);
-    Matrix<T> big_vector((T)2, 1, length);
-
-    for(int i = 0; i < 2; ++i)
-    {
-        settings::default_VMType = static_cast<VMMultType>(i);
-        start = std::chrono::high_resolution_clock::now();
-        big_vector * big_matrix;
-        end = std::chrono::high_resolution_clock::now();
-        elapsed_time = end-start;
-        result_times[i] = elapsed_time.count();
-        std::cout << "Time for " << length << " x " << length << " vector-matrix multiplication with method ";
-        std::cout << settings::VMMultTypeName[i] << " : " << result_times[i]*1000 << " milliseconds" << std::endl;
-    }
-
-    std::cout << "---------------------------------------------" << std::endl;
-    int best = std::distance(result_times, std::min_element(result_times, result_times+2));
-    std::cout << "Best performance achieved by " << settings::VMMultTypeName[best] << " with ";
-    std::cout << result_times[best]*1000 << " milliseconds" << std::endl << std::endl;
-    settings::default_VMType = static_cast<VMMultType>(best);
-}
-
-template <class T>
-void Time(size_t length)
-{
-    MMTest<T>(length);
-    MVTest<T>(16*length);
-    VMTest<T>(16*length);
-}
 
 template <class T>
 void Optimizations(size_t length)
 {
     std::string type(typeid(T).name());
     T number = (T) 3.14159265359;
-    typename Matrix<T>::matrix_t* test_array = (T*) _mm_malloc(sizeof(T)*length, sizeof(T));
+    Matrix<T> test_array(length, 1);
     std::chrono::time_point<std::chrono::high_resolution_clock> start, end;
     std::chrono::duration<double> elapsed_time;
 
 // STL algorithm
     start = std::chrono::high_resolution_clock::now();
 
-    std::fill( test_array, test_array + length, number );
+    std::fill( test_array.Data(), test_array.Data() + length, number );
 
     end = std::chrono::high_resolution_clock::now();
     elapsed_time = end-start;
@@ -150,9 +43,7 @@ void Optimizations(size_t length)
 
     #pragma omp parallel for
     for(size_t i = 0; i < length; ++i)
-    {
         test_array[i] = number;
-    }
 
     end = std::chrono::high_resolution_clock::now();
     elapsed_time = end-start;
@@ -163,9 +54,7 @@ void Optimizations(size_t length)
 
     #pragma omp for simd
     for(size_t i = 0; i < length; ++i)
-    {
         test_array[i] = number;
-    }
 
     end = std::chrono::high_resolution_clock::now();
     elapsed_time = end-start;
@@ -176,9 +65,7 @@ void Optimizations(size_t length)
 
     #pragma omp parallel for simd
     for(size_t i = 0; i < length; ++i)
-    {
         test_array[i] = number;
-    }
 
     end = std::chrono::high_resolution_clock::now();
     elapsed_time = end-start;
@@ -190,9 +77,7 @@ void Optimizations(size_t length)
 
     #pragma omp taskloop
     for(size_t i = 0; i < length; ++i)
-    {
         test_array[i] = number;
-    }
 
     end = std::chrono::high_resolution_clock::now();
     elapsed_time = end-start;
@@ -203,15 +88,11 @@ void Optimizations(size_t length)
 
     #pragma omp taskloop simd
     for(size_t i = 0; i < length; ++i)
-    {
         test_array[i] = number;
-    }
 
     end = std::chrono::high_resolution_clock::now();
     elapsed_time = end-start;
     std::cout << "Time for omp taskloop simd to assign " << length << " " << type << " : " << elapsed_time.count() << " seconds" << std::endl;
-
-    _mm_free(test_array);
 }
 
 template <class T>
@@ -256,7 +137,7 @@ bool TransposeRect()
 
     T data[10] = {1,6,2,7,3,8,4,9,5,10};
     const Matrix<T> expected_result(data, 10, 5, 2);
-    bool test_result =  (Compare(expected_result, RectMatrix<T>().Transpose()));
+    bool test_result = (Compare(expected_result, RectMatrix<T>().Transpose()));
     std::cout << (test_result ? "Success" : "Failure") << std::endl;
 
     return test_result;
@@ -272,7 +153,7 @@ bool Add()
 
     T data[9] = {2,4,6,8,10,12,14,16,18};
     const Matrix<T> expected_result(data, 9, 3, 3);
-    bool test_result =  (Compare(expected_result, SquareMatrix<T>() + SquareMatrix<T>()));
+    bool test_result = (Compare(expected_result, SquareMatrix<T>() + SquareMatrix<T>()));
     std::cout << (test_result ? "Success" : "Failure") << std::endl;
 
     return test_result;
@@ -288,7 +169,7 @@ bool Sub()
 
     T data[9] = {-1,-2,-3,-4,-5,-6,-7,-8,-9};
     const Matrix<T> expected_result(data, 9, 3, 3);
-    bool test_result =  (Compare(expected_result, SquareMatrix<T>() - (T)2 * SquareMatrix<T>()));
+    bool test_result = (Compare(expected_result, SquareMatrix<T>() - (T)2 * SquareMatrix<T>()));
     std::cout << (test_result ? "Success" : "Failure") << std::endl;
 
     return test_result;
@@ -304,7 +185,7 @@ bool MultSquare()
 
     T data[9] = {30,36,42,66,81,96,102,126,150};
     const Matrix<T> expected_result(data, 9, 3, 3);
-    bool test_result =  (Compare(expected_result, SquareMatrix<T>() * SquareMatrix<T>()));
+    bool test_result = (Compare(expected_result, SquareMatrix<T>() * SquareMatrix<T>()));
     std::cout << (test_result ? "Success" : "Failure") << std::endl;
 
     return test_result;
@@ -320,7 +201,7 @@ bool MultRect()
 
     T data[4] = {55,130,130,330};
     const Matrix<T> expected_result(data, 4, 2, 2);
-    bool test_result =  (Compare(expected_result, RectMatrix<T>() * RectMatrix<T>().Transpose()));
+    bool test_result = (Compare(expected_result, RectMatrix<T>() * RectMatrix<T>().Transpose()));
     std::cout << (test_result ? "Success" : "Failure") << std::endl;
 
     return test_result;
@@ -340,7 +221,7 @@ bool MultVectMat()
     T data[5] = {13,16,19,22,25};
     const Matrix<T> expected_result(data, 5, 1, 5);
 
-    bool test_result =  (Compare(expected_result, vect * RectMatrix<T>()));
+    bool test_result = (Compare(expected_result, vect * RectMatrix<T>()));
     std::cout << (test_result ? "Success" : "Failure") << std::endl;
 
     return test_result;
@@ -360,7 +241,7 @@ bool MultMatVect()
     T data[2] = {55,130};
     const Matrix<T> expected_result(data, 2, 2, 1);
 
-    bool test_result =  (Compare(expected_result, RectMatrix<T>() * vect));
+    bool test_result = (Compare(expected_result, RectMatrix<T>() * vect));
     std::cout << (test_result ? "Success" : "Failure") << std::endl;
 
     return test_result;
@@ -374,7 +255,7 @@ bool NormOne()
     std::string type(typeid(T).name());
     std::cout << "Norm one test with " << type << " : ";
 
-    bool test_result =  IsEqual(SquareMatrix<T>().Norm(one), (T) 45.0);
+    bool test_result = IsEqual(SquareMatrix<T>().Norm(one), (T) 45.0);
     std::cout << (test_result ? "Success" : "Failure") << std::endl;
 
     return test_result;
@@ -389,7 +270,7 @@ bool NormTwo()
     std::string type(typeid(T).name());
     std::cout << "Norm two test with " << type << " : ";
 
-    bool test_result =  IsEqual(SquareMatrix<T>().Norm(two), (T) 16.881943016134134);
+    bool test_result = IsEqual(SquareMatrix<T>().Norm(two), (T) 16.881943016134134);
     std::cout << (test_result ? "Success" : "Failure") << std::endl;
 
     return test_result;
@@ -434,7 +315,7 @@ bool Shrink()
     T data[9] = {0,0,1,2,3,4,5,6,7};
     const Matrix<T> expected_result(data, 9, 3, 3);
 
-    bool test_result =  (Compare(expected_result, SquareMatrix<T>().Shrink(2)));
+    bool test_result = (Compare(expected_result, SquareMatrix<T>().Shrink(2)));
     std::cout << (test_result ? "Success" : "Failure") << std::endl;
 
     return test_result;
@@ -444,8 +325,46 @@ bool Shrink<std::complex<double>>();
 
 bool Input();
 
+template <class T>
+bool CC()
+{
+    std::string type(typeid(T).name());
+    std::cout << "Connected component test with " << type << " : ";
+
+    T data[100] = {9,0,0,0,0,2,0,0,3,0,
+                   0,0,0,0,0,1,1,0,0,2,
+                   0,0,2,5,0,3,9,5,0,0,
+                   2,0,3,5,0,6,5,1,2,4,
+                   0,0,0,0,0,0,1,1,1,9,
+                   0,0,1,0,4,0,0,0,0,0,
+                   0,0,0,2,0,0,0,0,6,0,
+                   0,0,4,0,3,0,0,0,0,0,
+                   0,5,0,0,0,0,3,0,0,0,
+                   0,0,0,5,0,0,0,0,1,0};
+
+    const Matrix<T> raw_data(data, 100, 10, 10);
+
+    T result_data[100] = { 9,0,0,0,0,0,0,0,3,0,
+                           0,0,0,0,0,0,0,0,0,0,
+                           0,0,0,5,0,0,9,0,0,0,
+                           2,0,0,0,0,0,0,0,0,0,
+                           0,0,0,0,0,0,0,0,0,0,
+                           0,0,0,0,0,0,0,0,0,0,
+                           0,0,0,0,0,0,0,0,6,0,
+                           0,0,0,0,0,0,0,0,0,0,
+                           0,5,0,0,0,0,3,0,0,0,
+                           0,0,0,5,0,0,0,0,1,0};
+
+    const Matrix<T> expected_result(result_data, 100, 10, 10);
+
+    bool test_result = (Compare(expected_result, raw_data.ConnectedComponentsMax()));
+    std::cout << (test_result ? "Success" : "Failure") << std::endl;
+
+    return test_result;
+}
+
 } // namespace matrix
 } // namespace test
-} // namespace astroqut
+} // namespace alias
 
 #endif // ASTROQUT_TEST_MATRIX_HPP

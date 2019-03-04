@@ -3,85 +3,119 @@
 /// \brief Launcher for the ASTROQUT solver.
 /// \details Handle the user input, calls the preparation tools and the solver.
 /// \author Philippe Ganz <philippe.ganz@gmail.com>
-/// \version 0.5.0
-/// \date 2018-07-07
+/// \version 0.6.0
+/// \date 2019-03
 /// \copyright GPL-3.0
 ///
 
 #include "const.hpp"
-#include "test.hpp"
+#include "WS/astroQUT.hpp"
 
 #include <cstdlib>
-#include <fstream>
+#include <getopt.h>
 #include <iostream>
 #include <string>
 
+void usage()
+{
+    std::cerr << std::endl << "usage : ASTROQUT -f|--source SOURCE -e|--sensitivity SENSITIVITY -o|--background BACKGROUND -b|--blurring BLURRING -r|--result RESULT -s|--size SIZE -x|--bootstrap BOOTSTRAP" << std::endl << std::endl;
+    std::cerr << "  SOURCE - Path to the source image;" << std::endl;
+    std::cerr << "  SENSITIVITY - Path to the sensitivity image;" << std::endl;
+    std::cerr << "  BACKGROUND - Path to the background image;" << std::endl;
+    std::cerr << "  BLURRING - Path to the blurring filter, defaults to data/blurring.data;" << std::endl;
+    std::cerr << "  RESULT - Path to the solution file;" << std::endl;
+    std::cerr << "  SIZE - Width of the picture;" << std::endl;
+    std::cerr << "  BOOTSTRAP - Amount of bootstraps to perform." << std::endl << std::endl;
+}
 
 int main( int argc, char **argv )
 {
+    alias::WS::Parameters<double> options;
+    std::string source;
+    std::string sensitivity;
+    std::string background;
+    std::string blurring;
+    std::string result;
+    size_t pic_size = 0;
+    size_t bootstrap_max = 0;
 
-    try
+    int c;
+
+    while (1)
     {
-        astroqut::test::MatrixTest<double>();
+        static struct option long_options[] =
+        {
+            {"source",      required_argument, nullptr, 'f'},
+            {"sensitivity", required_argument, nullptr, 'e'},
+            {"background",  required_argument, nullptr, 'o'},
+            {"blurring",    required_argument, nullptr, 'b'},
+            {"result",      required_argument, nullptr, 'r'},
+            {"size",        required_argument, nullptr, 's'},
+            {"bootstrap",   required_argument, nullptr, 'x'},
+            {nullptr,       0,                 nullptr, 0}
+        };
+        /* getopt_long stores the option index here. */
+        int option_index = 0;
+
+        c = getopt_long (argc, argv, "f:e:o:b:r:s:x:", long_options, &option_index);
+
+        /* Detect the end of the options. */
+        if (c == -1)
+            break;
+
+        switch (c)
+        {
+        case 'f':
+            source = std::string(optarg);
+            break;
+
+        case 'e':
+            sensitivity = std::string(optarg);
+            break;
+
+        case 'o':
+            background = std::string(optarg);
+            break;
+
+        case 'b':
+            blurring = std::string(optarg);
+            break;
+
+        case 'r':
+            result = std::string(optarg);
+            break;
+
+        case 's':
+            pic_size = strtoul(optarg, nullptr, 0);
+            break;
+
+        case 'x':
+            bootstrap_max = strtoul(optarg, nullptr, 0);
+            break;
+
+        default:
+            usage();
+            return EXIT_FAILURE;
+        }
     }
-    catch (const std::exception& err)
+
+    if( source.compare("") == 0 ||
+        sensitivity.compare("") == 0 ||
+        background.compare("") == 0 ||
+        blurring.compare("") == 0 ||
+        result.compare("") == 0 ||
+        pic_size == 0 ||
+        bootstrap_max == 0)
     {
-        std::cerr << err.what() << std::endl;
-        std::cerr << "Matrix tests failed! Please refer to the individual test results for more details." << std::endl;
+        usage();
         return EXIT_FAILURE;
     }
 
-    try
-    {
-        astroqut::test::PerfTest<double>(2048);
-    }
-    catch (const std::exception& err)
-    {
-        std::cerr << err.what() << std::endl;
-        std::cerr << "Matrix tests failed! Please refer to the individual test results for more details." << std::endl;
-        return EXIT_FAILURE;
-    }
+    options.blurring_filter = blurring;
+    options.pic_size = pic_size;
+    options.bootstrap_max = bootstrap_max;
 
-    try
-    {
-        astroqut::test::OperatorTest();
-    }
-    catch (const std::exception& err)
-    {
-        std::cerr << err.what() << std::endl;
-        std::cerr << "Operator tests failed! Please refer to the individual test results for more details." << std::endl;
-        return EXIT_FAILURE;
-    }
-
-    try
-    {
-        astroqut::test::FISTATest();
-    }
-    catch (const std::exception& err)
-    {
-        std::cerr << err.what() << std::endl;
-        std::cerr << "FISTA tests failed! Please refer to the individual test results for more details." << std::endl;
-        return EXIT_FAILURE;
-    }
-
-    astroqut::test::astro::Chandra();
-
-
-//    if( argc != 6 )
-//    {
-//        std::cerr << "usage : ASTROQUT <source> <sensitivity> <background> <size> <option file>" << std::endl << std::endl;
-//        std::cerr << "  source - Path to the source image;" << std::endl;
-//        std::cerr << "  sensitivity - Path to the sensitivity image or an integer >= 1 in which case we consider constant sensitivity;" << std::endl;
-//        std::cerr << "  background - Path to the background image or an integer >= 0 in which case we consider constant background;" << std::endl;
-//        std::cerr << "  size - Width of the picture;" << std::endl;
-//        std::cerr << "  option file - Path to the parameters file." << std::endl << std::endl;
-//        return EXIT_FAILURE;
-//    }
-//
-//    size_t picture_size = strtol(argv[4], nullptr, 0);
-//    astroqut::Matrix<double> source(std::string(argv[1]), picture_size, picture_size);
-//    astroqut::Matrix<double> sensitivity(std::string(argv[2]), picture_size, picture_size);
-//    astroqut::Matrix<double> background(std::string(argv[3]), picture_size, picture_size);
+    alias::WS::Solve(source, sensitivity, background, result, options);
 
     return EXIT_SUCCESS;
 }

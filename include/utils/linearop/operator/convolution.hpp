@@ -3,8 +3,8 @@
 /// \brief Convolution class header
 /// \details Provide a convolution operator
 /// \author Philippe Ganz <philippe.ganz@gmail.com> 2017-2018
-/// \version 0.5.0
-/// \date 2018-04-22
+/// \version 0.6.0
+/// \date 2019-03
 /// \copyright GPL-3.0
 ///
 
@@ -13,10 +13,10 @@
 
 #include "utils/linearop/operator.hpp"
 
-namespace astroqut
+namespace alias
 {
 
-template <class T>
+template <class T = double>
 class Convolution : public Operator<T>
 {
 public:
@@ -24,19 +24,49 @@ public:
     /** Default constructor
      */
     Convolution()
-        : Operator<T>(0, 0)
-    {}
+        : Operator<T>()
+    {
+#ifdef DEBUG
+        std::cout << "Convolution : Default constructor called" << std::endl;
+#endif // DEBUG
+    }
+
+    /** Copy constructor
+     *  \param other Object to copy from
+     */
+    Convolution(const Convolution& other)
+        : Operator<T>(other)
+    {
+#ifdef DEBUG
+        std::cout << "Convolution : Copy constructor called" << std::endl;
+#endif // DEBUG
+    }
+
+    /** Move constructor
+     *  \param other Object to move from
+     */
+    Convolution(Convolution&& other)
+        : Convolution()
+    {
+#ifdef DEBUG
+        std::cout << "Convolution : Move constructor called" << std::endl;
+#endif // DEBUG
+        swap(*this, other);
+    }
 
     /** Full member constructor
      *  \param data Matrix containing the filter's data. Needs to be already inverted if not symmetrical.
      */
-    Convolution(Matrix<T>&& data)
-        : Operator<T>(std::forward<Matrix<T>>(data), data.Height(), data.Width(), false)
+    explicit Convolution(Matrix<T> data)
+        : Operator<T>(data, data.Height(), data.Width(), false)
     {
+#ifdef DO_ARGCHECKS
         if( this->height_ % 2 != 1 || this->width_ % 2 != 1 )
-        {
             throw std::invalid_argument("The filter size for the convolution needs to be odd in both dimensions.");
-        }
+#endif // DO_ARGCHECKS
+#ifdef DEBUG
+        std::cout << "Convolution : Full member constructor called" << std::endl;
+#endif // DEBUG
     }
 
     /** Clone function
@@ -50,7 +80,11 @@ public:
     /** Default destructor
      */
     virtual ~Convolution()
-    {}
+    {
+#ifdef DEBUG
+        std::cout << "Convolution : Destructor called" << std::endl;
+#endif // DEBUG
+    }
 
     /** Valid instance test
      *  \return Throws an error message if instance is not valid.
@@ -67,6 +101,28 @@ public:
         {
             throw std::invalid_argument("Convolution dimensions must be non-zero and odd, and data shall not be empty!");
         }
+    }
+
+    /** Swap function
+     *  \param first First object to swap
+     *  \param second Second object to swap
+     */
+    friend void swap(Convolution& first, Convolution& second) noexcept
+    {
+        using std::swap;
+
+        swap(static_cast<Operator<T>&>(first), static_cast<Operator<T>&>(second));
+    }
+
+    /** Copy assignment operator
+     *  \param other Object to assign to current object
+     *  \return A reference to this
+     */
+    Convolution& operator=(Convolution other)
+    {
+        swap(*this, other);
+
+        return *this;
     }
 
     Matrix<T> operator*(const Matrix<T>& other) const override final
@@ -120,8 +176,6 @@ public:
     }
 };
 
-
-
-} // namespace astroqut
+} // namespace alias
 
 #endif // ASTROQUT_UTILS_OPERATOR_CONVOLUTION_HPP

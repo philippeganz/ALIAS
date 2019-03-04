@@ -1,47 +1,61 @@
-addpath(genpath('C:\Program Files\MATLAB\R2018a\toolbox\Wavelab850'))
-addpath(genpath('D:\Philippe\SwitchDrive\AstroQUT_matlab\ASTROQUT v2.0'))
-
-fid = fopen("MATLAB/2000/solstatic.data", "r");
-sol = fread(fid, 263168, 'double');
-fclose(fid);
-fid = fopen("MATLAB/2000/divx.data", "r");
-divx = fread(fid, 263168, 'double');
-fclose(fid);
-fid = fopen("AstroQUT/100000/computedsol.data", "r");
-sol_c = fread(fid, 263168, 'double');
-fclose(fid);
-fid = fopen("AstroQUT/100000/computeddivx.data", "r");
-divx_c = fread(fid, 263168, 'double');
-fclose(fid);
+load 'D:\Philippe\SwitchDrive\AstroQUT_matlab\ASTROQUT\data_and_results\FEOchandra.mat'
+load 'D:\Philippe\GoogleDrive\Documents\Cours\Thesis\AstroQUT\data\512_chandra\MATLAB\2000\ChandraFEO.mat'
 
 M = 512;
 MM = 1024;
 N = 262144;
 R = 256;
 
-sol = sol ./ divx;
-sol_c = sol_c ./ divx_c;
-flassow = sol(1:M);
-flassow_c = sol_c(1:M);
-flassos = sol(M+1:MM);
-flassos_c = sol_c(M+1:MM);
-
-[~,~,qmf,S]=setUpOperatorsWS(M,N,R,0,0,0,'Daubechies',8,true,1);
-
-flasso = IWT_PO(flassow, 0, qmf) + S*flassos;
-flasso_c = IWT_PO(flassow_c, 0, qmf) + S*flassos_c;
-
-x=linspace(-M/2,M/2,M)*R/(M/2);
-x=x((M/2+1):M);
+fhat = sol.fhat;
+fid = fopen("computed_fhat.data", "r");
+fhat_c = fread(fid, M, 'double');
+fclose(fid);
 
 figure
-loglog(x,flasso((M/2+1):M), 'color', 'blue', 'LineWidth', 2, 'DisplayName', 'MATLAB')
+semilogy(fhat((R+1):round(M-R*(1-1/sqrt(2)))), 'color', 'blue', 'LineWidth', 2, 'DisplayName', 'MATLAB')
 hold on
-loglog(x,flasso_c((M/2+1):M), 'color', 'red','LineStyle', ':', 'LineWidth', 2, 'DisplayName', 'C++')
+semilogy(fhat_c((R+1):round(M-R*(1-1/sqrt(2)))), 'color', 'red','LineStyle', ':', 'LineWidth', 2, 'DisplayName', 'C++')
 hold off
 
 figure
-loglog(x,flasso((M/2):-1:1), 'color', 'blue', 'LineWidth', 2, 'DisplayName', 'MATLAB')
+semilogy(fhat(R:-1:round(R*(1-1/sqrt(2)))), 'color', 'blue', 'LineWidth', 2, 'DisplayName', 'MATLAB')
 hold on
-loglog(x,flasso_c((M/2):-1:1), 'color', 'red', 'LineStyle', ':', 'LineWidth', 2, 'DisplayName', 'C++')
+semilogy(fhat_c(R:-1:round(R*(1-1/sqrt(2)))), 'color', 'red', 'LineStyle', ':', 'LineWidth', 2, 'DisplayName', 'C++')
+hold off
+
+figure
+semilogy(fhat(round(R*(1-1/sqrt(2)):R+round(R*(1/sqrt(2))))), 'color', 'blue', 'LineWidth', 2, 'DisplayName', 'MATLAB')
+hold on
+semilogy(fhat_c(round(R*(1-1/sqrt(2)):R+round(R*(1/sqrt(2))))), 'color', 'red', 'LineStyle', ':', 'LineWidth', 2, 'DisplayName', 'C++')
+hold off
+
+dhat = sol.dhatpos;
+fid = fopen("computed_dhat.data", "r");
+dhat_c = fread(fid, N, 'double');
+fclose(fid);
+fid = fopen("computed_dhat_CC.data", "r");
+dhat_CC = fread(fid, N, 'double');
+fclose(fid);
+
+figure
+final = (Freal-Oreal)./Ereal;
+imshow(100*final/max(max(final)))
+
+figure
+[X,Y] = meshgrid(1:M,1:M);
+imshow(100*final/max(max(final)))
+hold on
+plot3(X(dhat>0),Y(dhat>0),dhat(dhat>0),'ro')
+hold off
+
+figure
+imshow(100*final/max(max(final)))
+hold on
+plot3(X(dhat_c>0),Y(dhat_c>0),dhat_c(dhat_c>0),'ro')
+hold off
+
+figure
+imshow(100*final/max(max(final)))
+hold on
+plot3(X(dhat_CC>0),Y(dhat_CC>0),dhat_CC(dhat_CC>0),'ro')
 hold off

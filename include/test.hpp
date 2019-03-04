@@ -2,8 +2,8 @@
 /// \file include/test.hpp
 /// \brief Test suites to validate the project code
 /// \author Philippe Ganz <philippe.ganz@gmail.com>
-/// \version 0.5.0
-/// \date 2018-03-30
+/// \version 0.6.0
+/// \date 2018-10-14
 /// \copyright GPL-3.0
 ///
 
@@ -19,14 +19,8 @@
 #include <iostream>
 #include <random>
 
-namespace astroqut{
+namespace alias{
 namespace test{
-
-template <class T>
-void PerfTest(size_t length)
-{
-    matrix::Time<T>(length);
-}
 
 template <class T>
 bool MatrixTest()
@@ -53,7 +47,9 @@ bool MatrixTest()
 
     bool input = Input();
 
-    return transpose_square && transpose_rect && add && sub && mult_square && mult_rect && vect_mat && mat_vect && norm_one && norm_two && norm_inf && sum && shrink && input;
+    bool cc = CC<T>();
+
+    return transpose_square && transpose_rect && add && sub && mult_square && mult_rect && vect_mat && mat_vect && norm_one && norm_two && norm_inf && sum && shrink && input && cc;
 }
 
 template <class T>
@@ -67,6 +63,6 @@ bool OperatorTest();
 bool FISTATest();
 
 } // namespace test
-} // namespace astroqut
+} // namespace alias
 
 #endif // ASTROQUT_TEST_HPP

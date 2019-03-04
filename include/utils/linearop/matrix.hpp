@@ -3,8 +3,8 @@
 /// \brief Matrix class header
 /// \details Provide matrix container with multiple matrix operations used in the whole project.
 /// \author Philippe Ganz <philippe.ganz@gmail.com> 2017-2018
-/// \version 0.5.0
-/// \date 2018-07-07
+/// \version 0.6.0
+/// \date 2019-03
 /// \copyright GPL-3.0
 ///
 
@@ -12,25 +12,22 @@
 #define ASTROQUT_UTILS_MATRIX_HPP
 
 #include "utils/linearop.hpp"
-#include "utils/settings.hpp"
 
 #include <algorithm>
 #include <cmath>
 #include <complex>
+#include <cstdlib>
 #include <fstream>
 #include <iomanip>
 #include <limits>
 #include <numeric>
+#include <omp.h>
+#include <queue>
 #include <string>
 #include <type_traits>
 
-#pragma GCC system_header
-#include <Eigen/Dense>
-
-
-namespace astroqut
+namespace alias
 {
-
 template<class T> struct is_complex : std::false_type {};
 template<class T> struct is_complex<std::complex<T>> : std::true_type {};
 
@@ -74,8 +71,14 @@ inline bool IsEqual(T first, T second)
     return IsEqual(std::real(first), std::real(second)) && IsEqual(std::imag(first), std::imag(second));
 }
 
-
+#ifdef VERBOSE
 template <class T>
+class Matrix;
+template <class T>
+std::ostream& operator<<(std::ostream& os, const Matrix<T>& mat);
+#endif // VERBOSE
+
+template <class T = double>
 class Matrix : public LinearOp
 {
 public:
@@ -101,19 +104,25 @@ public:
      *  \param height Height of the data
      *  \param width Width of the data
      */
-    Matrix( size_t height, size_t width)
+    Matrix(size_t height, size_t width)
         : LinearOp(height, width)
         , data_(nullptr)
     {
 #ifdef DEBUG
-        std::cout << "Matrix : Empty constructor called" << std::endl;
+        std::cout << "Matrix : Empty constructor called with height=" << height << ", width=" << width << std::endl;
 #endif // DEBUG
+
         if(this->length_ != 0)
         {
             try
             {
                 // allocate aligned memory
-                data_ = (matrix_t*) _mm_malloc (sizeof(T)*this->length_, (size_t) std::pow(2, std::ceil(std::log2(sizeof(T)))));
+                size_t alignment = std::pow(2, std::ceil(std::log2(sizeof(T))));
+#ifdef __WIN32
+                data_ = static_cast<matrix_t*>(_mm_malloc(alignment*this->length_, alignment));
+#elif defined __linux__
+                data_ = static_cast<matrix_t*>(aligned_alloc(alignment, alignment*this->length_));
+#endif
             }
             catch (const std::bad_alloc&)
             {
@@ -128,10 +137,14 @@ public:
      *  \param height Height of the data
      *  \param width Width of the data
      */
-    Matrix( matrix_t* data, size_t height, size_t width)
+    Matrix(matrix_t* data, size_t height, size_t width)
         : LinearOp(height, width)
         , data_(data)
     {
+#ifdef DEBUG
+        std::cout << "Matrix : Full member constructor called with data=" << data << ", height=" << height << ", width=" << width << std::endl;
+#endif // DEBUG
+
 #ifdef DO_ARGCHECKS
         if( !IsAligned(data, sizeof(T)) )
         {
@@ -139,9 +152,6 @@ public:
             throw;
         }
 #endif // DO_ARGCHECKS
-#ifdef DEBUG
-        std::cout << "Matrix : Full member constructor called" << std::endl;
-#endif // DEBUG
     }
 
     /** Full member constructor
@@ -151,26 +161,30 @@ public:
      *  \param width Width of the data
      */
     template <class U, typename std::enable_if_t<std::is_arithmetic<U>::value || std::is_same<T, U>{}>* = nullptr>
-    Matrix( const U data[], size_t length, size_t height, size_t width)
+    Matrix(const U data[], size_t length, size_t height, size_t width)
         : Matrix(height, width)
     {
-        #pragma omp parallel for simd
-        for(size_t i = 0; i < this->length_; ++i)
-            data_[i] = (T) data[i];
 #ifdef DEBUG
-        std::cout << "Matrix : Full member constructor called" << std::endl;
+        std::cout << "Matrix : Full member constructor called with data=" << data << ", length=" << length << ", height=" << height << ", width=" << width << std::endl;
 #endif // DEBUG
+        #pragma omp parallel for simd
+        for(size_t i = 0; i < length; ++i)
+            data_[i] = (T) data[i];
     }
 
-    /** File constructor
+    /** File constructor with known size
      *  \param filename Path of the binary file to read the matrix data from
      *  \param height Height of the data
      *  \param width Width of the data
      */
     template <class U = T, typename std::enable_if_t<std::is_arithmetic<U>::value>* = nullptr>
-    Matrix( const std::string filename, size_t height, size_t width, U dummy = 0)
+    Matrix(const std::string filename, size_t height, size_t width, U __attribute__((unused)) dummy = 0)
         : Matrix(height, width)
     {
+#ifdef DEBUG
+        std::cout << "Matrix : File constructor with known size called with filename=" << filename << ", height=" << height << ", width=" << width << std::endl;
+#endif // DEBUG
+
         std::ifstream file(filename, std::ios::binary | std::ios::in | std::ios::ate);
 
         size_t file_size = file.tellg();
@@ -185,18 +199,65 @@ public:
 
         U* reinterpret_memblock = (U*) memblock;
 
+        #pragma omp parallel for simd
         for(size_t i = 0; i < this->length_; ++i)
-        {
-            data_[i] = (T) reinterpret_memblock[i];
-        }
+            data_[i] = reinterpret_memblock[i];
 
         delete[] memblock;
-
         file.close();
+    }
 
+    /** File constructor raw
+     *  \param filename Path of the binary file to read the matrix data from
+     */
+    template <class U = T, typename std::enable_if_t<std::is_arithmetic<U>::value>* = nullptr>
+    Matrix(const std::string filename, U __attribute__((unused)) dummy = 0)
+        : data_(nullptr)
+    {
 #ifdef DEBUG
-        std::cout << "Matrix : File constructor called" << std::endl;
+        std::cout << "Matrix : File constructor raw called with filename=" << filename << std::endl;
 #endif // DEBUG
+
+        std::ifstream file(filename, std::ios::binary | std::ios::in | std::ios::ate);
+
+        size_t file_size = file.tellg();
+        if(file_size == 0)
+        {
+            std::cerr << "Input file is empty";
+            throw;
+        }
+        char* memblock = new char [file_size];
+        file.seekg(0, std::ios::beg);
+        file.read(memblock, file_size);
+
+        U* reinterpret_memblock = (U*) memblock;
+
+        try
+        {
+            // allocate aligned memory
+            size_t alignment = std::pow(2, std::ceil(std::log2(sizeof(T))));
+            double original_target_type_ratio = (double)alignment/(double)sizeof(U);
+#ifdef __WIN32
+            data_ = static_cast<matrix_t*>(_mm_malloc((size_t)(file_size*original_target_type_ratio), alignment));
+#elif defined __linux__
+            data_ = static_cast<matrix_t*>(aligned_alloc(alignment, (size_t)(file_size*original_target_type_ratio)));
+#endif
+        }
+        catch (const std::bad_alloc&)
+        {
+            std::cerr << "Could not allocate memory for new array!" << std::endl;
+            throw;
+        }
+        height_ = file_size/sizeof(T);
+        width_ = 1;
+        length_ = height_;
+
+        #pragma omp parallel for simd
+        for(size_t i = 0; i < length_; ++i)
+            data_[i] = reinterpret_memblock[i];
+
+        delete[] memblock;
+        file.close();
     }
 
     /** Constant number constructor
@@ -204,12 +265,12 @@ public:
      *  \param height Height of the data
      *  \param width Width of the data
      */
-    template <class U, typename std::enable_if_t<std::is_arithmetic<U>::value || std::is_same<T, U>{}>* = nullptr>
-    Matrix( U number, size_t height, size_t width)
+    template <class U, typename std::enable_if_t<std::is_arithmetic<U>::value || is_complex<U>{}>* = nullptr>
+    Matrix(U number, size_t height, size_t width)
         : Matrix(height, width)
     {
 #ifdef DEBUG
-        std::cout << "Matrix : Constant number constructor called" << std::endl;
+        std::cout << "Matrix : Constant number constructor called with number=" << number << ", height=" << height << ", width=" << width << std::endl;
 #endif // DEBUG
         if( omp_get_max_threads() > 1 )
         {
@@ -232,6 +293,7 @@ public:
 #ifdef DEBUG
         std::cout << "Matrix : Copy constructor called" << std::endl;
 #endif // DEBUG
+
         *this = other;
     }
 
@@ -244,6 +306,7 @@ public:
 #ifdef DEBUG
         std::cout << "Matrix : Move constructor called" << std::endl;
 #endif // DEBUG
+
         other.Data(nullptr);
     }
 
@@ -264,7 +327,11 @@ public:
         if( data_ != nullptr )
         {
             // deallocate aligned memory
+#ifdef __WIN32
             _mm_free(data_);
+#elif defined __linux__
+            free(data_);
+#endif
         }
         data_ = nullptr;
     }
@@ -299,13 +366,9 @@ public:
         if( this->height_ == 0 &&
             this->width_ == 0 &&
             data_ == nullptr)
-        {
             return true;
-        }
-        else
-        {
-            return false;
-        }
+
+        return false;
     }
 
     /** Valid instance test
@@ -316,13 +379,9 @@ public:
         if( this->height_ != 0 &&
             this->width_ != 0 &&
             data_ != nullptr )
-        {
             return true;
-        }
-        else
-        {
-            throw std::invalid_argument("Matrix dimensions must be non-zero and data shall not be empty!");
-        }
+
+        throw std::invalid_argument("Matrix dimensions must be non-zero and data shall not be empty!");
     }
 
     /** Negativity test
@@ -330,22 +389,54 @@ public:
      */
     bool ContainsNeg() const noexcept
     {
+#ifdef DO_ARGCHECKS
         if( this->height_ == 0 ||
             this->width_ == 0 ||
             data_ == nullptr)
         {
             return false;
         }
+#endif // DO_ARGCHECKS
 
         for( size_t i = 0; i < this->length_; ++i )
-        {
             if( data_[i] < 0 )
-            {
                 return true;
-            }
-        }
 
         return false;
+    }
+
+    /** Partial matrix creator
+     *  \brief Generates a new matrix from the current one with data in [start,end]
+     *  \param start First element of partial matrix
+     *  \param end Last element of partial matrix
+     *  \return A new matrix with the partial data
+     */
+    Matrix Partial(size_t start, size_t end) const
+    {
+        Matrix result(end-start+1, 1);
+        std::copy(data_+start, data_+end+1, result.Data());
+        return result;
+    }
+
+    /** Partial 2D matrix creator
+     *  \brief Generates a new matrix from the current one with data in [(row, col), (row, col)]
+     *  \param row_start Starting row, included
+     *  \param row_end Last row, included
+     *  \param col_start Starting column, included
+     *  \param col_end Last column, included
+     *  \return A new matrix with the partial data
+     */
+    Matrix Partial2D(size_t row_start, size_t row_end, size_t col_start, size_t col_end) const
+    {
+        size_t height = row_end-row_start+1;
+        size_t width = col_end-col_start+1;
+        Matrix result(height, width);
+
+        #pragma omp parallel for simd
+        for(size_t row = 0; row < height; ++row)
+            for(size_t col = 0; col < width; ++col)
+                result[row*width + col] = data_[(row+row_start)*this->width_ + (col+col_start)];
+        return result;
     }
 
     /** Copy assignment operator
@@ -364,7 +455,11 @@ public:
             if( data_ != nullptr )
             {
                 // deallocate aligned memory
+#ifdef __WIN32
                 _mm_free(data_);
+#elif defined __linux__
+                free(data_);
+#endif
                 data_ = nullptr;
             }
             // and we need to reallocate if there is something to store
@@ -373,7 +468,12 @@ public:
                 try
                 {
                     // allocate aligned data
-                    data_ = (matrix_t*) _mm_malloc (sizeof(T)*this->length_, (size_t) std::pow(2, std::ceil(std::log2(sizeof(T)))));
+                    size_t alignment = std::pow(2, std::ceil(std::log2(sizeof(T))));
+#ifdef __WIN32
+                    data_ = static_cast<matrix_t*>(_mm_malloc(alignment*this->length_, alignment));
+#elif defined __linux__
+                    data_ = static_cast<matrix_t*>(aligned_alloc(alignment, alignment*this->length_));
+#endif
                 }
                 catch (const std::bad_alloc&)
                 {
@@ -427,13 +527,27 @@ public:
     /** Cast operator
      *  \return A casted copy of this
      */
-    template <class U, typename std::enable_if_t<std::is_arithmetic<U>::value>* = nullptr>
+    template <class U, class S = T, typename std::enable_if_t<(std::is_arithmetic<S>::value && std::is_arithmetic<U>::value) ||
+                                                              (std::is_arithmetic<S>::value && is_complex<U>{}) ||
+                                                              (is_complex<S>{} && is_complex<U>{})                              >* = nullptr>
     operator Matrix<U>() const
     {
         Matrix<U> result(this->height_, this->width_);
 
+        #pragma omp parallel for simd
         for(size_t i = 0; i < this->length_; ++i)
             result[i] = (U) data_[i];
+
+        return result;
+    }
+    template <class U, class S = T, typename std::enable_if_t<is_complex<S>{} && std::is_arithmetic<U>::value>* = nullptr>
+    operator Matrix<U>() const
+    {
+        Matrix<U> result(this->height_, this->width_);
+
+        #pragma omp parallel for simd
+        for(size_t i = 0; i < this->length_; ++i)
+            result[i] = (U) data_[i].real();
 
         return result;
     }
@@ -486,9 +600,32 @@ public:
 
         #pragma omp parallel for simd
         for(size_t i = 0; i < this->length_; ++i)
-        {
             this->data_[i] += other.data_[i];
+
+        return *this;
+    }
+
+    /** Additive operator with single number in-place
+     *  \param number Number to add to current object
+     *  \return A reference to this
+     */
+    template <class U, typename std::enable_if_t<std::is_arithmetic<U>::value || is_complex<U>{}>* = nullptr>
+    Matrix& operator+=(U number)
+    {
+#ifdef DO_ARGCHECKS
+        try
+        {
+            IsValid();
         }
+        catch (const std::exception&)
+        {
+            throw;
+        }
+#endif // DO_ARGCHECKS
+
+        #pragma omp parallel for simd
+        for(size_t i = 0; i < this->length_; ++i)
+            data_[i] += number;
 
         return *this;
     }
@@ -517,9 +654,32 @@ public:
 
         #pragma omp parallel for simd
         for(size_t i = 0; i < this->length_; ++i)
-        {
             this->data_[i] -= other.data_[i];
+
+        return *this;
+    }
+
+    /** Subtractive operator with single number in-place
+     *  \param number Number to remove from current object
+     *  \return A reference to this
+     */
+    template <class U, typename std::enable_if_t<std::is_arithmetic<U>::value || is_complex<U>{}>* = nullptr>
+    Matrix& operator-=(U number)
+    {
+#ifdef DO_ARGCHECKS
+        try
+        {
+            IsValid();
         }
+        catch (const std::exception&)
+        {
+            throw;
+        }
+#endif // DO_ARGCHECKS
+
+        #pragma omp parallel for simd
+        for(size_t i = 0; i < this->length_; ++i)
+            data_[i] -= number;
 
         return *this;
     }
@@ -611,9 +771,7 @@ public:
 
         #pragma omp parallel for simd
         for(size_t i = 0; i < this->length_; ++i)
-        {
             data_[i] *= number;
-        }
 
         return *this;
     }
@@ -642,9 +800,7 @@ public:
 
         #pragma omp parallel for simd
         for(size_t i = 0; i < this->length_; ++i)
-        {
             data_[i] *= other.data_[i];
-        }
 
         return *this;
     }
@@ -669,9 +825,7 @@ public:
 
         #pragma omp parallel for simd
         for(size_t i = 0; i < this->length_; ++i)
-        {
             data_[i] /= number;
-        }
 
         return *this;
     }
@@ -699,9 +853,7 @@ public:
 
         #pragma omp parallel for simd
         for(size_t i = 0; i < this->length_; ++i)
-        {
             data_[i] /= other.data_[i];
-        }
 
         return *this;
     }
@@ -727,7 +879,16 @@ public:
         // vector
         if( this->height_ == 1 || this->width_ == 1 )
         {
-            std::copy(data_, data_ + (this->length_), result.data_);
+            if( omp_get_max_threads() > 1)
+            {
+                #pragma omp parallel for simd
+                for(size_t i = 0; i < this->length_; ++i)
+                    result[i] = data_[i];
+            }
+            else
+            {
+                std::copy(data_, data_ + (this->length_), result.data_);
+            }
         }
         // matrix
         else
@@ -737,9 +898,7 @@ public:
 			{
 			    #pragma omp simd
 				for ( size_t j = 0 ; j < this->width_; ++j )
-				{
 					result.data_[ j * this->height_ + i ] = data_[ i * this->width_ + j ];
-				}
 			}
         }
         return result;
@@ -778,9 +937,7 @@ public:
                 {
                     #pragma omp simd
                     for ( size_t j = i+1 ; j < this->width_; ++j )
-                    {
                         std::swap(data_[i * this->width_ + j], data_[j * this->width_ + i]);
-                    }
                 }
                 std::swap(this->height_, this->width_); // width <--> height
             }
@@ -797,9 +954,7 @@ public:
                 {
                     #pragma omp simd
                     for ( size_t j = 0 ; j < this->width_; ++j )
-                    {
                         result.data_[ j * this->height_ + i ] = data_[ i * this->width_ + j ];
-                    }
                 }
                 *this = std::move(result);
             }
@@ -824,7 +979,7 @@ public:
         }
 #endif // DO_ARGCHECKS
 
-        #pragma omp parallel for
+        #pragma omp parallel for simd
         for(size_t i = 0; i < this->length_; ++i)
         {
             // real part of log of negative numbers is 0
@@ -862,10 +1017,7 @@ public:
 
         #pragma omp parallel for simd
         for(size_t i = 0; i < this->length_; ++i)
-        {
-            // real part of log of negative numbers is 0
             data_[i] = std::abs(data_[i]);
-        }
 
         return std::move(*this);
     }
@@ -897,11 +1049,9 @@ public:
         }
 #endif // DO_ARGCHECKS
 
-        #pragma omp parallel for
+        #pragma omp parallel for simd
         for( size_t i = 0; i < this->length_; ++i )
-        {
             data_[i] *= std::max(1 - thresh_factor / (double)std::abs(data_[i]), 0.0);
-        }
 
         return std::move(*this);
     }
@@ -914,6 +1064,189 @@ public:
     Matrix Shrink(double thresh_factor) const &
     {
         return Matrix(*this).Shrink(thresh_factor);
+    }
+
+    /** Remove negative values in-place
+     *   Set all values below zero in [first, last) to zero
+     *   \param first First element of the range
+     *   \param last Last element of the range
+     *   \return A reference to this
+     */
+    Matrix&& RemoveNeg(size_t first, size_t last) &&
+    {
+        #pragma omp parallel for simd
+        for(size_t i = first; i < last; ++i)
+            if(data_[i] < 0)
+                data_[i] = (T)0;
+
+        return std::move(*this);
+    }
+
+    /** Remove negative values at location
+     *   Set all values below zero in [first, last) to zero
+     *   \param first First element of the range
+     *   \param last Last element of the range
+     *   \return A new instance containing the result
+     */
+    Matrix RemoveNeg(size_t first, size_t last) const &
+    {
+        return Matrix(*this).RemoveNeg(first, last);
+    }
+
+    /** Remove negative values at location in-place
+     *   Set values below zero to zero
+     *   \param indices An array of index of location to remove negative values
+     *   \return A reference to this
+     */
+    Matrix&& RemoveNeg(Matrix<size_t> indices) &&
+    {
+        #pragma omp parallel for simd
+        for(size_t i = 0; i < indices.Length(); ++i)
+            if(data_[indices[i]] < 0)
+                data_[indices[i]] = (T)0;
+
+        return std::move(*this);
+    }
+
+    /** Remove negative values at location
+     *   Set values below zero to zero
+     *   \param indices An array of index of location to remove negative values
+     *   \return A new instance containing the result
+     */
+    Matrix RemoveNeg(Matrix<size_t> indices) const &
+    {
+        return Matrix(*this).RemoveNeg(indices);
+    }
+
+    Matrix ConnectedComponentsMax() const &
+    {
+        Matrix<T> CC_max(0.0, height_, width_);
+        Matrix<bool> CC_marked(false, height_, width_);
+
+        for(size_t row = 0; row < height_; ++row)
+        {
+            for(size_t col = 0; col < width_; ++col)
+            {
+                // consider only non-zero data and point not already marked
+                if( ! IsEqual(data_[row*width_ + col], 0.0) && ! CC_marked[row*width_ + col])
+                {
+                    // mark current point
+                    CC_marked[row*width_ + col] = true;
+
+                    // initialise the new CC with the current non-zero point
+                    std::vector<size_t> CC_current = {row*width_ + col};
+                    std::queue<std::pair<int, int>> points;
+                    points.push(std::pair<int, int>(row, col));
+#ifdef VERBOSE
+                    std::cout << "(" << row << "," << col << ")" << std::endl;
+#endif // VERBOSE
+
+                    // Breadth First Search to look for all points connected to the currentCC.
+                    while( ! points.empty() )
+                    {
+                        std::pair<int, int> point = points.front();
+                        points.pop();
+                        // check all 8 neighbours of the current point
+                        for(int neighbor_row = std::max(point.first-1, 0); neighbor_row < std::min(point.first+2, (int)width_); ++neighbor_row )
+                        {
+                            for(int neighbor_col = std::max(point.second-1, 0); neighbor_col < std::min(point.second+2, (int)height_); ++neighbor_col )
+                            {
+                                size_t point_index = neighbor_row*width_ + neighbor_col;
+                                // do not check if it is already marked
+                                if(! CC_marked[point_index])
+                                {
+                                    CC_marked[point_index] = true;
+                                    // consider only if non zero
+                                    if( ! IsEqual( data_[point_index], 0.0) )
+                                    {
+                                        CC_current.push_back(point_index);
+                                        points.push(std::pair<int, int>(neighbor_row, neighbor_col));
+#ifdef VERBOSE
+                                        std::cout << "(" << neighbor_row << "," << neighbor_col << ")" << std::endl;
+#endif // VERBOSE
+                                    }
+                                }
+                            }
+                        }
+                    }
+
+                    // get maximum value of the connected component
+                    size_t max_index = CC_current[0];
+                    for(size_t i = 1; i < CC_current.size(); ++i)
+                        if(data_[max_index] < data_[CC_current[i]])
+                            max_index = CC_current[i];
+
+                    // assign the maximum value to its index in the result
+                    CC_max[max_index] = data_[max_index];
+
+#ifdef VERBOSE
+                    std::cout << *this;
+                    std::cout << CC_max;
+#endif // VERBOSE
+                }
+            }
+        }
+
+        return CC_max;
+    }
+
+    /** Get indices of non zero elements
+     *   \return A new instance containing the result
+     */
+    Matrix<size_t> NonZeroIndices() const &
+    {
+        std::vector<size_t> indices;
+        for(size_t i = 0; i < this->length_; ++i)
+            if(data_[i] < (T)0 || data_[i] > (T)0)
+                indices.push_back(i);
+
+        return Matrix<size_t>(&indices[0], indices.size(), indices.size(), 1);
+    }
+
+    /** Get indices of zero elements
+     *   \return A new instance containing the result
+     */
+    Matrix<size_t> ZeroIndices() const &
+    {
+        std::vector<size_t> indices;
+        for(size_t i = 0; i < this->length_; ++i)
+            if( IsEqual(data_[i], (T)0) )
+                indices.push_back(i);
+
+        return Matrix<size_t>(&indices[0], indices.size(), indices.size(), 1);
+    }
+
+    /** Get amount of non zero elements
+     *   \return A new instance containing the result
+     */
+    size_t NonZeroAmount() const &
+    {
+        size_t result = 0;
+        if(omp_get_max_threads() > 1)
+        {
+            size_t* local_result = new size_t[omp_get_max_threads()]{0};
+            #pragma omp parallel
+            {
+                size_t my_num = omp_get_thread_num();
+                #pragma omp for
+                for(size_t i = 0; i < this->length_; ++i)
+                    if(data_[i] < 0 || data_[i] > 0)
+                        ++local_result[my_num];
+            }
+
+            for(size_t i = 0; i < (size_t)omp_get_max_threads(); ++i)
+                result += local_result[i];
+
+            delete[] local_result;
+        }
+        else
+        {
+            for(size_t i = 0; i < this->length_; ++i)
+                if(data_[i] < 0 || data_[i] > 0)
+                    ++result;
+        }
+
+        return result;
     }
 
     /** Padding function for temporary instances
@@ -930,22 +1263,16 @@ public:
         bool height_padding = false;
         bool width_padding = false;
         if( height_ < height )
-        {
             height_padding = true;
-        }
         if( width_ < width )
-        {
             width_padding = true;
-        }
 
         // no padding necessary
         if( !height_padding && !width_padding )
         {
             // no type conversion necessary
             if( std::is_same<T,U>::value )
-            {
                 return std::forward(*this);
-            }
             Matrix<U> result = *this;
             return std::move(result);
         }
@@ -968,9 +1295,7 @@ public:
         {
             #pragma omp parallel for
             for( size_t i = height_; i < height; ++i )
-            {
                 std::fill( result.Data() + i*width, result.Data() + (i+1)*width, (T) 0 );
-            }
         }
 
         return std::move(result);
@@ -999,7 +1324,7 @@ public:
         {
             if(omp_get_max_threads() > 1)
             {
-                double local_result[omp_get_max_threads()]{0.0};
+                double* local_result = new double[omp_get_max_threads()]{0.0};
                 #pragma omp parallel
                 {
                     size_t my_num = omp_get_thread_num();
@@ -1009,9 +1334,10 @@ public:
                 }
 
                 double result = 0.0;
-                for(size_t i = 0; i < omp_get_max_threads(); ++i)
+                for(size_t i = 0; i < (size_t)omp_get_max_threads(); ++i)
                     result += local_result[i];
 
+                delete[] local_result;
                 return result;
             }
             else
@@ -1032,7 +1358,7 @@ public:
         {
             if(omp_get_max_threads() > 1)
             {
-                double local_result[omp_get_max_threads()]{0.0};
+                double* local_result = new double[omp_get_max_threads()]{0.0};
                 #pragma omp parallel
                 {
                     size_t my_num = omp_get_thread_num();
@@ -1042,8 +1368,10 @@ public:
                 }
 
                 double result = 0.0;
-                for(size_t i = 0; i < omp_get_max_threads(); ++i)
+                for(size_t i = 0; i < (size_t)omp_get_max_threads(); ++i)
                     result += local_result[i];
+
+                delete[] local_result;
                 return result;
 
             }
@@ -1061,7 +1389,7 @@ public:
         {
             if(omp_get_max_threads() > 1)
             {
-                double local_result[omp_get_max_threads()]{0.0};
+                double* local_result = new double[omp_get_max_threads()]{0.0};
                 #pragma omp parallel
                 {
                     size_t my_num = omp_get_thread_num();
@@ -1074,7 +1402,9 @@ public:
                     }
                 }
 
-                return *std::max_element(local_result, local_result + omp_get_max_threads());
+                double result = *std::max_element(local_result, local_result + omp_get_max_threads());
+                delete[] local_result;
+                return result;
             }
             else
             {
@@ -1112,7 +1442,7 @@ public:
 
         if(omp_get_max_threads() > 1)
         {
-            T local_result[omp_get_max_threads()]{0};
+            T* local_result = new T[omp_get_max_threads()]{0};
             #pragma omp parallel
             {
                 size_t my_num = omp_get_thread_num();
@@ -1122,9 +1452,9 @@ public:
             }
 
             T result = 0;
-            for(size_t i = 0; i < omp_get_max_threads(); ++i)
+            for(size_t i = 0; i < (size_t)omp_get_max_threads(); ++i)
                 result += local_result[i];
-
+            delete[] local_result;
             return result;
         }
         else
@@ -1221,7 +1551,7 @@ Matrix<T> operator+(const Matrix<T>& first, const Matrix<T>& second)
  *  \return A reference to second
  */
 template<class T>
-Matrix<T>&& operator+(Matrix<T>&& first, const Matrix<T>& second)
+Matrix<T> operator+(Matrix<T>&& first, const Matrix<T>& second)
 {
     return std::move(first += second); // if first is temporary, no need to allocate new memory for the result
 }
@@ -1232,9 +1562,32 @@ Matrix<T>&& operator+(Matrix<T>&& first, const Matrix<T>& second)
  *  \return A reference to second
  */
 template<class T>
-Matrix<T>&& operator+(const Matrix<T>& first, Matrix<T>&& second)
+Matrix<T> operator+(const Matrix<T>& first, Matrix<T>&& second)
 {
     return std::move(second += first); // if second is temporary, no need to allocate new memory for the result
+}
+
+/** Additive operator with single number
+ *  \param number Number to add to current object
+ *  \param mat Matrix, lvalue ref
+ *  \return A reference to this
+ */
+template <class T, class U, typename std::enable_if_t<std::is_arithmetic<U>::value || is_complex<U>{}>* = nullptr>
+Matrix<T> operator+(const Matrix<T>& mat, U number)
+{
+    Matrix<T> result(mat);
+    return result += number;
+}
+
+/** Additive operator with single number of temporary instance
+ *  \param number Number to add to current object
+ *  \param mat Matrix, rvalue ref
+ *  \return A reference to this
+ */
+template <class T, class U, typename std::enable_if_t<std::is_arithmetic<U>::value || is_complex<U>{}>* = nullptr>
+Matrix<T> operator+(Matrix<T>&& mat, U number)
+{
+    return std::move(mat += number);
 }
 
 /** Subtractive operator, both Matrix are lvalues
@@ -1255,7 +1608,7 @@ Matrix<T> operator-(const Matrix<T>& first, const Matrix<T>& second)
  *  \return A reference to first
  */
 template<class T>
-Matrix<T>&& operator-(Matrix<T>&& first, const Matrix<T>& second)
+Matrix<T> operator-(Matrix<T>&& first, const Matrix<T>& second)
 {
     return std::move(first -= second); // if first is temporary, no need to allocate new memory for the result
 }
@@ -1266,7 +1619,7 @@ Matrix<T>&& operator-(Matrix<T>&& first, const Matrix<T>& second)
  *  \return A reference to second
  */
 template<class T>
-Matrix<T>&& operator-(const Matrix<T>& first, Matrix<T>&& second)
+Matrix<T> operator-(const Matrix<T>& first, Matrix<T>&& second)
 {
     // Need to implement it fully again since `-` is not commutative
 
@@ -1283,11 +1636,32 @@ Matrix<T>&& operator-(const Matrix<T>& first, Matrix<T>&& second)
 
     #pragma omp parallel for simd
     for(size_t i = 0; i < first.Length(); ++i)
-    {
         second[i] = first[i] - second[i];
-    }
 
     return std::move(second); // if second is temporary, no need to allocate new memory for the result
+}
+
+/** Subtractive operator with single number
+ *  \param number Number to remove from current object
+ *  \param mat Matrix, lvalue ref
+ *  \return A reference to this
+ */
+template <class T, class U, typename std::enable_if_t<std::is_arithmetic<U>::value || is_complex<U>{}>* = nullptr>
+Matrix<T> operator-(const Matrix<T>& mat, U number)
+{
+    Matrix<T> result(mat);
+    return result -= number;
+}
+
+/** Subtractive operator with single number of temporary instance
+ *  \param number Number to remove from current object
+ *  \param mat Matrix, rvalue ref
+ *  \return A reference to this
+ */
+template <class T, class U, typename std::enable_if_t<std::is_arithmetic<U>::value || is_complex<U>{}>* = nullptr>
+Matrix<T> operator-(Matrix<T>&& mat, U number)
+{
+    return std::move(mat -= number);
 }
 
 /** Multiplicative operator element-wise
@@ -1308,7 +1682,7 @@ Matrix<T> operator&(const Matrix<T>& first, const Matrix<T>& second)
  *  \return A reference to first
  */
 template <class T>
-Matrix<T>&& operator&(Matrix<T>&& first, const Matrix<T>& second)
+Matrix<T> operator&(Matrix<T>&& first, const Matrix<T>& second)
 {
     return std::move(first &= second);
 }
@@ -1319,7 +1693,7 @@ Matrix<T>&& operator&(Matrix<T>&& first, const Matrix<T>& second)
  *  \return A reference to second
  */
 template <class T>
-Matrix<T>&& operator&(const Matrix<T>& first, Matrix<T>&& second)
+Matrix<T> operator&(const Matrix<T>& first, Matrix<T>&& second)
 {
     return std::move(second &= first);
 }
@@ -1342,7 +1716,7 @@ Matrix<T> operator*(const Matrix<T>& mat, U number)
  *  \return A reference to this
  */
 template <class T, class U, typename std::enable_if_t<std::is_arithmetic<U>::value || is_complex<U>{}>* = nullptr>
-Matrix<T>&& operator*(Matrix<T>&& mat, U number)
+Matrix<T> operator*(Matrix<T>&& mat, U number)
 {
     return std::move(mat *= number);
 }
@@ -1364,7 +1738,7 @@ Matrix<T> operator*(U number, const Matrix<T>& mat)
  *  \return A reference to this
  */
 template <class T, class U, typename std::enable_if_t<std::is_arithmetic<U>::value || is_complex<U>{}>* = nullptr>
-Matrix<T>&& operator*(U number, Matrix<T>&& mat)
+Matrix<T> operator*(U number, Matrix<T>&& mat)
 {
     return mat * number;
 }
@@ -1387,7 +1761,7 @@ Matrix<T> operator/(const Matrix<T>& mat, U number)
  *  \return A reference to mat
  */
 template <class T, class U, typename std::enable_if_t<std::is_arithmetic<U>::value || is_complex<U>{}>* = nullptr>
-Matrix<T>&& operator/(const Matrix<T>&& first, U number)
+Matrix<T> operator/(Matrix<T>&& first, U number)
 {
     return std::move(first /= number);
 }
@@ -1410,7 +1784,7 @@ Matrix<T> operator/(const Matrix<T>& first, const Matrix<T>& second)
  *  \return A reference to first
  */
 template <class T>
-Matrix<T>&& operator/(Matrix<T>&& first, const Matrix<T>& second)
+Matrix<T> operator/(Matrix<T>&& first, const Matrix<T>& second)
 {
     return std::move(first /= second);
 }
@@ -1434,13 +1808,13 @@ std::ostream& operator<<(std::ostream& os, const Matrix<T>& mat)
     }
 #endif // DO_ARGCHECKS
 
+    size_t width = sizeof(T) * 1.5;
+
     for( size_t i = 0; i < mat.Height(); ++i )
     {
         os << std::endl;
         for( size_t j = 0; j < mat.Width(); ++j )
-        {
-            os << std::setw(10) << mat[i*mat.Width() + j] << " ";
-        }
+            os << std::setw(width) << mat[i*mat.Width() + j] << " ";
     }
     os << std::endl;
     return os;
@@ -1451,7 +1825,7 @@ std::ostream& operator<<(std::ostream& os, const Matrix<T>& mat)
  *  \param mat Matrix to read from
  */
 template <class T>
-void operator<<(std::string filename, Matrix<T>& mat)
+void operator<<(std::string filename, const Matrix<T>& mat)
 {
 #ifdef DO_ARGCHECKS
     try
@@ -1469,9 +1843,7 @@ void operator<<(std::string filename, Matrix<T>& mat)
     T* memblock = new T[mat.Length()];
 
     for(size_t i = 0; i < mat.Length(); ++i)
-    {
         memblock[i] = mat[i];
-    }
 
     char* reinterpret_memblock = (char*) memblock;
 
@@ -1504,7 +1876,7 @@ T Inner(const Matrix<T>& first, const Matrix<T>& second)
 
     if(omp_get_max_threads() > 1)
     {
-        T local_result[omp_get_max_threads()]{0};
+        T* local_result = new T[omp_get_max_threads()]{0};
         #pragma omp parallel
         {
             size_t my_num = omp_get_thread_num();
@@ -1514,7 +1886,7 @@ T Inner(const Matrix<T>& first, const Matrix<T>& second)
         }
 
         T result = 0;
-        for(size_t i = 0; i < omp_get_max_threads(); ++i)
+        for(size_t i = 0; i < (size_t)omp_get_max_threads(); ++i)
             result += local_result[i];
         return result;
     }
@@ -1536,72 +1908,21 @@ inline std::complex<double> Inner(const Matrix<std::complex<double>>& first, con
     }
 #endif // DO_ARGCHECKS
 
-    std::complex<double> local_result[omp_get_max_threads()]{0};
+    std::complex<double>* local_result = new std::complex<double>[omp_get_max_threads()]{0};
     #pragma omp parallel
     {
-    size_t my_num = omp_get_thread_num();
-    #pragma omp for
-    for(size_t i = 0; i < first.Length(); ++i)
-    {
-        local_result[my_num] += std::conj(first[i]) * second[i];
-    }
+        size_t my_num = omp_get_thread_num();
+        #pragma omp for
+        for(size_t i = 0; i < first.Length(); ++i)
+            local_result[my_num] += std::conj(first[i]) * second[i];
     }
 
     std::complex<double> result = 0;
-    for(size_t i = 0; i < omp_get_max_threads(); ++i)
-    {
+    for(size_t i = 0; i < (size_t)omp_get_max_threads(); ++i)
         result += local_result[i];
-    }
+
+    delete[] local_result;
     return result;
-}
-
-
-using namespace settings;
-
-/** Matrix Matrix multiplication using the Eigen library
- *  \param first First matrix of size l by m
- *  \param second Second matrix of size m by n
- *  \param result Resulting matrix of size l by n
- */
-template <class T>
-void MatrixMatrixMultEigen(const Matrix<T>& first, const Matrix<T>& second, Matrix<T>& result)
-{
-    Eigen::Map<Eigen::Matrix<T, Eigen::Dynamic, Eigen::Dynamic, Eigen::RowMajor>> eigenMat(first.Data(), first.Height(), first.Width());
-    Eigen::Map<Eigen::Matrix<T, Eigen::Dynamic, Eigen::Dynamic, Eigen::RowMajor>> eigenVect(second.Data(), second.Height(), second.Width());
-    Eigen::Map<Eigen::Matrix<T, Eigen::Dynamic, Eigen::Dynamic, Eigen::RowMajor>> eigenResult(result.Data(), result.Height(), result.Width());
-    eigenResult = eigenMat * eigenVect;
-}
-inline void MatrixMatrixMultEigen(const Matrix<double>& first, const Matrix<double>& second, Matrix<double>& result)
-{
-    // loading the data with 8 bytes alignment
-    Eigen::Map<Eigen::Matrix<double, Eigen::Dynamic, Eigen::Dynamic, Eigen::RowMajor>, Eigen::Aligned8> eigenMat(first.Data(), first.Height(), first.Width());
-    Eigen::Map<Eigen::Matrix<double, Eigen::Dynamic, Eigen::Dynamic, Eigen::RowMajor>, Eigen::Aligned8> eigenVect(second.Data(), second.Height(), second.Width());
-    Eigen::Map<Eigen::Matrix<double, Eigen::Dynamic, Eigen::Dynamic, Eigen::RowMajor>, Eigen::Aligned8> eigenResult(result.Data(), result.Height(), result.Width());
-    eigenResult = eigenMat * eigenVect;
-}
-inline void MatrixMatrixMultEigen(const Matrix<long long>& first, const Matrix<long long>& second, Matrix<long long>& result)
-{
-    // loading the data with 8 bytes alignment
-    Eigen::Map<Eigen::Matrix<long long, Eigen::Dynamic, Eigen::Dynamic, Eigen::RowMajor>, Eigen::Aligned8> eigenMat(first.Data(), first.Height(), first.Width());
-    Eigen::Map<Eigen::Matrix<long long, Eigen::Dynamic, Eigen::Dynamic, Eigen::RowMajor>, Eigen::Aligned8> eigenVect(second.Data(), second.Height(), second.Width());
-    Eigen::Map<Eigen::Matrix<long long, Eigen::Dynamic, Eigen::Dynamic, Eigen::RowMajor>, Eigen::Aligned8> eigenResult(result.Data(), result.Height(), result.Width());
-    eigenResult = eigenMat * eigenVect;
-}
-inline void MatrixMatrixMultEigen(const Matrix<long double>& first, const Matrix<long double>& second, Matrix<long double>& result)
-{
-    // loading the data with 8 bytes alignment
-    Eigen::Map<Eigen::Matrix<long double, Eigen::Dynamic, Eigen::Dynamic, Eigen::RowMajor>, Eigen::Aligned16> eigenMat(first.Data(), first.Height(), first.Width());
-    Eigen::Map<Eigen::Matrix<long double, Eigen::Dynamic, Eigen::Dynamic, Eigen::RowMajor>, Eigen::Aligned16> eigenVect(second.Data(), second.Height(), second.Width());
-    Eigen::Map<Eigen::Matrix<long double, Eigen::Dynamic, Eigen::Dynamic, Eigen::RowMajor>, Eigen::Aligned16> eigenResult(result.Data(), result.Height(), result.Width());
-    eigenResult = eigenMat * eigenVect;
-}
-inline void MatrixMatrixMultEigen(const Matrix<std::complex<double>>& first, const Matrix<std::complex<double>>& second, Matrix<std::complex<double>>& result)
-{
-    // loading the data with 8 bytes alignment
-    Eigen::Map<Eigen::Matrix<std::complex<double>, Eigen::Dynamic, Eigen::Dynamic, Eigen::RowMajor>, Eigen::Aligned16> eigenMat(first.Data(), first.Height(), first.Width());
-    Eigen::Map<Eigen::Matrix<std::complex<double>, Eigen::Dynamic, Eigen::Dynamic, Eigen::RowMajor>, Eigen::Aligned16> eigenVect(second.Data(), second.Height(), second.Width());
-    Eigen::Map<Eigen::Matrix<std::complex<double>, Eigen::Dynamic, Eigen::Dynamic, Eigen::RowMajor>, Eigen::Aligned16> eigenResult(result.Data(), result.Height(), result.Width());
-    eigenResult = eigenMat * eigenVect;
 }
 
 /** Matrix Matrix multiplication
@@ -1611,98 +1932,18 @@ inline void MatrixMatrixMultEigen(const Matrix<std::complex<double>>& first, con
  *  \param result Resulting matrix of size l by n
  */
 template <class T>
-void MatrixMatrixMult(const Matrix<T>& first, const Matrix<T>& second, Matrix<T>& result, MMMultType type = default_MMType)
+static inline void MatrixMatrixMult(const Matrix<T>& first, const Matrix<T>& second, Matrix<T>& result)
 {
-    switch(type)
+    // Init result to zero
+    for(size_t i = 0; i < result.Length(); ++i)
     {
-    // Naive implementation, making use of multi-threading when available
-    case MM_naive:
-        {
-            // Init result to zero
-            for(size_t i = 0; i < result.Length(); ++i)
-            {
-                result[i] = 0;
-            }
-            #pragma omp parallel for
-            for(size_t i = 0; i < first.Height(); ++i)
-            {
-                for(size_t k = 0; k < first.Width(); ++k)
-                {
-                    for(size_t j = 0; j < second.Width(); ++j)
-                    {
-                        result[i*second.Width() + j] += first[i*first.Width() + k] * second[k*second.Width() + j];
-                    }
-                }
-            }
-
-            break;
-        }
-    case MM_pure_eigen:
-        {
-            MatrixMatrixMultEigen(first, second, result);
-
-            break;
-        }
-    default:
-        {}
+        result[i] = 0;
     }
-}
-
-/** Matrix Vector multiplication using the Eigen library
- *  \param mat Matrix of size m by n
- *  \param vect Vector of size n by 1
- *  \param result Resulting vector of size m by 1
- */
-template <class T>
-void MatrixVectMultEigen(const Matrix<T>& mat, const Matrix<T>& vect, Matrix<T>& result)
-{
-    Eigen::Map<Eigen::Matrix<T, 1, Eigen::Dynamic, Eigen::RowMajor>> eigenVect(vect.Data(), vect.Height());
     #pragma omp parallel for
-    for(size_t i = 0; i < mat.Height(); ++i)
-    {
-        Eigen::Map<Eigen::Matrix<T, 1, Eigen::Dynamic, Eigen::RowMajor>> eigenMat(mat.Data() + i*mat.Width(), mat.Width());
-        result[i] = eigenMat.dot(eigenVect);
-    }
-}
-inline void MatrixVectMultEigen(const Matrix<double>& mat, const Matrix<double>& vect, Matrix<double>& result)
-{
-    Eigen::Map<Eigen::Matrix<double, 1, Eigen::Dynamic, Eigen::RowMajor>, Eigen::Aligned8> eigenVect(vect.Data(), vect.Height());
-    #pragma omp parallel for
-    for(size_t i = 0; i < mat.Height(); ++i)
-    {
-        Eigen::Map<Eigen::Matrix<double, 1, Eigen::Dynamic, Eigen::RowMajor>, Eigen::Aligned8> eigenMat(mat.Data() + i*mat.Width(), mat.Width());
-        result[i] = eigenMat.dot(eigenVect);
-    }
-}
-inline void MatrixVectMultEigen(const Matrix<long long>& mat, const Matrix<long long>& vect, Matrix<long long>& result)
-{
-    Eigen::Map<Eigen::Matrix<long long, 1, Eigen::Dynamic, Eigen::RowMajor>, Eigen::Aligned8> eigenVect(vect.Data(), vect.Height());
-    #pragma omp parallel for
-    for(size_t i = 0; i < mat.Height(); ++i)
-    {
-        Eigen::Map<Eigen::Matrix<long long, 1, Eigen::Dynamic, Eigen::RowMajor>, Eigen::Aligned8> eigenMat(mat.Data() + i*mat.Width(), mat.Width());
-        result[i] = eigenMat.dot(eigenVect);
-    }
-}
-inline void MatrixVectMultEigen(const Matrix<long double>& mat, const Matrix<long double>& vect, Matrix<long double>& result)
-{
-    Eigen::Map<Eigen::Matrix<long double, 1, Eigen::Dynamic, Eigen::RowMajor>, Eigen::Aligned16> eigenVect(vect.Data(), vect.Height());
-    #pragma omp parallel for
-    for(size_t i = 0; i < mat.Height(); ++i)
-    {
-        Eigen::Map<Eigen::Matrix<long double, 1, Eigen::Dynamic, Eigen::RowMajor>, Eigen::Aligned16> eigenMat(mat.Data() + i*mat.Width(), mat.Width());
-        result[i] = eigenMat.dot(eigenVect);
-    }
-}
-inline void MatrixVectMultEigen(const Matrix<std::complex<double>>& mat, const Matrix<std::complex<double>>& vect, Matrix<std::complex<double>>& result)
-{
-    Eigen::Map<Eigen::Matrix<std::complex<double>, 1, Eigen::Dynamic, Eigen::RowMajor>, Eigen::Aligned16> eigenVect(vect.Data(), vect.Height());
-    #pragma omp parallel for
-    for(size_t i = 0; i < mat.Height(); ++i)
-    {
-        Eigen::Map<Eigen::Matrix<std::complex<double>, 1, Eigen::Dynamic, Eigen::RowMajor>, Eigen::Aligned16> eigenMat(mat.Data() + i*mat.Width(), mat.Width());
-        result[i] = eigenMat.conjugate().dot(eigenVect);
-    }
+    for(size_t i = 0; i < first.Height(); ++i)
+        for(size_t k = 0; k < first.Width(); ++k)
+            for(size_t j = 0; j < second.Width(); ++j)
+                result[i*second.Width() + j] += first[i*first.Width() + k] * second[k*second.Width() + j];
 }
 
 /** Matrix Vector multiplication
@@ -1713,41 +1954,14 @@ inline void MatrixVectMultEigen(const Matrix<std::complex<double>>& mat, const M
  *  \param type Computation strategy to use
  */
 template <class T>
-void MatrixVectorMult(const Matrix<T>& mat, const Matrix<T>& vect, Matrix<T>& result, MVMultType type = default_MVType)
+static inline void MatrixVectorMult(const Matrix<T>& mat, const Matrix<T>& vect, Matrix<T>& result)
 {
-    switch(type)
+    #pragma omp parallel for
+    for(size_t i = 0; i < mat.Height(); ++i)
     {
-    // Naive implementation, making use of multi-threading when available
-    case MV_naive:
-        {
-            #pragma omp parallel for
-            for(size_t i = 0; i < mat.Height(); ++i)
-            {
-                result[i] = 0;
-                for(size_t j = 0; j < mat.Width(); ++j)
-                {
-                    result[i] += mat[i*mat.Width() + j] * vect[j];
-                }
-            }
-
-            break;
-        }
-    // Eigen implementation, that does currently not make use of multi-threading
-    case MV_pure_eigen:
-        {
-            MatrixMatrixMultEigen(mat, vect, result);
-
-            break;
-        }
-    // Mixed Eigen-OpenMP implementation, that does make use of multi-threading
-    case MV_par_eigen:
-        {
-            MatrixVectMultEigen(mat, vect, result);
-
-            break;
-        }
-    default:
-        {}
+        result[i] = (T)0;
+        for(size_t j = 0; j < mat.Width(); ++j)
+            result[i] += mat[i*mat.Width() + j] * vect[j];
     }
 }
 
@@ -1758,40 +1972,18 @@ void MatrixVectorMult(const Matrix<T>& mat, const Matrix<T>& vect, Matrix<T>& re
  *  \param result Resulting vector of size 1 by n
  */
 template <class T>
-void VectorMatrixMult(const Matrix<T>& vect, const Matrix<T>& mat, Matrix<T>& result, VMMultType type = default_VMType)
+static inline void VectorMatrixMult(const Matrix<T>& vect, const Matrix<T>& mat, Matrix<T>& result)
 {
-    switch(type)
-    {
-    // Naive implementation, making use of multi-threading when available
-    case VM_naive:
-        {
-            // Init result to zero
-            for(size_t i = 0; i < result.Length(); ++i)
-            {
-                result[i] = 0;
-            }
-            #pragma omp parallel for
-            for(size_t i = 0; i < mat.Height(); ++i)
-            {
-                for(size_t j = 0; j < mat.Width(); ++j)
-                {
-                    result[j] += vect[i] * mat[i*mat.Width() + j];
-                }
-            }
-
-            break;
-        }
-    case VM_pure_eigen:
-        {
-            MatrixMatrixMultEigen(vect, mat, result);
-
-            break;
-        }
-    default:
-        {}
-    }
+    // Init result to zero
+    #pragma omp parallel for simd
+    for(size_t i = 0; i < result.Length(); ++i)
+        result[i] = (T)0;
+    #pragma omp parallel for
+    for(size_t i = 0; i < mat.Height(); ++i)
+        for(size_t j = 0; j < mat.Width(); ++j)
+            result[j] += vect[i] * mat[i*mat.Width() + j];
 }
 
-} // namespace astroqut
+} // namespace alias
 
 #endif // ASTROQUT_UTILS_MATRIX_HPP

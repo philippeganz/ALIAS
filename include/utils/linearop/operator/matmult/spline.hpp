@@ -2,8 +2,8 @@
 /// \file include/utils/linearop/operator/matmult/spline.hpp
 /// \brief Spline operator class header
 /// \author Philippe Ganz <philippe.ganz@gmail.com> 2017-2018
-/// \version 0.5.0
-/// \date 2018-06-17
+/// \version 0.6.0
+/// \date 2019-03
 /// \copyright GPL-3.0
 ///
 
@@ -12,10 +12,10 @@
 
 #include "utils/linearop/operator/matmult.hpp"
 
-namespace astroqut
+namespace alias
 {
 
-template<class T>
+template<class T = double>
 class Spline : public MatMult<T>
 {
 private:
@@ -25,7 +25,34 @@ public:
     /** Default constructor
      */
     Spline()
-    {}
+    {
+#ifdef DEBUG
+        std::cerr << "Spline : Default constructor called." << std::endl;
+#endif // DEBUG
+    }
+
+    /** Copy constructor
+     *  \param other Object to copy from
+     */
+    Spline(const Spline& other)
+        : MatMult<T>(other)
+    {
+#ifdef DEBUG
+        std::cout << "Spline : Copy constructor called" << std::endl;
+#endif // DEBUG
+    }
+
+    /** Move constructor
+     *  \param other Object to move from
+     */
+    Spline(Spline&& other)
+        : Spline()
+    {
+#ifdef DEBUG
+        std::cout << "Spline : Move constructor called" << std::endl;
+#endif // DEBUG
+        swap(*this, other);
+    }
 
     /** Full member constructor
      *  \param low_pass_filter QMF matrix for low pass filtering
@@ -33,17 +60,25 @@ public:
      *  \param height Height of the full Abel matrix
      *  \param width Width of the full Abel matrix
      */
-    Spline(Matrix<T>&& data, size_t height, size_t width)
-        : MatMult<T>(std::forward<Matrix<T>>(data), height, width)
-    {}
+    explicit Spline(Matrix<T> data, size_t height, size_t width)
+        : MatMult<T>(data, height, width)
+    {
+#ifdef DEBUG
+        std::cerr << "Spline : Full member constructor called." << std::endl;
+#endif // DEBUG
+    }
 
     /** Build constructor
      *  \brief Builds the Spline operator with the qmf matrix corresponding to type and parameter
      *  \param pic_size Side size of the picture in pixel
      */
-    Spline(size_t pic_size)
+    explicit Spline(size_t pic_size)
         : MatMult<T>(Generate(pic_size), pic_size, pic_size)
-    {}
+    {
+#ifdef DEBUG
+        std::cerr << "Spline : Build constructor called." << std::endl;
+#endif // DEBUG
+    }
 
     /** Clone function
      *  \return A copy of the current instance
@@ -56,7 +91,11 @@ public:
     /** Default destructor
      */
     virtual ~Spline()
-    {}
+    {
+#ifdef DEBUG
+        std::cout << "Spline : Destructor called" << std::endl;
+#endif // DEBUG
+    }
 
     /** Transpose in-place
      *   \return A reference to this
@@ -66,6 +105,28 @@ public:
         std::swap(this->height_, this->width_);
         this->transposed_ = !this->transposed_;
         this->data_ = std::move(this->data_.Transpose());
+        return *this;
+    }
+
+    /** Swap function
+     *  \param first First object to swap
+     *  \param second Second object to swap
+     */
+    friend void swap(Spline& first, Spline& second) noexcept
+    {
+        using std::swap;
+
+        swap(static_cast<Operator<T>&>(first), static_cast<Operator<T>&>(second));
+    }
+
+    /** Copy assignment operator
+     *  \param other Object to assign to current object
+     *  \return A reference to this
+     */
+    Spline& operator=(Spline other)
+    {
+        swap(*this, other);
+
         return *this;
     }
 
@@ -147,6 +208,6 @@ public:
     }
 };
 
-} // namespace astroqut
+} // namespace alias
 
 #endif // ASTROQUT_UTILS_OPERATOR_SPLINE_HPP

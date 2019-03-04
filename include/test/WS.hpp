@@ -2,8 +2,8 @@
 /// \file include/test/WS.hpp
 /// \brief Test suite to test the WS method.
 /// \author Philippe Ganz <philippe.ganz@gmail.com>
-/// \version 0.5.0
-/// \date 2018-05-01
+/// \version 0.6.0
+/// \date 2019-03
 /// \copyright GPL-3.0
 ///
 
@@ -12,7 +12,7 @@
 
 #include "WS/astroQUT.hpp"
 
-namespace astroqut
+namespace alias
 {
 namespace test
 {
@@ -20,9 +20,10 @@ namespace astro
 {
 
 void Chandra();
+void Sym256();
 
 } // namespace astro
 } // namespace test
-} // namespace astroqut
+} // namespace alias
 
 #endif // ASTROQUT_TEST_WS_HPP

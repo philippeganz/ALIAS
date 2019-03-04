@@ -2,8 +2,8 @@
 /// \file include/test/fista.hpp
 /// \brief Test suite to validate the FISTA class.
 /// \author Philippe Ganz <philippe.ganz@gmail.com>
-/// \version 0.5.0
-/// \date 2018-01-12
+/// \version 0.6.0
+/// \date 2019-03
 /// \copyright GPL-3.0
 ///
 
@@ -11,13 +11,12 @@
 #define ASTROQUT_TEST_FISTA_HPP
 
 #include "fista/poisson.hpp"
-#include "utils/settings.hpp"
 
 #include <chrono>
 #include <iostream>
 #include <random>
 
-namespace astroqut{
+namespace alias{
 namespace test{
 namespace fista{
 
@@ -27,6 +26,6 @@ void Time(size_t length);
 
 } // namespace fista
 } // namespace test
-} // namespace astroqut
+} // namespace alias
 
 #endif // ASTROQUT_TEST_FISTA_HPP

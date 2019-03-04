@@ -2,8 +2,8 @@
 /// \file include/utils/linearop/operator/astrooperator.hpp
 /// \brief Combination of all operators to create the main operator
 /// \author Philippe Ganz <philippe.ganz@gmail.com> 2017-2018
-/// \version 0.5.0
-/// \date 2018-07-07
+/// \version 0.6.0
+/// \date 2019-03
 /// \copyright GPL-3.0
 ///
 
@@ -11,21 +11,21 @@
 #define ASTROQUT_UTILS_OPERATOR_ASTROOPERATOR_HPP
 
 #include "utils/linearop/operator/abeltransform.hpp"
-#include "utils/linearop/operator/convolution/blur.hpp"
+#include "utils/linearop/operator/blurring.hpp"
 #include "utils/linearop/operator/matmult/spline.hpp"
 #include "utils/linearop/operator/wavelet.hpp"
 #include "WS/astroQUT.hpp"
 
-namespace astroqut
+namespace alias
 {
 
-template<class T>
+template<class T = double>
 class AstroOperator : public Operator<T>
 {
 private:
     size_t pic_size_;
     AbelTransform<T> abel_;
-    Blur<T> bluring_;
+    Blurring<T> blurring_;
     Matrix<T> sensitivity_;
     Matrix<T> standardize_;
     Spline<T> spline_;
@@ -35,14 +35,49 @@ public:
     /** Default constructor
      */
     AstroOperator()
-        : pic_size_()
+        : Operator<T>()
+        , pic_size_()
         , abel_()
-        , bluring_()
+        , blurring_()
         , sensitivity_()
         , standardize_()
         , spline_()
         , wavelet_()
-    {}
+    {
+#ifdef DEBUG
+        std::cout << "AstroOperator : Default constructor called" << std::endl;
+#endif // DEBUG
+    }
+
+    /** Copy constructor
+     *  \param other Object to copy from
+     */
+    AstroOperator(const AstroOperator& other)
+        : Operator<T>(other)
+        , pic_size_(other.pic_size_)
+        , abel_(other.abel_)
+        , blurring_(other.blurring_)
+        , sensitivity_(other.sensitivity_)
+        , standardize_(other.standardize_)
+        , spline_(other.spline_)
+        , wavelet_(other.wavelet_)
+    {
+#ifdef DEBUG
+        std::cout << "AstroOperator : Copy constructor called" << std::endl;
+#endif // DEBUG
+    }
+
+    /** Move constructor
+     *  \param other Object to move from
+     */
+    AstroOperator(AstroOperator&& other)
+        : AstroOperator()
+    {
+#ifdef DEBUG
+        std::cout << "AstroOperator : Move constructor called" << std::endl;
+#endif // DEBUG
+        swap(*this, other);
+    }
 
     /** Build constructor
      *  \brief Builds the AstroOperator
@@ -54,13 +89,13 @@ public:
      *  \param params
      *  \param transposed
      */
-    AstroOperator(size_t pic_size,
-                  size_t wavelet_amount,
-                  size_t radius,
-                  const Matrix<T> sensitivity,
-                  const Matrix<T> standardize,
-                  bool transposed = false,
-                  WS::Parameters<T> params = WS::Parameters<T>() )
+    explicit AstroOperator(size_t pic_size,
+                           size_t wavelet_amount,
+                           size_t radius,
+                           const Matrix<T> sensitivity,
+                           const Matrix<T> standardize,
+                           bool transposed = false,
+                           WS::Parameters<T> params = WS::Parameters<T>() )
         : Operator<T>(Matrix<T>(),
                       transposed ? (pic_size+2)*pic_size : pic_size*pic_size,
                       transposed ? pic_size*pic_size : (pic_size+2)*pic_size,
@@ -69,8 +104,8 @@ public:
         , abel_(transposed ?
                 AbelTransform<T>(wavelet_amount, pic_size*pic_size, radius).Transpose() :
                 AbelTransform<T>(wavelet_amount, pic_size*pic_size, radius))
-        , bluring_(Blur<T>(params.blur_thresh, params.blur_R0, params.blur_alpha))
-        , sensitivity_(sensitivity.Transpose())
+        , blurring_(Blurring<T>(params.blurring_filter, pic_size))
+        , sensitivity_(sensitivity)
         , standardize_(standardize)
         , spline_(transposed ?
                   Spline<T>(pic_size).Transpose() :
@@ -78,7 +113,11 @@ public:
         , wavelet_(transposed ?
                    Wavelet<T>((WaveletType) params.wavelet[0], params.wavelet[1]).Transpose() :
                    Wavelet<T>((WaveletType) params.wavelet[0], params.wavelet[1]))
-    {}
+    {
+#ifdef DEBUG
+        std::cout << "AstroOperator : Build constructor called" << std::endl;
+#endif // DEBUG
+    }
 
     /** Full member constructor
      *  \brief Constructs the AstroOperator with all member attributes given
@@ -90,9 +129,9 @@ public:
      *  \param params
      *  \param transposed
      */
-    AstroOperator(size_t pic_size,
+    explicit AstroOperator(size_t pic_size,
                   const AbelTransform<T> abel,
-                  const Blur<T> blur,
+                  const Blurring<T> blurring,
                   const Matrix<T> sensitivity,
                   const Matrix<T> standardize,
                   const Spline<T> spline,
@@ -104,17 +143,25 @@ public:
                       transposed)
         , pic_size_(pic_size)
         , abel_( transposed ? abel : abel.Clone()->Transpose() )
-        , bluring_(blur)
-        , sensitivity_(sensitivity.Transpose())
+        , blurring_(blurring)
+        , sensitivity_(sensitivity)
         , standardize_(standardize)
         , spline_( transposed ? spline : spline.Clone()->Transpose() )
         , wavelet_( transposed ? wavelet : wavelet.Clone()->Transpose() )
-    {}
+    {
+#ifdef DEBUG
+        std::cout << "AstroOperator : Full member constructor called" << std::endl;
+#endif // DEBUG
+    }
 
     /** Default destructor
      */
     virtual ~AstroOperator()
-    {}
+    {
+#ifdef DEBUG
+        std::cout << "AstroOperator : Destructor called" << std::endl;
+#endif // DEBUG
+    }
 
     /** Clone function
      *  \return A copy of the current instance
@@ -142,13 +189,13 @@ public:
         abel_ = abel;
     }
 
-    Blur<T> Bluring() const
+    Blurring<T> Blur() const
     {
-        return bluring_;
+        return blurring_;
     }
-    void Bluring(const Blur<T> bluring)
+    void Blur(const Blurring<T> blurring)
     {
-        bluring_ = bluring;
+        blurring_ = blurring;
     }
 
     Matrix<T> Sensitivity() const
@@ -197,6 +244,35 @@ public:
         abel_ = abel_.Transpose();
         spline_ = spline_.Transpose();
         wavelet_ = wavelet_.Transpose();
+        return *this;
+    }
+
+    /** Swap function
+     *  \param first First object to swap
+     *  \param second Second object to swap
+     */
+    friend void swap(AstroOperator& first, AstroOperator& second) noexcept
+    {
+        using std::swap;
+
+        swap(static_cast<Operator<T>&>(first), static_cast<Operator<T>&>(second));
+        swap(first.pic_size_, second.pic_size_);
+        swap(first.abel_, second.abel_);
+        swap(first.blurring_, second.blurring_);
+        swap(first.sensitivity_, second.sensitivity_);
+        swap(first.standardize_, second.standardize_);
+        swap(first.spline_, second.spline_);
+        swap(first.wavelet_, second.wavelet_);
+    }
+
+    /** Copy assignment operator
+     *  \param other Object to assign to current object
+     *  \return A reference to this
+     */
+    AstroOperator& operator=(AstroOperator other)
+    {
+        swap(*this, other);
+
         return *this;
     }
 
@@ -267,7 +343,7 @@ public:
             result += source_ps;
 
         // B(AWx + ps)
-        result = bluring_ * result;
+        result = blurring_ * result;
         result.Height(pic_size_*pic_size_);
         result.Width(1);
 
@@ -317,7 +393,7 @@ public:
         BEtx.Width(pic_size_);
 
         // B * Etx
-        BEtx = bluring_ * BEtx;
+        BEtx = blurring_ * BEtx;
         BEtx.Height(pic_size_*pic_size_);
         BEtx.Width(1);
 
@@ -354,6 +430,6 @@ public:
     }
 };
 
-} // namespace astroqut
+} // namespace alias
 
 #endif // ASTROQUT_UTILS_OPERATOR_ASTROOPERATOR_HPP
