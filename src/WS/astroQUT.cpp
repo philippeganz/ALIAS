@@ -434,6 +434,7 @@ Matrix<double> Solve(std::string picture_path,
     std::cout << "Running solver with " << omp_get_max_threads() << " threads for parallel computing." << std::endl << std::endl;
 
     options.model_size = (options.pic_size + 2) * options.pic_size;
+    options.MC_max = options.pic_size*10;
     options.MC_quantile_PF = (size_t) (options.MC_max * (1.0 - 1.0/(std::sqrt(PI*std::log(options.pic_size)))));
     options.MC_quantile_PS = (size_t) (options.MC_max * (1.0 - 1.0/(options.pic_size*options.pic_size)));
 
