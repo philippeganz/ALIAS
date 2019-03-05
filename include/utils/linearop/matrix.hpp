@@ -1838,7 +1838,7 @@ void operator<<(std::string filename, const Matrix<T>& mat)
     }
 #endif // DO_ARGCHECKS
 
-    std::ofstream file(filename, std::ios::binary | std::ios::out);
+    std::ofstream file(filename, std::ios::binary | std::ios::out | std::ios::app);
 
     T* memblock = new T[mat.Length()];
 
