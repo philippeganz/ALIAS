@@ -133,8 +133,8 @@ static void Standardize(const Matrix<double>& mu_hat,
     for(size_t MC_id = 0; MC_id < options.MC_max; ++MC_id)
     {
         std::default_random_engine generator(rnd() + omp_get_team_num() + std::chrono::system_clock::now().time_since_epoch().count());
-        if((options.MC_max >= 100 && MC_id % (options.MC_max/100) == 0) || options.MC_max < 100)
-            std::cout << "\r" + std::to_string(1+std::lround(MC_id*100.0/(double)options.MC_max)) + "/100" << std::flush;
+        if(options.MC_max > 100 && (MC_id % ((options.MC_max)/100) == 0))
+            std::cout << "\r" + std::to_string(std::lround(MC_id*100.0/(double)(options.MC_max-1))) + "/100" << std::flush;
 
         Matrix<double> rnd_result = astro.WtAtBt(MCCompute(mu_hat, mu_hat_dist, generator), false, true, true, false).Abs();
 
@@ -142,7 +142,7 @@ static void Standardize(const Matrix<double>& mu_hat,
         for(size_t i = 0; i < rnd_result.Height(); ++i )
             MC_astro[i*MC_astro.Width() + MC_id] = rnd_result[i];
     }
-    std::cout << std::endl;
+    std::cout << "\r100/100" << std::endl;
 
     options.standardize = Matrix<double>(1.0, options.model_size, 1);
 
@@ -205,8 +205,8 @@ static void Lambda(const Matrix<double>& mu_hat,
 
         std::default_random_engine generator(rnd() + omp_get_thread_num() + std::chrono::system_clock::now().time_since_epoch().count());
 
-        if((options.MC_max >= 100 && MC_id % (options.MC_max/100) == 0) || options.MC_max < 100)
-            std::cout << "\r" + std::to_string(1+std::lround(MC_id*100.0/(double)options.MC_max)) + "/100" << std::flush;
+        if(options.MC_max > 100 && (MC_id % ((options.MC_max)/100) == 0))
+            std::cout << "\r" + std::to_string(std::lround(MC_id*100.0/(double)(options.MC_max-1))) + "/100" << std::flush;
 
         Matrix<double> rnd_result = astro.WtAtBt(MCCompute(mu_hat, mu_hat_dist, generator)).Abs();
 
@@ -216,7 +216,7 @@ static void Lambda(const Matrix<double>& mu_hat,
         // compute max value for each MC simulation in point source results
         PS_max_values[MC_id] = *std::max_element(&rnd_result[options.pic_size*2], &rnd_result[options.model_size]);
     }
-    std::cout << std::endl;
+    std::cout << "\r100/100" << std::endl;
 
     // determine the value of lambda
     std::nth_element(&WS_max_values[0],
@@ -304,8 +304,8 @@ static Matrix<double> EstimateNonZero(const Matrix<double>& picture,
     Matrix<double> identity(0.0, options.model_size, 1);
     for(size_t i = 0; i < non_zero_elements_amount; ++i)
     {
-        if((non_zero_elements_amount >= 100 && i % (non_zero_elements_amount/100) == 0) || non_zero_elements_amount < 100)
-            std::cout << "\r" + std::to_string(1+std::lround(i*100.0/(double)non_zero_elements_amount)) + "/100" << std::flush;
+        if(non_zero_elements_amount > 100 && i % ((non_zero_elements_amount)/100) == 0)
+            std::cout << "\r" + std::to_string(std::lround(i*100.0/(double)(non_zero_elements_amount-1))) + "/100" << std::flush;
         identity[non_zero_elements_indices[i]] = 1.0;
         Matrix<double> local_result = astro * identity;
         identity[non_zero_elements_indices[i]] = 0.0;
@@ -313,7 +313,7 @@ static Matrix<double> EstimateNonZero(const Matrix<double>& picture,
         for(size_t j = 0; j < local_result.Length(); ++j)
             non_zero_elements_operator[j*non_zero_elements_amount + i] = local_result[j];
     }
-    std::cout << std::endl;
+    std::cout << "\r100/100" << std::endl;
 
     options.fista_params.init_value = Matrix<double>(non_zero_elements_amount, 1);
 
