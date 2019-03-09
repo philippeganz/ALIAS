@@ -1888,6 +1888,8 @@ T Inner(const Matrix<T>& first, const Matrix<T>& second)
         T result = 0;
         for(size_t i = 0; i < (size_t)omp_get_max_threads(); ++i)
             result += local_result[i];
+
+        delete[] local_result;
         return result;
     }
     else
