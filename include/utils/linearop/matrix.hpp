@@ -35,17 +35,6 @@ template<class T> struct is_complex<std::complex<T>> : std::true_type {};
  */
 enum NormType {one, two, two_squared, inf};
 
-/** Function to verify if data is aligned
- *  \param ptr Pointer to evaluate
- *  \param align_byte_size The byte boundary size
- *  \author Christoph from https://stackoverflow.com/a/1898487/8141262
- *  \author Philippe Ganz <philippe.ganz@gmail.com> 2018
- */
-inline bool IsAligned(const void* ptr, size_t align_byte_size)
-{
-    return (uintptr_t)ptr % align_byte_size == 0;
-}
-
 /** Floating point type comparison function
  *  \param first First number to compare
  *  \param second Second number to compare
@@ -81,11 +70,8 @@ std::ostream& operator<<(std::ostream& os, const Matrix<T>& mat);
 template <class T = double>
 class Matrix : public LinearOp
 {
-public:
-    typedef T matrix_t __attribute__(( aligned ((size_t) std::pow(2, std::ceil(std::log2(sizeof(T))))) ));
-
 private:
-    matrix_t* data_; //!< Member variable "data_"
+    T* data_; //!< Member variable "data_"
 
 public:
     /** Default constructor
@@ -116,13 +102,7 @@ public:
         {
             try
             {
-                // allocate aligned memory
-                size_t alignment = std::pow(2, std::ceil(std::log2(sizeof(T))));
-#ifdef __WIN32
-                data_ = static_cast<matrix_t*>(_mm_malloc(alignment*this->length_, alignment));
-#elif defined __linux__
-                data_ = static_cast<matrix_t*>(aligned_alloc(alignment, alignment*this->length_));
-#endif
+                 data_ = new T[this->length_];
             }
             catch (const std::bad_alloc&)
             {
@@ -137,21 +117,13 @@ public:
      *  \param height Height of the data
      *  \param width Width of the data
      */
-    Matrix(matrix_t* data, size_t height, size_t width)
+    Matrix(T* data, size_t height, size_t width)
         : LinearOp(height, width)
         , data_(data)
     {
 #ifdef DEBUG
         std::cout << "Matrix : Full member constructor called with data=" << data << ", height=" << height << ", width=" << width << std::endl;
 #endif // DEBUG
-
-#ifdef DO_ARGCHECKS
-        if( !IsAligned(data, sizeof(T)) )
-        {
-            std::cerr << "Please use only " << sizeof(T) << " bytes aligned data.";
-            throw;
-        }
-#endif // DO_ARGCHECKS
     }
 
     /** Full member constructor
@@ -226,22 +198,17 @@ public:
             std::cerr << "Input file is empty";
             throw;
         }
-        char* memblock = new char [file_size];
+        char* memblock = new char[file_size];
         file.seekg(0, std::ios::beg);
         file.read(memblock, file_size);
 
         U* reinterpret_memblock = (U*) memblock;
 
+        size_t length = file_size / sizeof(U);
+
         try
         {
-            // allocate aligned memory
-            size_t alignment = std::pow(2, std::ceil(std::log2(sizeof(T))));
-            double original_target_type_ratio = (double)alignment/(double)sizeof(U);
-#ifdef __WIN32
-            data_ = static_cast<matrix_t*>(_mm_malloc((size_t)(file_size*original_target_type_ratio), alignment));
-#elif defined __linux__
-            data_ = static_cast<matrix_t*>(aligned_alloc(alignment, (size_t)(file_size*original_target_type_ratio)));
-#endif
+            data_ = new T[length];
         }
         catch (const std::bad_alloc&)
         {
@@ -272,16 +239,10 @@ public:
 #ifdef DEBUG
         std::cout << "Matrix : Constant number constructor called with number=" << number << ", height=" << height << ", width=" << width << std::endl;
 #endif // DEBUG
-        if( omp_get_max_threads() > 1 )
-        {
-            #pragma omp parallel for simd
-            for(size_t i = 0; i < this->length_; ++i)
-                data_[i] = (T) number;
-        }
-        else
-        {
-            std::fill( data_, data_ + (this->length_), number );
-        }
+
+        #pragma omp parallel for simd
+        for(size_t i = 0; i < this->length_; ++i)
+            data_[i] = (T) number;
     }
 
     /** Copy constructor
@@ -326,12 +287,7 @@ public:
 #endif // DEBUG
         if( data_ != nullptr )
         {
-            // deallocate aligned memory
-#ifdef __WIN32
-            _mm_free(data_);
-#elif defined __linux__
-            free(data_);
-#endif
+            delete[] data_;
         }
         data_ = nullptr;
     }
@@ -339,22 +295,15 @@ public:
     /** Access data_
      * \return The current value of data_
      */
-    matrix_t* Data() const noexcept
+    T* Data() const noexcept
     {
         return data_;
     }
     /** Set data_
      * \param data New value to set
      */
-    void Data(matrix_t* const data)
+    void Data(T* const data)
     {
-#ifdef DO_ARGCHECKS
-        if( !IsAligned(data, sizeof(T)) )
-        {
-            std::cerr << "Please use only " << sizeof(T) << " bytes aligned data.";
-            throw;
-        }
-#endif // DO_ARGCHECKS
         data_ = data;
     }
 
@@ -439,6 +388,8 @@ public:
         return result;
     }
 
+
+
     /** Copy assignment operator
      *  \param other Object to assign to current object
      *  \return A reference to this
@@ -467,13 +418,7 @@ public:
             {
                 try
                 {
-                    // allocate aligned data
-                    size_t alignment = std::pow(2, std::ceil(std::log2(sizeof(T))));
-#ifdef __WIN32
-                    data_ = static_cast<matrix_t*>(_mm_malloc(alignment*this->length_, alignment));
-#elif defined __linux__
-                    data_ = static_cast<matrix_t*>(aligned_alloc(alignment, alignment*this->length_));
-#endif
+                    data_ = new T[this->length_];
                 }
                 catch (const std::bad_alloc&)
                 {

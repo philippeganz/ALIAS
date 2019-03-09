@@ -59,7 +59,7 @@ void ConvolutionTime(size_t data_length, size_t filter_length)
     size_t test_height = data_length*data_length;
     size_t test_width = data_length;
 
-    Matrix<int>::matrix_t * A_data = (int*) _mm_malloc(sizeof(int)*test_height*test_width, sizeof(int)); // destroyed when A is destroyed
+    int* A_data = new int[test_height*test_width]; // destroyed when A is destroyed
     #pragma omp parallel for simd
     for( size_t i = 0; i < test_height*test_width; ++i )
     {
@@ -67,7 +67,7 @@ void ConvolutionTime(size_t data_length, size_t filter_length)
     }
     alias::Matrix<int> A(A_data, test_height, test_width);
 
-    Matrix<int>::matrix_t * f_data = (int*) _mm_malloc(sizeof(int)*filter_length*filter_length, sizeof(int));; // destroyed when u is destroyed
+    int* f_data = new int[filter_length*filter_length]; // destroyed when u is destroyed
     #pragma omp parallel for simd
     for( size_t i = 0; i < filter_length*filter_length; ++i )
     {
@@ -247,7 +247,7 @@ void AbelTime(size_t pic_size)
     size_t test_height = pic_size;
     size_t test_width = 1;
 
-    Matrix<double>::matrix_t * target_data = (double*) _mm_malloc(sizeof(double)*test_height*test_width, sizeof(double)); // destroyed when A is destroyed
+    double* target_data = new double[test_height*test_width]; // destroyed when A is destroyed
     #pragma omp parallel for simd
     for( size_t i = 0; i < test_height*test_width; ++i )
     {
