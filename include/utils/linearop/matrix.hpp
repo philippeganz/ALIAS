@@ -255,20 +255,25 @@ public:
         std::cout << "Matrix : Copy constructor called" << std::endl;
 #endif // DEBUG
 
-        *this = other;
+        if( other.data_ != nullptr )
+        {
+            #pragma omp parallel for simd
+            for(size_t i = 0; i < this->length_; ++i)
+                data_[i] = other.data_[i];
+        }
     }
 
     /** Move constructor
      *  \param other Object to move from
      */
     Matrix(Matrix&& other) noexcept
-        : Matrix(other.data_, other.height_, other.width_)
+        : Matrix()
     {
 #ifdef DEBUG
         std::cout << "Matrix : Move constructor called" << std::endl;
 #endif // DEBUG
 
-        other.Data(nullptr);
+        swap(*this, other);
     }
 
     /** Clone function
@@ -285,10 +290,7 @@ public:
 #ifdef DEBUG
         std::cout << "Matrix : Destructor called" << std::endl;
 #endif // DEBUG
-        if( data_ != nullptr )
-        {
-            delete[] data_;
-        }
+        delete[] data_;
         data_ = nullptr;
     }
 
@@ -388,84 +390,28 @@ public:
         return result;
     }
 
+    /** Swap function
+     *  \param first First object to swap
+     *  \param second Second object to swap
+     */
+    friend void swap(Matrix& first, Matrix& second) noexcept
+    {
+        using std::swap;
 
+        swap(static_cast<LinearOp&>(first), static_cast<LinearOp&>(second));
+        swap(first.data_, second.data_);
+    }
 
     /** Copy assignment operator
      *  \param other Object to assign to current object
      *  \return A reference to this
      */
-    Matrix& operator=(const Matrix& other)
+    Matrix& operator=(Matrix other)
     {
 #ifdef DEBUG
         std::cout << "Matrix : Copy assignment operator called" << std::endl;
 #endif // DEBUG
-
-        // we need to deallocate data_ if the array size is not the same
-        if( this->length_ != other.length_ )
-        {
-            if( data_ != nullptr )
-            {
-                // deallocate aligned memory
-#ifdef __WIN32
-                _mm_free(data_);
-#elif defined __linux__
-                free(data_);
-#endif
-                data_ = nullptr;
-            }
-            // and we need to reallocate if there is something to store
-            if( other.data_ != nullptr )
-            {
-                try
-                {
-                    data_ = new T[this->length_];
-                }
-                catch (const std::bad_alloc&)
-                {
-                    std::cerr << "Could not allocate memory for new array!" << std::endl;
-                    throw;
-                }
-            }
-        }
-
-        // copy data if need be
-        if( data_ != nullptr && data_ != other.data_ )
-        {
-            if(omp_get_max_threads() > 1)
-            {
-                #pragma omp parallel for simd
-                for(size_t i = 0; i < other.length_; ++i)
-                    data_[i] = other.data_[i];
-            }
-            else
-            {
-                std::copy(other.data_, other.data_ + other.length_, data_);
-            }
-        }
-
-        // finally, update the size values
-        this->height_ = other.height_;
-        this->width_ = other.width_;
-        this->length_ = other.length_;
-
-        return *this;
-    }
-
-    /** Move assignment operator
-     *  \param other Object to move to current object
-     *  \return A reference to this
-     */
-    Matrix& operator=(Matrix&& other) noexcept
-    {
-#ifdef DEBUG
-        std::cout << "Matrix : Move assignment operator called" << std::endl;
-#endif // DEBUG
-
-        this->height_ = other.height_;
-        this->width_ = other.width_;
-        this->length_ = other.length_;
-        std::swap(data_, other.data_);
-
+        swap(*this, other);
         return *this;
     }
 
