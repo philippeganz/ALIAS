@@ -187,8 +187,8 @@ public:
         using std::swap;
 
         swap(static_cast<LinearOp&>(first), static_cast<LinearOp&>(second));
-        std::swap(first.data_, second.data_);
-        std::swap(first.transposed_, second.transposed_);
+        swap(first.data_, second.data_);
+        swap(first.transposed_, second.transposed_);
     }
 
     virtual Matrix<T> operator*(const Matrix<T>& other) const = 0;
