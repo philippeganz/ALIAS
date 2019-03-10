@@ -226,11 +226,11 @@ public:
         for( size_t row = 0; row < signal.Height(); ++row )
         {
             Matrix<std::complex<T>> input_row(signal.Data() + row*signal.Width(), signal.Width(), 1);
-            Matrix<std::complex<T>> result_row(result.Data() + row*result.Width(), result.Width(), 1);
             Matrix<std::complex<T>> result_row_freq_domain = FFT(input_row);
-            result_row = result_row_freq_domain;
+            #pragma omp simd
+            for( size_t i = 0; i < result.Width(); ++i )
+                result[row*result.Width() + i] = result_row_freq_domain[i];
             input_row.Data(nullptr);
-            result_row.Data(nullptr);
         }
 
         // transpose the result in-place
@@ -242,7 +242,9 @@ public:
         {
             Matrix<std::complex<T>> result_row(result_transposed.Data() + row*result_transposed.Width(), result_transposed.Width(), 1);
             Matrix<std::complex<T>> result_row_freq_domain = FFT(result_row);
-            result_row = result_row_freq_domain;
+            #pragma omp simd
+            for( size_t i = 0; i < result_transposed.Width(); ++i )
+                result_transposed[row*result_transposed.Width() + i] = result_row_freq_domain[i];
             result_row.Data(nullptr);
         }
 
@@ -256,25 +258,29 @@ public:
         Matrix<std::complex<T>> result(this->Height(), this->Width());
 
         // compute a 1D IFFT for every row of the signal
+        #pragma omp parallel for
         for( size_t row = 0; row < signal.Height(); ++row )
         {
             Matrix<std::complex<T>> input_row(signal.Data() + row*signal.Width(), signal.Width(), 1);
-            Matrix<std::complex<T>> result_row(result.Data() + row*result.Width(), result.Width(), 1);
             Matrix<std::complex<T>> result_row_time_domain = IFFT(input_row);
-            result_row = result_row_time_domain;
+            #pragma omp simd
+            for( size_t i = 0; i < result.Width(); ++i )
+                result[row*result.Width() + i] = result_row_time_domain[i];
             input_row.Data(nullptr);
-            result_row.Data(nullptr);
         }
 
         // transpose the result in-place
         std::move(result).Transpose();
 
         // compute a 1D IFFT for every row of the transposed intermediate result, i.e. the columns of the previous IFFT
+        #pragma omp parallel for
         for( size_t row = 0; row < result.Height(); ++row )
         {
             Matrix<std::complex<T>> result_row(result.Data() + row*result.Width(), result.Width(), 1);
             Matrix<std::complex<T>> result_row_time_domain = IFFT(result_row);
-            result_row = result_row_time_domain;
+            #pragma omp simd
+            for( size_t i = 0; i < result.Width(); ++i )
+                result[row*result.Width() + i] = result_row_time_domain[i];
             result_row.Data(nullptr);
         }
 

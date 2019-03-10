@@ -306,6 +306,9 @@ public:
                   bool apply_spline = true,
                   bool ps = true ) const
     {
+#ifdef DEBUG
+    std::cerr << "BAW called" << std::endl;
+#endif // DEBUG
 #ifdef DO_ARGCHECKS
         if( this->transposed_ )
         {
@@ -318,20 +321,23 @@ public:
         if(standardize)
             normalized_source /= standardize_;
 
-        // split the normalized source into wavelet, spline and ps components
-        Matrix<T> source_wavelet(&normalized_source[0], pic_size_, 1);
-        Matrix<T> source_spline(&normalized_source[pic_size_], pic_size_, 1);
-        Matrix<T> source_ps(&normalized_source[2*pic_size_], pic_size_, pic_size_);
-
         // W * xw
         Matrix<T> result_wavelet;
         if( apply_wavelet )
+        {
+            Matrix<T> source_wavelet(&normalized_source[0], pic_size_, 1);
             result_wavelet = wavelet_ * source_wavelet;
+            source_wavelet.Data(nullptr);
+        }
 
         // W * xs
         Matrix<T> result_spline;
         if( apply_spline )
+        {
+            Matrix<T> source_spline(&normalized_source[pic_size_], pic_size_, 1);
             result_spline = spline_ * source_spline;
+            source_spline.Data(nullptr);
+        }
 
         // A * (Wxw + Wxs)
         Matrix<T> result = abel_ * (result_wavelet + result_spline);
@@ -340,7 +346,11 @@ public:
 
         // AWx + ps
         if( ps )
+        {
+            Matrix<T> source_ps(&normalized_source[2*pic_size_], pic_size_, pic_size_);
             result += source_ps;
+            source_ps.Data(nullptr);
+        }
 
         // B(AWx + ps)
         result = blurring_ * result;
@@ -350,11 +360,9 @@ public:
         // E' .* B(AWx + ps)
         result = result & sensitivity_;
 
-        // release pointers
-        source_wavelet.Data(nullptr);
-        source_spline.Data(nullptr);
-        source_ps.Data(nullptr);
-
+#ifdef DEBUG
+    std::cerr << "BAW done" << std::endl;
+#endif // DEBUG
         return result;
     }
 
@@ -364,6 +372,9 @@ public:
                      bool apply_spline = true,
                      bool ps = true ) const
     {
+#ifdef DEBUG
+    std::cerr << "WtAtBt called" << std::endl;
+#endif // DEBUG
 #ifdef DO_ARGCHECKS
         if( ! this->transposed_ )
         {
@@ -373,19 +384,6 @@ public:
 #endif // DO_ARGCHECKS
         // result matrix
         Matrix<T> result((apply_wavelet + apply_spline + ps*pic_size_)*pic_size_, 1);
-
-        // result components pointers
-        T* current_position = &result[0];
-        // wavelet component
-        Matrix<T> result_wavelet(current_position, pic_size_, 1);
-        if(apply_wavelet)
-            current_position += pic_size_;
-        // spline component
-        Matrix<T> result_spline(current_position, pic_size_, 1);
-        if(apply_spline)
-            current_position += pic_size_;
-        // point source component
-        Matrix<T> result_ps(current_position, pic_size_, pic_size_);
 
         // E' .* x
         Matrix<T> BEtx = source & sensitivity_;
@@ -398,7 +396,11 @@ public:
         BEtx.Width(1);
 
         if( ps )
-            result_ps = BEtx;
+        {
+            #pragma omp parallel for simd
+            for(size_t i = 0; i < pic_size_*pic_size_; ++i)
+                result[(apply_wavelet + apply_spline)*pic_size_ + i] = BEtx[i];
+        }
 
         // A' * BEtx
         Matrix<T> AtBEtx = abel_ * BEtx;
@@ -406,26 +408,27 @@ public:
         // W' * AtBEtx
         if( apply_wavelet )
         {
-            Matrix<T> wavelet = wavelet_ * AtBEtx;
-            result_wavelet = wavelet;
+            Matrix<T> result_wavelet = wavelet_ * AtBEtx;
+            #pragma omp parallel for simd
+            for(size_t i = 0; i < pic_size_; ++i)
+                result[i] = result_wavelet[i];
         }
 
         // S' * AtBEtx
         if( apply_spline )
         {
-            Matrix<T> spline = spline_ * AtBEtx;
-            result_spline = spline;
+            Matrix<T> result_spline = spline_ * AtBEtx;
+            #pragma omp parallel for simd
+            for(size_t i = 0; i < pic_size_; ++i)
+                result[apply_wavelet*pic_size_ + i] = result_spline[i];
         }
-
-        // release pointers
-        result_wavelet.Data(nullptr);
-        result_spline.Data(nullptr);
-        result_ps.Data(nullptr);
 
         // standardize
         if(standardize)
             result /= standardize_;
-
+#ifdef DEBUG
+    std::cerr << "WtAtBt done" << std::endl;
+#endif // DEBUG
         return result;
     }
 };
