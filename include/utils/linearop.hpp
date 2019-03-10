@@ -160,8 +160,7 @@ public:
         case add:
             {
                 if( IsValid() && other.IsValid() &&
-                    this->height_ == other.height_ &&
-                    this->width_ == other.width_ )
+                    this->length_ == other.length_ )
                 {
                     test_result = true;
                 }
@@ -199,9 +198,9 @@ public:
     {
         using std::swap;
 
-        std::swap(first.height_, second.height_);
-        std::swap(first.width_, second.width_);
-        std::swap(first.length_, second.length_);
+        swap(first.height_, second.height_);
+        swap(first.width_, second.width_);
+        swap(first.length_, second.length_);
     }
 
 };
