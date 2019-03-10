@@ -27,6 +27,9 @@ namespace WS
 
 static Matrix<double> CenterOffset(std::string picture_path, int offset_vert, int offset_horiz, Parameters<double>& options)
 {
+#ifdef DEBUG
+    std::cerr << "CenterOffset called" << std::endl;
+#endif // DEBUG
     Matrix<double> result(options.pic_size, options.pic_size);
     Matrix<double> raw_picture(picture_path);
     size_t raw_pic_size = (size_t) sqrt(raw_picture.Length());
@@ -38,12 +41,17 @@ static Matrix<double> CenterOffset(std::string picture_path, int offset_vert, in
     for(size_t row = 0; row < options.pic_size; ++row)
         for(size_t col = 0; col < options.pic_size; ++col)
             result[row*options.pic_size + col] = raw_picture[(row+offset_height)*options.pic_size + (col+offset_width)];
-
+#ifdef DEBUG
+    std::cerr << "CenterOffset done" << std::endl;
+#endif // DEBUG
     return result;
 }
 
 static Matrix<double> Resample(Matrix<double> picture, size_t resample_windows_size)
 {
+#ifdef DEBUG
+    std::cerr << "Resample called" << std::endl;
+#endif // DEBUG
     // no resampling
     if(resample_windows_size == 1)
         return picture;
@@ -70,7 +78,9 @@ static Matrix<double> Resample(Matrix<double> picture, size_t resample_windows_s
                     result[row*picture.Width()+col] = block_values[uniform_dist(generator)];
         }
     }
-
+#ifdef DEBUG
+    std::cerr << "Resample done" << std::endl;
+#endif // DEBUG
     return result;
 }
 
@@ -78,6 +88,9 @@ static Matrix<double> MCCompute(const Matrix<double>& mu_hat,
                                 std::vector<std::poisson_distribution<int>>& mu_hat_dist,
                                 std::default_random_engine generator)
 {
+#ifdef DEBUG
+    std::cerr << "MCCompute called" << std::endl;
+#endif // DEBUG
     Matrix<double> mu_hat_rnd(mu_hat.Height(), mu_hat.Width());
 
     #pragma omp simd
@@ -87,6 +100,9 @@ static Matrix<double> MCCompute(const Matrix<double>& mu_hat,
     mu_hat_rnd -= mu_hat;
     mu_hat_rnd /= mu_hat;
 
+#ifdef DEBUG
+    std::cerr << "MCCompute done" << std::endl;
+#endif // DEBUG
     return mu_hat_rnd;
 }
 
@@ -94,6 +110,9 @@ static void BetaZero(const Matrix<double>& picture,
                      const AstroOperator<double>& astro,
                      Parameters<double>& options)
 {
+#ifdef DEBUG
+    std::cerr << "BetaZero called" << std::endl;
+#endif // DEBUG
     std::cout << "Computing beta0..." << std::endl;
     Matrix<double> x0(0.0, options.pic_size*2, 1);
     x0[0] = 1;
@@ -117,6 +136,9 @@ static void BetaZero(const Matrix<double>& picture,
 
     options.beta0 = non_zero_values_amount*non_zero_values_median/null_model_sum;
     std::cout << "beta0 = " << std::scientific << options.beta0 << std::endl << std::endl;
+#ifdef DEBUG
+    std::cerr << "BetaZero done" << std::endl;
+#endif // DEBUG
 }
 
 static void Standardize(const Matrix<double>& mu_hat,
@@ -125,6 +147,9 @@ static void Standardize(const Matrix<double>& mu_hat,
                         const AstroOperator<double>& astro,
                         Parameters<double>& options)
 {
+#ifdef DEBUG
+    std::cerr << "Standardize called" << std::endl;
+#endif // DEBUG
     std::cout << "Computing standardization matrix..." << std::endl;
     Matrix<double> MC_astro(options.pic_size*2, options.MC_max);
 
@@ -183,6 +208,9 @@ static void Standardize(const Matrix<double>& mu_hat,
             std::cout << i << " put to zero." << std::endl;
 #endif // VERBOSE
         }
+#ifdef DEBUG
+    std::cerr << "Standardize done" << std::endl;
+#endif // DEBUG
 }
 
 static void Lambda(const Matrix<double>& mu_hat,
@@ -190,6 +218,9 @@ static void Lambda(const Matrix<double>& mu_hat,
                    AstroOperator<double>& astro,
                    Parameters<double>& options)
 {
+#ifdef DEBUG
+    std::cerr << "Lambda called" << std::endl;
+#endif // DEBUG
     std::cout << "Computing lambda and lambdaI..." << std::endl;
     Matrix<double> lambda_standardize(options.standardize);
     lambda_standardize[0] = std::numeric_limits<double>::infinity();
@@ -236,13 +267,18 @@ static void Lambda(const Matrix<double>& mu_hat,
     #pragma omp parallel for simd
     for(size_t i = options.pic_size*2; i < options.model_size; ++i)
         options.standardize[i] *= PS_standardize_ratio;
-
+#ifdef DEBUG
+    std::cerr << "Lambda done" << std::endl;
+#endif // DEBUG
 }
 
 static void StandardizeAndRegularize(const Matrix<double>& background,
                                      AstroOperator<double>& astro,
                                      Parameters<double>& options)
 {
+#ifdef DEBUG
+    std::cerr << "StandardizeAndRegularize called" << std::endl;
+#endif // DEBUG
     std::cout << "Computing standardization and regularization values with ";
     std::cout << options.MC_max << " MC simulations..." << std::endl;
     Matrix<double> initial_guess(0.0, options.pic_size*2, 1);
@@ -263,6 +299,9 @@ static void StandardizeAndRegularize(const Matrix<double>& background,
     astro.Transpose();
     astro.Standardize(options.standardize);
     std::cout << std::endl;
+#ifdef DEBUG
+    std::cerr << "StandardizeAndRegularize done" << std::endl;
+#endif // DEBUG
 }
 
 static Matrix<double> Estimate(const Matrix<double>& picture,
@@ -270,6 +309,9 @@ static Matrix<double> Estimate(const Matrix<double>& picture,
                                const AstroOperator<double>& astro,
                                Parameters<double>& options)
 {
+#ifdef DEBUG
+    std::cerr << "Estimate called" << std::endl;
+#endif // DEBUG
     std::cout << "Computing static estimate..." << std::endl;
     options.fista_params.init_value = Matrix<double>(0.0, options.model_size, 1);
     options.fista_params.init_value[0] = options.beta0 * options.standardize[0];
@@ -284,7 +326,9 @@ static Matrix<double> Estimate(const Matrix<double>& picture,
     result.RemoveNeg(options.pic_size*2, options.model_size);
 
     std::cout << std::endl;
-
+#ifdef DEBUG
+    std::cerr << "Estimate done" << std::endl;
+#endif // DEBUG
     return result;
 }
 
@@ -294,7 +338,9 @@ static Matrix<double> EstimateNonZero(const Matrix<double>& picture,
                                       const AstroOperator<double>& astro,
                                       Parameters<double>& options)
 {
-
+#ifdef DEBUG
+    std::cerr << "EstimateNonZero called" << std::endl;
+#endif // DEBUG
     std::cout << "Getting non zero elements..." << std::endl;
     Matrix<size_t> non_zero_elements_indices = solution_static.NonZeroIndices();
     size_t non_zero_elements_amount = non_zero_elements_indices.Length();
@@ -337,7 +383,9 @@ static Matrix<double> EstimateNonZero(const Matrix<double>& picture,
     Matrix<double> result(solution_static);
     for(size_t i = 0; i < non_zero_elements_amount; ++i)
         result[non_zero_elements_indices[i]] = beta_new[i];
-
+#ifdef DEBUG
+    std::cerr << "EstimateNonZero done" << std::endl;
+#endif // DEBUG
     return result;
 }
 
@@ -346,6 +394,9 @@ static Matrix<double> SolveWS(const Matrix<double>& picture,
                               const Matrix<double>& background,
                               Parameters<double>& options)
 {
+#ifdef DEBUG
+    std::cerr << "SolveWS called" << std::endl;
+#endif // DEBUG
     AstroOperator<double> astro(options.pic_size, options.pic_size, options.pic_size/2, sensitivity, Matrix<double>(1, options.model_size, 1), false, options);
 
     BetaZero(picture, astro, options);
@@ -412,7 +463,9 @@ static Matrix<double> SolveWS(const Matrix<double>& picture,
     std::cout << "Stopping." << std::endl << std::endl;
 
     std::cout << std::endl << "Total time: "   << total_time << " seconds" << std::endl << std::endl;
-
+#ifdef DEBUG
+    std::cerr << "SolveWS done" << std::endl;
+#endif // DEBUG
     return solution/options.standardize;
 }
 
@@ -422,6 +475,9 @@ Matrix<double> Solve(std::string picture_path,
                      std::string solution_path,
                      Parameters<double>& options )
 {
+#ifdef DEBUG
+    std::cerr << "Solve called" << std::endl;
+#endif // DEBUG
     std::cout << std::string(80, '=') << std::endl;
     std::cout << "                     Astrophysics Lasso Inverse Abel Solver                     " << std::endl << std::endl;
     std::cout << "Picture:     " << picture_path << std::endl;
@@ -539,7 +595,9 @@ Matrix<double> Solve(std::string picture_path,
 
         ++bootstrap_current;
     }
-
+#ifdef DEBUG
+    std::cerr << "Solve done" << std::endl;
+#endif // DEBUG
     return result_fhat_cropped;
 }
 

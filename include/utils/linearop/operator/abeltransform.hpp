@@ -154,6 +154,9 @@ public:
 
     Matrix<T> operator*(const Matrix<T>& other) const override final
     {
+#ifdef DEBUG
+    std::cerr << "AbelTransform: operator* called" << std::endl;
+#endif // DEBUG
 #ifdef DO_ARGCHECKS
         try
         {

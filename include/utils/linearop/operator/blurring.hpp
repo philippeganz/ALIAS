@@ -255,6 +255,9 @@ public:
 
     Matrix<T> operator*(const Matrix<T>& other) const
     {
+#ifdef DEBUG
+    std::cerr << "Blurring: operator* called" << std::endl;
+#endif // DEBUG
 #ifdef DO_ARGCHECKS
         if( !IsValid() || !other.IsValid() ||
             other.Height() == 1 || other.Width() == 1 )

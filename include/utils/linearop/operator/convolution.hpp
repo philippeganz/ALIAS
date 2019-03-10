@@ -127,6 +127,9 @@ public:
 
     Matrix<T> operator*(const Matrix<T>& other) const override final
     {
+#ifdef DEBUG
+    std::cerr << "Convolution: operator* called" << std::endl;
+#endif // DEBUG
 #ifdef DO_ARGCHECKS
         if( !IsValid() || !other.IsValid() )
         {
@@ -139,17 +142,9 @@ public:
         size_t height_dist_from_center = (this->height_ - 1) / 2;
         size_t width_dist_from_center = (this->width_ - 1) / 2;
 
-#ifdef DEBUG
-        int progress_step = std::max(1, (int)other.Height()/100);
-#endif // DEBUG
-
         #pragma omp parallel for
         for( size_t row = 0; row < other.Height(); ++row )
         {
-#ifdef DEBUG
-            if( row % progress_step == 0 )
-                std::cout << "*";
-#endif // DEBUG
             int relative_dist_row = row - height_dist_from_center;
             int filter_start_row = relative_dist_row < 0 ? -relative_dist_row : 0;
             int matrix_start_row = relative_dist_row < 0 ? 0 : relative_dist_row;

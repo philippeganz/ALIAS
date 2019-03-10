@@ -124,6 +124,9 @@ public:
 
     Matrix<T> operator*(const Matrix<T>& other) const override final
     {
+#ifdef DEBUG
+    std::cerr << "MatMult: operator* called" << std::endl;
+#endif // DEBUG
 #ifdef DO_ARGCHECKS
         try
         {
