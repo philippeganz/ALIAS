@@ -3,7 +3,7 @@
 /// \brief Constant values used throughout the whole project
 /// \author Philippe Ganz <philippe.ganz@gmail.com>
 /// \version 0.6.0
-/// \date 2019-03
+/// \date March 2019
 /// \copyright GPL-3.0
 ///
 
@@ -12,6 +12,7 @@
 
 //#define DEBUG
 //#define VERBOSE
+//#define SILENT
 //#define DO_ARGCHECKS
 //#define CLASSIC_FISTA
 #define BLURRING_CONVOLUTION

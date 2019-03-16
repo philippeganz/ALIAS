@@ -4,7 +4,7 @@
 /// \author Jairo Diaz <jairo.diaz@unige.ch> 2016-2017
 /// \author Philippe Ganz <philippe.ganz@gmail.com> 2017-2018
 /// \version 0.6.0
-/// \date 2019-03
+/// \date March 2019
 /// \copyright GPL-3.0
 ///
 
@@ -535,33 +535,33 @@ Matrix<double> Solve(std::string picture_path,
             switch(options.wavelet[0])
             {
             case 2:
-                {
-                    std::uniform_int_distribution random_wavelet_param(1,5);
-                    options.wavelet[1] = random_wavelet_param(generator);
-                    break;
-                }
+            {
+                std::uniform_int_distribution random_wavelet_param(1,5);
+                options.wavelet[1] = random_wavelet_param(generator);
+                break;
+            }
             case 3:
-                {
-                    std::uniform_int_distribution random_wavelet_param(2,10);
-                    options.wavelet[1] = 2*random_wavelet_param(generator);
-                    break;
-                }
+            {
+                std::uniform_int_distribution random_wavelet_param(2,10);
+                options.wavelet[1] = 2*random_wavelet_param(generator);
+                break;
+            }
             case 4:
-                {
-                    std::uniform_int_distribution random_wavelet_param(4,10);
-                    options.wavelet[1] = random_wavelet_param(generator);
-                    break;
-                }
+            {
+                std::uniform_int_distribution random_wavelet_param(4,10);
+                options.wavelet[1] = random_wavelet_param(generator);
+                break;
+            }
             case 6:
-                {
-                    std::uniform_int_distribution random_wavelet_param(0,2);
-                    options.wavelet[1] = 2*random_wavelet_param(generator) + 1;
-                    break;
-                }
+            {
+                std::uniform_int_distribution random_wavelet_param(0,2);
+                options.wavelet[1] = 2*random_wavelet_param(generator) + 1;
+                break;
+            }
             default:
-                {
-                    break;
-                }
+            {
+                break;
+            }
             }
 
             // solve with bootstrap

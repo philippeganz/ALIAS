@@ -3,7 +3,7 @@
 /// \brief Test suite to validate the Matrix class.
 /// \author Philippe Ganz <philippe.ganz@gmail.com>
 /// \version 0.6.0
-/// \date 2018-10-14
+/// \date March 2019
 /// \copyright GPL-3.0
 ///
 
@@ -16,9 +16,12 @@
 #include <iostream>
 #include <typeinfo>
 
-namespace alias{
-namespace test{
-namespace matrix{
+namespace alias
+{
+namespace test
+{
+namespace matrix
+{
 
 template <class T>
 void Optimizations(size_t length)
@@ -340,7 +343,8 @@ bool CC()
                    0,0,0,2,0,0,0,0,6,0,
                    0,0,4,0,3,0,0,0,0,0,
                    0,5,0,0,0,0,3,0,0,0,
-                   0,0,0,5,0,0,0,0,1,0};
+                   0,0,0,5,0,0,0,0,1,0
+                  };
 
     const Matrix<T> raw_data(data, 100, 10, 10);
 
@@ -353,7 +357,8 @@ bool CC()
                            0,0,0,0,0,0,0,0,6,0,
                            0,0,0,0,0,0,0,0,0,0,
                            0,5,0,0,0,0,3,0,0,0,
-                           0,0,0,5,0,0,0,0,1,0};
+                           0,0,0,5,0,0,0,0,1,0
+                         };
 
     const Matrix<T> expected_result(result_data, 100, 10, 10);
 

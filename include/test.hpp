@@ -3,7 +3,7 @@
 /// \brief Test suites to validate the project code
 /// \author Philippe Ganz <philippe.ganz@gmail.com>
 /// \version 0.6.0
-/// \date 2018-10-14
+/// \date March 2019
 /// \copyright GPL-3.0
 ///
 
@@ -19,8 +19,10 @@
 #include <iostream>
 #include <random>
 
-namespace alias{
-namespace test{
+namespace alias
+{
+namespace test
+{
 
 template <class T>
 bool MatrixTest()

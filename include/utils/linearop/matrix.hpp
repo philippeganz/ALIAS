@@ -4,7 +4,7 @@
 /// \details Provide matrix container with multiple matrix operations used in the whole project.
 /// \author Philippe Ganz <philippe.ganz@gmail.com> 2017-2018
 /// \version 0.6.0
-/// \date 2019-03
+/// \date March 2019
 /// \copyright GPL-3.0
 ///
 
@@ -54,7 +54,7 @@ inline bool IsEqual(T first, T second)
 {
     return first == second;
 }
-template <class T, typename std::enable_if_t<is_complex<T>{}>* = nullptr>
+template <class T, typename std::enable_if_t<is_complex<T> {}>* = nullptr>
 inline bool IsEqual(T first, T second)
 {
     return IsEqual(std::real(first), std::real(second)) && IsEqual(std::imag(first), std::imag(second));
@@ -102,7 +102,7 @@ public:
         {
             try
             {
-                 data_ = new T[this->length_];
+                data_ = new T[this->length_];
             }
             catch (const std::bad_alloc&)
             {
@@ -132,7 +132,7 @@ public:
      *  \param height Height of the data
      *  \param width Width of the data
      */
-    template <class U, typename std::enable_if_t<std::is_arithmetic<U>::value || std::is_same<T, U>{}>* = nullptr>
+    template <class U, typename std::enable_if_t<std::is_arithmetic<U>::value || std::is_same<T, U> {}>* = nullptr>
     Matrix(const U data[], size_t length, size_t height, size_t width)
         : Matrix(height, width)
     {
@@ -232,7 +232,7 @@ public:
      *  \param height Height of the data
      *  \param width Width of the data
      */
-    template <class U, typename std::enable_if_t<std::is_arithmetic<U>::value || is_complex<U>{}>* = nullptr>
+    template <class U, typename std::enable_if_t<std::is_arithmetic<U>::value || is_complex<U> {}>* = nullptr>
     Matrix(U number, size_t height, size_t width)
         : Matrix(height, width)
     {
@@ -314,9 +314,7 @@ public:
      */
     bool IsEmpty() const noexcept
     {
-        if( this->height_ == 0 &&
-            this->width_ == 0 &&
-            data_ == nullptr)
+        if( this->height_ == 0 && this->width_ == 0 && data_ == nullptr)
             return true;
 
         return false;
@@ -327,9 +325,7 @@ public:
      */
     bool IsValid() const override final
     {
-        if( this->height_ != 0 &&
-            this->width_ != 0 &&
-            data_ != nullptr )
+        if( this->height_ != 0 && this->width_ != 0 && data_ != nullptr )
             return true;
 
         throw std::invalid_argument("Matrix dimensions must be non-zero and data shall not be empty!");
@@ -341,12 +337,8 @@ public:
     bool ContainsNeg() const noexcept
     {
 #ifdef DO_ARGCHECKS
-        if( this->height_ == 0 ||
-            this->width_ == 0 ||
-            data_ == nullptr)
-        {
+        if( this->height_ == 0 || this->width_ == 0 || data_ == nullptr)
             return false;
-        }
 #endif // DO_ARGCHECKS
 
         for( size_t i = 0; i < this->length_; ++i )
@@ -419,8 +411,8 @@ public:
      *  \return A casted copy of this
      */
     template <class U, class S = T, typename std::enable_if_t<(std::is_arithmetic<S>::value && std::is_arithmetic<U>::value) ||
-                                                              (std::is_arithmetic<S>::value && is_complex<U>{}) ||
-                                                              (is_complex<S>{} && is_complex<U>{})                              >* = nullptr>
+                                                              (std::is_arithmetic<S>::value && is_complex<U> {}) ||
+                                                              (is_complex<S> {} && is_complex<U> {})                            >* = nullptr>
     operator Matrix<U>() const
     {
         Matrix<U> result(this->height_, this->width_);
@@ -431,7 +423,7 @@ public:
 
         return result;
     }
-    template <class U, class S = T, typename std::enable_if_t<is_complex<S>{} && std::is_arithmetic<U>::value>* = nullptr>
+    template <class U, class S = T, typename std::enable_if_t<is_complex<S> {} && std::is_arithmetic<U>::value>* = nullptr>
     operator Matrix<U>() const
     {
         Matrix<U> result(this->height_, this->width_);
@@ -461,7 +453,7 @@ public:
     {
         return data_[index];
     }
-    template <class S = T, typename std::enable_if_t<is_complex<S>{}>* = nullptr>
+    template <class S = T, typename std::enable_if_t<is_complex<S> {}>* = nullptr>
     const S& operator[](size_t index) const noexcept
     {
         return data_[index];
@@ -500,7 +492,7 @@ public:
      *  \param number Number to add to current object
      *  \return A reference to this
      */
-    template <class U, typename std::enable_if_t<std::is_arithmetic<U>::value || is_complex<U>{}>* = nullptr>
+    template <class U, typename std::enable_if_t<std::is_arithmetic<U>::value || is_complex<U> {}>* = nullptr>
     Matrix& operator+=(U number)
     {
 #ifdef DO_ARGCHECKS
@@ -554,7 +546,7 @@ public:
      *  \param number Number to remove from current object
      *  \return A reference to this
      */
-    template <class U, typename std::enable_if_t<std::is_arithmetic<U>::value || is_complex<U>{}>* = nullptr>
+    template <class U, typename std::enable_if_t<std::is_arithmetic<U>::value || is_complex<U> {}>* = nullptr>
     Matrix& operator-=(U number)
     {
 #ifdef DO_ARGCHECKS
@@ -646,7 +638,7 @@ public:
      *  \param number Number to multiply current object with
      *  \return A reference to this
      */
-    template <class U, typename std::enable_if_t<std::is_arithmetic<U>::value || is_complex<U>{}>* = nullptr>
+    template <class U, typename std::enable_if_t<std::is_arithmetic<U>::value || is_complex<U> {}>* = nullptr>
     Matrix& operator*=(U number)
     {
 #ifdef DO_ARGCHECKS
@@ -700,7 +692,7 @@ public:
      *  \param number Number to divide the current object with
      *  \return A reference to this
      */
-    template <class U, typename std::enable_if_t<std::is_arithmetic<U>::value || is_complex<U>{}>* = nullptr>
+    template <class U, typename std::enable_if_t<std::is_arithmetic<U>::value || is_complex<U> {}>* = nullptr>
     Matrix& operator/=(U number)
     {
 #ifdef DO_ARGCHECKS
@@ -786,11 +778,11 @@ public:
         {
             #pragma omp parallel for
             for ( size_t i = 0; i < this->height_; ++i )
-			{
-			    #pragma omp simd
-				for ( size_t j = 0 ; j < this->width_; ++j )
-					result.data_[ j * this->height_ + i ] = data_[ i * this->width_ + j ];
-			}
+            {
+                #pragma omp simd
+                for ( size_t j = 0 ; j < this->width_; ++j )
+                    result.data_[ j * this->height_ + i ] = data_[ i * this->width_ + j ];
+            }
         }
         return result;
     }
@@ -1115,7 +1107,7 @@ public:
         size_t result = 0;
         if(omp_get_max_threads() > 1)
         {
-            size_t* local_result = new size_t[omp_get_max_threads()]{0};
+            size_t* local_result = new size_t[omp_get_max_threads()] {0};
             #pragma omp parallel
             {
                 size_t my_num = omp_get_thread_num();
@@ -1215,7 +1207,7 @@ public:
         {
             if(omp_get_max_threads() > 1)
             {
-                double* local_result = new double[omp_get_max_threads()]{0.0};
+                double* local_result = new double[omp_get_max_threads()] {0.0};
                 #pragma omp parallel
                 {
                     size_t my_num = omp_get_thread_num();
@@ -1249,7 +1241,7 @@ public:
         {
             if(omp_get_max_threads() > 1)
             {
-                double* local_result = new double[omp_get_max_threads()]{0.0};
+                double* local_result = new double[omp_get_max_threads()] {0.0};
                 #pragma omp parallel
                 {
                     size_t my_num = omp_get_thread_num();
@@ -1280,7 +1272,7 @@ public:
         {
             if(omp_get_max_threads() > 1)
             {
-                double* local_result = new double[omp_get_max_threads()]{0.0};
+                double* local_result = new double[omp_get_max_threads()] {0.0};
                 #pragma omp parallel
                 {
                     size_t my_num = omp_get_thread_num();
@@ -1333,7 +1325,7 @@ public:
 
         if(omp_get_max_threads() > 1)
         {
-            T* local_result = new T[omp_get_max_threads()]{0};
+            T* local_result = new T[omp_get_max_threads()] {0};
             #pragma omp parallel
             {
                 size_t my_num = omp_get_thread_num();
@@ -1372,14 +1364,10 @@ public:
 template <class T>
 bool operator==(const Matrix<T>& first, const Matrix<T>& second)
 {
-    if( first.Height() != second.Height() ||
-        first.Width() != second.Width() ||
-        first.Data() != second.Data() )
-    {
+    if( first.Height() != second.Height() || first.Width() != second.Width() || first.Data() != second.Data() )
         return false;
-    }
 
-    return false;
+    return true;
 }
 
 /** Comparison operator not-equal
@@ -1463,7 +1451,7 @@ Matrix<T> operator+(const Matrix<T>& first, Matrix<T>&& second)
  *  \param mat Matrix, lvalue ref
  *  \return A reference to this
  */
-template <class T, class U, typename std::enable_if_t<std::is_arithmetic<U>::value || is_complex<U>{}>* = nullptr>
+template <class T, class U, typename std::enable_if_t<std::is_arithmetic<U>::value || is_complex<U> {}>* = nullptr>
 Matrix<T> operator+(const Matrix<T>& mat, U number)
 {
     Matrix<T> result(mat);
@@ -1475,7 +1463,7 @@ Matrix<T> operator+(const Matrix<T>& mat, U number)
  *  \param mat Matrix, rvalue ref
  *  \return A reference to this
  */
-template <class T, class U, typename std::enable_if_t<std::is_arithmetic<U>::value || is_complex<U>{}>* = nullptr>
+template <class T, class U, typename std::enable_if_t<std::is_arithmetic<U>::value || is_complex<U> {}>* = nullptr>
 Matrix<T> operator+(Matrix<T>&& mat, U number)
 {
     return std::move(mat += number);
@@ -1537,7 +1525,7 @@ Matrix<T> operator-(const Matrix<T>& first, Matrix<T>&& second)
  *  \param mat Matrix, lvalue ref
  *  \return A reference to this
  */
-template <class T, class U, typename std::enable_if_t<std::is_arithmetic<U>::value || is_complex<U>{}>* = nullptr>
+template <class T, class U, typename std::enable_if_t<std::is_arithmetic<U>::value || is_complex<U> {}>* = nullptr>
 Matrix<T> operator-(const Matrix<T>& mat, U number)
 {
     Matrix<T> result(mat);
@@ -1549,7 +1537,7 @@ Matrix<T> operator-(const Matrix<T>& mat, U number)
  *  \param mat Matrix, rvalue ref
  *  \return A reference to this
  */
-template <class T, class U, typename std::enable_if_t<std::is_arithmetic<U>::value || is_complex<U>{}>* = nullptr>
+template <class T, class U, typename std::enable_if_t<std::is_arithmetic<U>::value || is_complex<U> {}>* = nullptr>
 Matrix<T> operator-(Matrix<T>&& mat, U number)
 {
     return std::move(mat -= number);
@@ -1594,7 +1582,7 @@ Matrix<T> operator&(const Matrix<T>& first, Matrix<T>&& second)
  *  \param number Number to multiply the current object with
  *  \return A new instance containing the result
  */
-template <class T, class U, typename std::enable_if_t<std::is_arithmetic<U>::value || is_complex<U>{}>* = nullptr>
+template <class T, class U, typename std::enable_if_t<std::is_arithmetic<U>::value || is_complex<U> {}>* = nullptr>
 Matrix<T> operator*(const Matrix<T>& mat, U number)
 {
     Matrix<T> result(mat);
@@ -1606,7 +1594,7 @@ Matrix<T> operator*(const Matrix<T>& mat, U number)
  *  \param number Number to multiply the current object with
  *  \return A reference to this
  */
-template <class T, class U, typename std::enable_if_t<std::is_arithmetic<U>::value || is_complex<U>{}>* = nullptr>
+template <class T, class U, typename std::enable_if_t<std::is_arithmetic<U>::value || is_complex<U> {}>* = nullptr>
 Matrix<T> operator*(Matrix<T>&& mat, U number)
 {
     return std::move(mat *= number);
@@ -1617,7 +1605,7 @@ Matrix<T> operator*(Matrix<T>&& mat, U number)
  *  \param mat Matrix, lvalue ref
  *  \return A new instance containing the result
  */
-template <class T, class U, typename std::enable_if_t<std::is_arithmetic<U>::value || is_complex<U>{}>* = nullptr>
+template <class T, class U, typename std::enable_if_t<std::is_arithmetic<U>::value || is_complex<U> {}>* = nullptr>
 Matrix<T> operator*(U number, const Matrix<T>& mat)
 {
     return mat * number;
@@ -1628,7 +1616,7 @@ Matrix<T> operator*(U number, const Matrix<T>& mat)
  *  \param mat Matrix, rvalue ref
  *  \return A reference to this
  */
-template <class T, class U, typename std::enable_if_t<std::is_arithmetic<U>::value || is_complex<U>{}>* = nullptr>
+template <class T, class U, typename std::enable_if_t<std::is_arithmetic<U>::value || is_complex<U> {}>* = nullptr>
 Matrix<T> operator*(U number, Matrix<T>&& mat)
 {
     return mat * number;
@@ -1639,7 +1627,7 @@ Matrix<T> operator*(U number, Matrix<T>&& mat)
  *  \param number Number to divide the current object with
  *  \return A new instance containing the result
  */
-template <class T, class U, typename std::enable_if_t<std::is_arithmetic<U>::value || is_complex<U>{}>* = nullptr>
+template <class T, class U, typename std::enable_if_t<std::is_arithmetic<U>::value || is_complex<U> {}>* = nullptr>
 Matrix<T> operator/(const Matrix<T>& mat, U number)
 {
     Matrix<T> result(mat);
@@ -1651,7 +1639,7 @@ Matrix<T> operator/(const Matrix<T>& mat, U number)
  *  \param number Number to divide the current object with
  *  \return A reference to mat
  */
-template <class T, class U, typename std::enable_if_t<std::is_arithmetic<U>::value || is_complex<U>{}>* = nullptr>
+template <class T, class U, typename std::enable_if_t<std::is_arithmetic<U>::value || is_complex<U> {}>* = nullptr>
 Matrix<T> operator/(Matrix<T>&& first, U number)
 {
     return std::move(first /= number);
@@ -1767,7 +1755,7 @@ T Inner(const Matrix<T>& first, const Matrix<T>& second)
 
     if(omp_get_max_threads() > 1)
     {
-        T* local_result = new T[omp_get_max_threads()]{0};
+        T* local_result = new T[omp_get_max_threads()] {0};
         #pragma omp parallel
         {
             size_t my_num = omp_get_thread_num();
@@ -1801,7 +1789,7 @@ inline std::complex<double> Inner(const Matrix<std::complex<double>>& first, con
     }
 #endif // DO_ARGCHECKS
 
-    std::complex<double>* local_result = new std::complex<double>[omp_get_max_threads()]{0};
+    std::complex<double>* local_result = new std::complex<double>[omp_get_max_threads()] {0};
     #pragma omp parallel
     {
         size_t my_num = omp_get_thread_num();
@@ -1828,10 +1816,9 @@ template <class T>
 static inline void MatrixMatrixMult(const Matrix<T>& first, const Matrix<T>& second, Matrix<T>& result)
 {
     // Init result to zero
+    #pragma omp parallel for simd
     for(size_t i = 0; i < result.Length(); ++i)
-    {
         result[i] = 0;
-    }
     #pragma omp parallel for
     for(size_t i = 0; i < first.Height(); ++i)
         for(size_t k = 0; k < first.Width(); ++k)

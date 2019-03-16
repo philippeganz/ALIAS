@@ -3,15 +3,18 @@
 /// \brief Implementation of the FISTA class test suite.
 /// \author Philippe Ganz <philippe.ganz@gmail.com>
 /// \version 0.6.0
-/// \date 2019-03
+/// \date March 2019
 /// \copyright GPL-3.0
 ///
 
 #include "test/fista.hpp"
 
-namespace alias{
-namespace test{
-namespace fista{
+namespace alias
+{
+namespace test
+{
+namespace fista
+{
 
 bool SmallExample()
 {

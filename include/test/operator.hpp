@@ -3,7 +3,7 @@
 /// \brief Test suite to validate the Operator class.
 /// \author Philippe Ganz <philippe.ganz@gmail.com>
 /// \version 0.6.0
-/// \date 2018-09-30
+/// \date March 2019
 /// \copyright GPL-3.0
 ///
 
@@ -21,9 +21,12 @@
 #include <iostream>
 #include <random>
 
-namespace alias{
-namespace test{
-namespace oper{
+namespace alias
+{
+namespace test
+{
+namespace oper
+{
 
 bool ConvolutionTest();
 void ConvolutionTime(size_t data_length, size_t filter_length);

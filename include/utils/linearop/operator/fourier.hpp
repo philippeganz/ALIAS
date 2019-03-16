@@ -4,7 +4,7 @@
 /// \details Provide a Fourier transform operator
 /// \author Philippe Ganz <philippe.ganz@gmail.com> 2017-2018
 /// \version 0.6.0
-/// \date 2019-02-25
+/// \date March 2019
 /// \copyright GPL-3.0
 ///
 
@@ -88,9 +88,9 @@ public:
 
             while(bit_count-- > 0)
             {
-               reverse_num <<= 1;
-               reverse_num |= num & 1;
-               num >>= 1;
+                reverse_num <<= 1;
+                reverse_num |= num & 1;
+                num >>= 1;
             }
 
             bit_reverse_table_[i] = reverse_num;
@@ -129,11 +129,7 @@ public:
      */
     bool IsValid() const override final
     {
-        if( this->height_ != 0 &&
-            this->width_ != 0 &&
-            depth_max_ != 0 &&
-            !bit_reverse_table_.IsEmpty() &&
-            !roots_of_unity_.IsEmpty() )
+        if( this->height_ != 0 && this->width_ != 0 && depth_max_ != 0 && !bit_reverse_table_.IsEmpty() && !roots_of_unity_.IsEmpty() )
             return true;
 
         throw std::invalid_argument("Operator dimensions must be non-zero and function shall not be nullptr!");

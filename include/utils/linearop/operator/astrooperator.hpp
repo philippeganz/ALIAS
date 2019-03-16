@@ -3,7 +3,7 @@
 /// \brief Combination of all operators to create the main operator
 /// \author Philippe Ganz <philippe.ganz@gmail.com> 2017-2018
 /// \version 0.6.0
-/// \date 2019-03
+/// \date March 2019
 /// \copyright GPL-3.0
 ///
 
@@ -130,13 +130,13 @@ public:
      *  \param transposed
      */
     explicit AstroOperator(size_t pic_size,
-                  const AbelTransform<T> abel,
-                  const Blurring<T> blurring,
-                  const Matrix<T> sensitivity,
-                  const Matrix<T> standardize,
-                  const Spline<T> spline,
-                  const Wavelet<T> wavelet,
-                  bool transposed = false )
+                           const AbelTransform<T> abel,
+                           const Blurring<T> blurring,
+                           const Matrix<T> sensitivity,
+                           const Matrix<T> standardize,
+                           const Spline<T> spline,
+                           const Wavelet<T> wavelet,
+                           bool transposed = false )
         : Operator<T>(Matrix<T>(),
                       transposed ? (pic_size+2)*pic_size : pic_size*pic_size,
                       transposed ? pic_size*pic_size : (pic_size+2)*pic_size,
@@ -307,7 +307,7 @@ public:
                   bool ps = true ) const
     {
 #ifdef DEBUG
-    std::cerr << "BAW called" << std::endl;
+        std::cerr << "BAW called" << std::endl;
 #endif // DEBUG
 #ifdef DO_ARGCHECKS
         if( this->transposed_ )
@@ -361,7 +361,7 @@ public:
         result = result & sensitivity_;
 
 #ifdef DEBUG
-    std::cerr << "BAW done" << std::endl;
+        std::cerr << "BAW done" << std::endl;
 #endif // DEBUG
         return result;
     }
@@ -373,7 +373,7 @@ public:
                      bool ps = true ) const
     {
 #ifdef DEBUG
-    std::cerr << "WtAtBt called" << std::endl;
+        std::cerr << "WtAtBt called" << std::endl;
 #endif // DEBUG
 #ifdef DO_ARGCHECKS
         if( ! this->transposed_ )
@@ -427,7 +427,7 @@ public:
         if(standardize)
             result /= standardize_;
 #ifdef DEBUG
-    std::cerr << "WtAtBt done" << std::endl;
+        std::cerr << "WtAtBt done" << std::endl;
 #endif // DEBUG
         return result;
     }

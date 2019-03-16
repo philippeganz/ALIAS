@@ -4,7 +4,7 @@
 /// \details Handle the user input, calls the preparation tools and the solver.
 /// \author Philippe Ganz <philippe.ganz@gmail.com>
 /// \version 0.6.0
-/// \date 2019-03
+/// \date March 2019
 /// \copyright GPL-3.0
 ///
 
@@ -66,36 +66,52 @@ int main( int argc, char **argv )
         switch (c)
         {
         case 'f':
+        {
             source = std::string(optarg);
             break;
+        }
 
         case 'e':
+        {
             sensitivity = std::string(optarg);
             break;
+        }
 
         case 'o':
+        {
             background = std::string(optarg);
             break;
+        }
 
         case 'b':
+        {
             blurring = std::string(optarg);
             break;
+        }
 
         case 'r':
+        {
             result = std::string(optarg);
             break;
+        }
 
         case 's':
+        {
             pic_size = strtoul(optarg, nullptr, 0);
             break;
+        }
 
         case 'x':
+        {
             bootstrap_max = strtoul(optarg, nullptr, 0);
             break;
+        }
 
         default:
+        {
             usage();
             return EXIT_FAILURE;
+        }
         }
     }
 

@@ -4,7 +4,7 @@
 /// \details Provide operator container with operator-vector operations
 /// \author Philippe Ganz <philippe.ganz@gmail.com> 2017-2018
 /// \version 0.6.0
-/// \date 2019-02-25
+/// \date March 2019
 /// \copyright GPL-3.0
 ///
 
@@ -127,15 +127,10 @@ public:
      */
     virtual bool IsValid() const override
     {
-        if( this->height_ != 0 &&
-            this->width_ != 0 )
-        {
+        if( this->height_ != 0 && this->width_ != 0 )
             return true;
-        }
         else
-        {
             throw std::invalid_argument("Operator dimensions must be non-zero!");
-        }
     }
 
     /** Transpose in-place
@@ -162,11 +157,10 @@ public:
      */
     bool operator==(const Operator& other) const noexcept
     {
-        if( this->height_ == other.height_ && this->width_ == other.width_ &&
-            data_ == other.data_ )
-            return true;
+        if( this->height_ != other.height_ || this->width_ != other.width_ || data_ != other.data_ )
+            return false;
 
-        return false;
+        return true;
     }
 
     /** Comparison operator not-equal
