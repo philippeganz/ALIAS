@@ -124,7 +124,8 @@ Matrix<T> Solve(const Operator<T>& A,
     Matrix<T> Axu = A*x+u;
     Matrix<T> Ax_nextu;
     Matrix<T> Ayu = Axu;
-    Operator<T> &At = A.Clone()->Transpose();
+    Operator<T> *A_copy = A.Clone();
+    Operator<T> &At = A_copy->Transpose();
     T f_lasso_next = (T)0;
     T f_lasso_previous[10] {};
     f_lasso_previous[0] = FLasso(Axu, x_next_woi, b, lambda);
@@ -210,6 +211,7 @@ Matrix<T> Solve(const Operator<T>& A,
     std::cout << "FISTA: Relative error: " << std::abs(tol) << std::endl << std::endl;
 
     x_next_woi.Data(nullptr); // release pointer
+    delete A_copy;
 
     return x;
 }

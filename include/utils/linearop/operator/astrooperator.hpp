@@ -142,12 +142,12 @@ public:
                       transposed ? pic_size*pic_size : (pic_size+2)*pic_size,
                       transposed)
         , pic_size_(pic_size)
-        , abel_( transposed ? abel : abel.Clone()->Transpose() )
+        , abel_( transposed ? abel : abel.Transpose() )
         , blurring_(blurring)
         , sensitivity_(sensitivity)
         , standardize_(standardize)
-        , spline_( transposed ? spline : spline.Clone()->Transpose() )
-        , wavelet_( transposed ? wavelet : wavelet.Clone()->Transpose() )
+        , spline_( transposed ? spline : spline.Transpose() )
+        , wavelet_( transposed ? wavelet : wavelet.Transpose() )
     {
 #ifdef DEBUG
         std::cout << "AstroOperator : Full member constructor called" << std::endl;

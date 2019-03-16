@@ -83,7 +83,7 @@ public:
     /** Clone function
      *  \return A copy of the current instance
      */
-    virtual Spline* Clone() const override
+    Spline* Clone() const override final
     {
         return new Spline(*this);
     }
