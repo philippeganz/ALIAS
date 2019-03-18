@@ -3,7 +3,7 @@
 /// \brief Matrix Multiplication class header
 /// \author Philippe Ganz <philippe.ganz@gmail.com> 2017-2018
 /// \version 0.6.0
-/// \date 2019-03
+/// \date March 2019
 /// \copyright GPL-3.0
 ///
 
@@ -88,16 +88,10 @@ public:
      */
     bool IsValid() const override final
     {
-        if( this->height_ != 0 &&
-            this->width_ != 0 &&
-            !this->data_.IsEmpty() )
-        {
+        if( this->height_ != 0 && this->width_ != 0 && !this->data_.IsEmpty() )
             return true;
-        }
         else
-        {
             throw std::invalid_argument("Operator dimensions must be non-zero and function shall not be nullptr!");
-        }
     }
 
     /** Swap function
@@ -124,6 +118,9 @@ public:
 
     Matrix<T> operator*(const Matrix<T>& other) const override final
     {
+#ifdef DEBUG
+        std::cerr << "MatMult: operator* called" << std::endl;
+#endif // DEBUG
 #ifdef DO_ARGCHECKS
         try
         {

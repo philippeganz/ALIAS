@@ -3,14 +3,16 @@
 /// \brief Implementation of the test suites.
 /// \author Philippe Ganz <philippe.ganz@gmail.com> 2017-2018
 /// \version 0.6.0
-/// \date 2018-09-30
+/// \date March 2019
 /// \copyright GPL-3.0
 ///
 
 #include "test.hpp"
 
-namespace alias{
-namespace test{
+namespace alias
+{
+namespace test
+{
 
 bool OperatorTest()
 {

@@ -4,7 +4,7 @@
 /// \author Hatef Monajemi <monajemi@stanford.edu> 2012-2014
 /// \author Philippe Ganz <philippe.ganz@gmail.com> 2017-2018
 /// \version 0.6.0
-/// \date 2018-10-27
+/// \date March 2019
 /// \copyright GPL-3.0
 ///
 
@@ -20,9 +20,12 @@
 #include <limits>
 #include <numeric>
 
-namespace alias{
-namespace fista{
-namespace poisson{
+namespace alias
+{
+namespace fista
+{
+namespace poisson
+{
 
 template<class T = double>
 struct Parameters
@@ -121,9 +124,10 @@ Matrix<T> Solve(const Operator<T>& A,
     Matrix<T> Axu = A*x+u;
     Matrix<T> Ax_nextu;
     Matrix<T> Ayu = Axu;
-    Operator<T> &At = A.Clone()->Transpose();
+    Operator<T> *A_copy = A.Clone();
+    Operator<T> &At = A_copy->Transpose();
     T f_lasso_next = (T)0;
-    T f_lasso_previous[10]{};
+    T f_lasso_previous[10] {};
     f_lasso_previous[0] = FLasso(Axu, x_next_woi, b, lambda);
     Matrix<T> grad_current = FuncGrad(Axu, At, b);
 
@@ -207,6 +211,7 @@ Matrix<T> Solve(const Operator<T>& A,
     std::cout << "FISTA: Relative error: " << std::abs(tol) << std::endl << std::endl;
 
     x_next_woi.Data(nullptr); // release pointer
+    delete A_copy;
 
     return x;
 }

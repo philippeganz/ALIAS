@@ -4,7 +4,7 @@
 /// \details Provide the Abel transform operator
 /// \author Philippe Ganz <philippe.ganz@gmail.com> 2017-2018
 /// \version 0.6.0
-/// \date 2019-03
+/// \date March 2019
 /// \copyright GPL-3.0
 ///
 
@@ -14,7 +14,7 @@
 #include "utils/linearop/operator.hpp"
 
 #ifdef DEBUG
-    #include <sstream>
+#include <sstream>
 #endif // DEBUG
 
 namespace alias
@@ -120,8 +120,7 @@ public:
      */
     bool IsValid() const override final
     {
-        if( this->height_ != 0 && this->width_ != 0 &&
-            !this->data_.IsEmpty() )
+        if( this->height_ != 0 && this->width_ != 0 && !this->data_.IsEmpty() )
             return true;
 
         throw std::invalid_argument("Operator dimensions must be non-zero and data shall not be nullptr!");
@@ -154,6 +153,9 @@ public:
 
     Matrix<T> operator*(const Matrix<T>& other) const override final
     {
+#ifdef DEBUG
+        std::cerr << "AbelTransform: operator* called" << std::endl;
+#endif // DEBUG
 #ifdef DO_ARGCHECKS
         try
         {
@@ -243,11 +245,11 @@ public:
         size_t pic_side_half = pic_side_/2;
         size_t wavelet_amount_half = wavelet_amount_/2;
 
-    #ifdef DEBUG
+#ifdef DEBUG
         int progress_step = std::max(1, (int)(pic_side_half*pic_side_half)/100);
         int step = 0;
         std::cout << std::endl;
-    #endif // DEBUG
+#endif // DEBUG
 
         // iterating over blocks
         #pragma omp parallel for
@@ -256,14 +258,14 @@ public:
             // iterating over rows
             for( size_t i = 0; i < pic_side_half; ++i )
             {
-    #ifdef DEBUG
+#ifdef DEBUG
                 if( (block*pic_side_half+i) % progress_step == 0 )
                 {
                     std::stringstream output;
                     output << "\r" << step++;
                     std::cout << output.str();
                 }
-    #endif // DEBUG
+#endif // DEBUG
 
                 // iterating over matrix multiplication vectors
                 for( size_t k = 0; k < wavelet_amount_half; ++k )

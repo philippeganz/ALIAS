@@ -3,15 +3,18 @@
 /// \brief Implementation of the FISTA class test suite.
 /// \author Philippe Ganz <philippe.ganz@gmail.com>
 /// \version 0.6.0
-/// \date 2019-03
+/// \date March 2019
 /// \copyright GPL-3.0
 ///
 
 #include "test/fista.hpp"
 
-namespace alias{
-namespace test{
-namespace fista{
+namespace alias
+{
+namespace test
+{
+namespace fista
+{
 
 bool SmallExample()
 {
@@ -69,7 +72,7 @@ void Time(size_t length)
     size_t test_height = length*length;
     size_t test_width = length;
 
-    Matrix<double>::matrix_t * A_data = (double*) _mm_malloc(sizeof(double)*test_height*test_width, sizeof(double)); // destroyed when A is destroyed
+    double* A_data = new double[test_height*test_width]; // destroyed when A is destroyed
     #pragma omp parallel for simd
     for( size_t i = 0; i < test_height*test_width; ++i )
     {
@@ -77,7 +80,7 @@ void Time(size_t length)
     }
     MatMult<double> A(Matrix<double>(A_data, test_height, test_width), test_height, test_width);
 
-    Matrix<double>::matrix_t * u_data = (double*) _mm_malloc(sizeof(double)*test_height, sizeof(double));; // destroyed when u is destroyed
+    double* u_data = new double[test_height]; // destroyed when u is destroyed
     #pragma omp parallel for simd
     for( size_t i = 0; i < test_height; ++i )
     {
@@ -85,7 +88,7 @@ void Time(size_t length)
     }
     Matrix<double> u(u_data, test_height, 1);
 
-    Matrix<double>::matrix_t * b_data = (double*) _mm_malloc(sizeof(double)*test_height, sizeof(double)); // destroyed when b is destroyed
+    double* b_data = new double[test_height]; // destroyed when b is destroyed
     #pragma omp parallel for simd
     for( size_t i = 0; i < test_height; ++i )
     {

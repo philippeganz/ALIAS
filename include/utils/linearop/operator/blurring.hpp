@@ -3,7 +3,7 @@
 /// \brief Blurring operator class header
 /// \author Philippe Ganz <philippe.ganz@gmail.com> 2017-2019
 /// \version 0.6.0
-/// \date 2019-02-25
+/// \date March 2019
 /// \copyright GPL-3.0
 ///
 
@@ -183,8 +183,7 @@ public:
      */
     bool IsValid() const override final
     {
-        if( this->height_ != 0 &&
-            this->width_ != 0 &&
+        if( this->height_ != 0 && this->width_ != 0 &&
 #ifdef BLURRING_CONVOLUTION
             convolution_.IsValid() )
 #else
@@ -255,9 +254,11 @@ public:
 
     Matrix<T> operator*(const Matrix<T>& other) const
     {
+#ifdef DEBUG
+        std::cerr << "Blurring: operator* called" << std::endl;
+#endif // DEBUG
 #ifdef DO_ARGCHECKS
-        if( !IsValid() || !other.IsValid() ||
-            other.Height() == 1 || other.Width() == 1 )
+        if( !IsValid() || !other.IsValid() || other.Height() == 1 || other.Width() == 1 )
         {
             throw std::invalid_argument("Can not apply the blurring with these Matrices.");
         }

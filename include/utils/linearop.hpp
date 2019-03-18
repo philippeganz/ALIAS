@@ -4,7 +4,7 @@
 /// \details Provide generic linear operator base class.
 /// \author Philippe Ganz <philippe.ganz@gmail.com> 2017-2018
 /// \version 0.6.0
-/// \date 2019-02-25
+/// \date March 2019
 /// \copyright GPL-3.0
 ///
 
@@ -149,37 +149,27 @@ public:
         switch(type)
         {
         case mult:
-            {
-                if( IsValid() && other.IsValid() &&
-                    this->width_ == other.height_ )
-                {
-                    test_result = true;
-                }
-                break;
-            }
+        {
+            if( IsValid() && other.IsValid() && this->width_ == other.height_ )
+                test_result = true;
+            break;
+        }
         case add:
-            {
-                if( IsValid() && other.IsValid() &&
-                    this->height_ == other.height_ &&
-                    this->width_ == other.width_ )
-                {
-                    test_result = true;
-                }
-                break;
-            }
+        {
+            if( IsValid() && other.IsValid() && this->length_ == other.length_ )
+                test_result = true;
+            break;
+        }
         case element_wise:
-            {
-                if( IsValid() && other.IsValid() &&
-                    this->length_ == other.length_ )
-                {
-                    test_result = true;
-                }
-                break;
-            }
+        {
+            if( IsValid() && other.IsValid() && this->length_ == other.length_ )
+                test_result = true;
+            break;
+        }
         default:
-            {
-                break;
-            }
+        {
+            break;
+        }
         }
         if( test_result )
         {
@@ -199,9 +189,9 @@ public:
     {
         using std::swap;
 
-        std::swap(first.height_, second.height_);
-        std::swap(first.width_, second.width_);
-        std::swap(first.length_, second.length_);
+        swap(first.height_, second.height_);
+        swap(first.width_, second.width_);
+        swap(first.length_, second.length_);
     }
 
 };

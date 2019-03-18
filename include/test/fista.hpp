@@ -3,7 +3,7 @@
 /// \brief Test suite to validate the FISTA class.
 /// \author Philippe Ganz <philippe.ganz@gmail.com>
 /// \version 0.6.0
-/// \date 2019-03
+/// \date March 2019
 /// \copyright GPL-3.0
 ///
 
@@ -16,9 +16,12 @@
 #include <iostream>
 #include <random>
 
-namespace alias{
-namespace test{
-namespace fista{
+namespace alias
+{
+namespace test
+{
+namespace fista
+{
 
 bool SmallExample();
 

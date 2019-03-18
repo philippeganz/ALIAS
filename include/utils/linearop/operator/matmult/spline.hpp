@@ -3,7 +3,7 @@
 /// \brief Spline operator class header
 /// \author Philippe Ganz <philippe.ganz@gmail.com> 2017-2018
 /// \version 0.6.0
-/// \date 2019-03
+/// \date March 2019
 /// \copyright GPL-3.0
 ///
 
@@ -83,7 +83,7 @@ public:
     /** Clone function
      *  \return A copy of the current instance
      */
-    virtual Spline* Clone() const override
+    Spline* Clone() const override final
     {
         return new Spline(*this);
     }

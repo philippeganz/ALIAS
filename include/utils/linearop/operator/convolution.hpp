@@ -4,7 +4,7 @@
 /// \details Provide a convolution operator
 /// \author Philippe Ganz <philippe.ganz@gmail.com> 2017-2018
 /// \version 0.6.0
-/// \date 2019-03
+/// \date March 2019
 /// \copyright GPL-3.0
 ///
 
@@ -91,16 +91,10 @@ public:
      */
     bool IsValid() const override final
     {
-        if( this->height_ != 0 && this->width_ != 0 &&
-            !this->data_.IsEmpty() &&
-            this->height_ % 2 == 1 && this->width_ % 2 == 1 )
-        {
+        if( this->height_ != 0 && this->width_ != 0 && !this->data_.IsEmpty() && this->height_ % 2 == 1 && this->width_ % 2 == 1 )
             return true;
-        }
         else
-        {
             throw std::invalid_argument("Convolution dimensions must be non-zero and odd, and data shall not be empty!");
-        }
     }
 
     /** Swap function
@@ -127,11 +121,12 @@ public:
 
     Matrix<T> operator*(const Matrix<T>& other) const override final
     {
+#ifdef DEBUG
+        std::cerr << "Convolution: operator* called" << std::endl;
+#endif // DEBUG
 #ifdef DO_ARGCHECKS
         if( !IsValid() || !other.IsValid() )
-        {
             throw std::invalid_argument("Can not perform a convolution with these Matrices.");
-        }
 #endif // DO_ARGCHECKS
 
         Matrix<T> result((T) 0, other.Height(), other.Width());
@@ -139,17 +134,9 @@ public:
         size_t height_dist_from_center = (this->height_ - 1) / 2;
         size_t width_dist_from_center = (this->width_ - 1) / 2;
 
-#ifdef DEBUG
-        int progress_step = std::max(1, (int)other.Height()/100);
-#endif // DEBUG
-
         #pragma omp parallel for
         for( size_t row = 0; row < other.Height(); ++row )
         {
-#ifdef DEBUG
-            if( row % progress_step == 0 )
-                std::cout << "*";
-#endif // DEBUG
             int relative_dist_row = row - height_dist_from_center;
             int filter_start_row = relative_dist_row < 0 ? -relative_dist_row : 0;
             int matrix_start_row = relative_dist_row < 0 ? 0 : relative_dist_row;
