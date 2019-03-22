@@ -23,7 +23,7 @@ namespace alias
 template<class T = double>
 class Blurring : public Operator<T>
 {
-private:
+public:
 #ifdef BLURRING_CONVOLUTION
     Convolution<T> convolution_;
 #else
@@ -208,9 +208,11 @@ public:
         int mask_size = std::ceil(std::sqrt((std::pow(threshold, -1.0/alpha)-1.0)*radius_squared));
         Matrix<double> result(2*mask_size+1, 2*mask_size+1);
 
+        #pragma omp parallel for
         for(int i = -mask_size; i <= mask_size; ++i)
         {
             T i_squared = i*i;
+            #pragma omp simd
             for(int j = -mask_size; j <= mask_size; ++j)
             {
                 T j_squared = j*j;
