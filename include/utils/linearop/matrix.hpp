@@ -168,6 +168,7 @@ public:
         char* memblock = new char [file_size];
         file.seekg(0, std::ios::beg);
         file.read(memblock, file_size);
+        file.close();
 
         U* reinterpret_memblock = (U*) memblock;
 
@@ -176,7 +177,6 @@ public:
             data_[i] = reinterpret_memblock[i];
 
         delete[] memblock;
-        file.close();
     }
 
     /** File constructor raw
@@ -201,21 +201,15 @@ public:
         char* memblock = new char[file_size];
         file.seekg(0, std::ios::beg);
         file.read(memblock, file_size);
+        file.close();
 
         U* reinterpret_memblock = (U*) memblock;
 
         size_t length = file_size / sizeof(U);
 
-        try
-        {
-            data_ = new T[length];
-        }
-        catch (const std::bad_alloc&)
-        {
-            std::cerr << "Could not allocate memory for new array!" << std::endl;
-            throw;
-        }
-        height_ = file_size/sizeof(T);
+        data_ = new T[length];
+
+        height_ = length;
         width_ = 1;
         length_ = height_;
 
@@ -224,7 +218,6 @@ public:
             data_[i] = reinterpret_memblock[i];
 
         delete[] memblock;
-        file.close();
     }
 
     /** Constant number constructor
