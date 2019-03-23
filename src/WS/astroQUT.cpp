@@ -156,7 +156,7 @@ static void Standardize(const Matrix<double>& mu_hat,
     #pragma omp parallel for schedule(dynamic)
     for(size_t MC_id = 0; MC_id < options.MC_max; ++MC_id)
     {
-        std::default_random_engine generator(rnd() + omp_get_team_num() + std::chrono::system_clock::now().time_since_epoch().count());
+        std::default_random_engine generator(rnd() + omp_get_thread_num() + std::chrono::system_clock::now().time_since_epoch().count());
         if(options.MC_max > 100 && (MC_id % ((options.MC_max)/100) == 0))
             std::cout << "\r" + std::to_string(std::lround(MC_id*100.0/(double)(options.MC_max-1))) + "/100" << std::flush;
 
