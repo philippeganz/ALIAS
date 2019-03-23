@@ -101,9 +101,7 @@ public:
         {
             double depth_length = std::pow(2, depth);
             for(size_t col = 0; col < depth_length/2; ++col)
-            {
-                roots_of_unity_[std::pow(2,depth-1) + col] = std::exp( std::complex(0.0, - 2.0 * PI * col / depth_length ) );
-            }
+                roots_of_unity_[std::pow(2,depth-1) - 1 + col] = std::exp( std::complex(0.0, - 2.0 * PI * col / depth_length ) );
         }
     }
 
@@ -189,7 +187,7 @@ public:
                 for( size_t col = 0; col < depth_length/2; ++col )
                 {
                     std::complex<T> e_k = flipped_signal[ row + col ];
-                    std::complex<T> o_k = roots_of_unity_[std::pow(2,depth-1) + col] * flipped_signal[ row + col + depth_length/2 ];
+                    std::complex<T> o_k = roots_of_unity_[std::pow(2,depth-1) - 1 + col] * flipped_signal[ row + col + depth_length/2 ];
                     flipped_signal[ row + col ] = e_k + o_k;
                     flipped_signal[ row + col + depth_length/2 ] = e_k - o_k;
                 }
@@ -202,7 +200,7 @@ public:
         // compute a forward FFT of the signal and divide by signal length
         Matrix<std::complex<T>> signal_fft = FFT(signal) / signal.Length();
 
-        // mirror all the value except the first one
+        // mirror all the values except the first one
         for( size_t i = 1; i < signal.Length()/2; ++i )
             std::swap(signal_fft[i], signal_fft[signal.Length() - i]);
         return signal_fft;
