@@ -502,6 +502,7 @@ Matrix<double> Solve(std::string picture_path,
     Matrix<double> picture = CenterOffset(picture_path, 0, 0, options);
     Matrix<double> sensitivity = CenterOffset(sensitivity_path, 0, 0, options);
     Matrix<double> background = CenterOffset(background_path, 0, 0, options);
+    background += 1e-10 - background.Min();
 
     std::random_device rnd;
     std::default_random_engine generator(rnd() + std::chrono::system_clock::now().time_since_epoch().count());
@@ -524,6 +525,7 @@ Matrix<double> Solve(std::string picture_path,
             picture = CenterOffset(picture_path, offset_vert, offset_horiz, options);
             sensitivity = CenterOffset(sensitivity_path, offset_vert, offset_horiz, options);
             background = CenterOffset(background_path, offset_vert, offset_horiz, options);
+            background += 1e-10 - background.Min();
 
             // resample pixels
             picture = Resample(picture, options.resample_windows_size);
