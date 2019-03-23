@@ -123,15 +123,7 @@ public:
 
         if(this->length_ != 0)
         {
-            try
-            {
-                data_ = new T[this->length_];
-            }
-            catch (const std::bad_alloc&)
-            {
-                std::cerr << "Could not allocate memory for new array!" << std::endl;
-                throw;
-            }
+            data_ = new T[this->length_];
         }
     }
 
