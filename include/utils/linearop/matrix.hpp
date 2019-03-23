@@ -1339,6 +1339,68 @@ public:
         }
     }
 
+    /** Min
+     *  Min of all elements, considered as a one dimensional vector
+     *  \return The result of type T
+     */
+    T Min() const
+    {
+#ifdef DO_ARGCHECKS
+        try
+        {
+            IsValid();
+        }
+        catch (const std::exception&)
+        {
+            throw;
+        }
+#endif // DO_ARGCHECKS
+
+        if(omp_get_max_threads() > 1)
+        {
+            T result = std::numeric_limits<T>::infinity();
+            #pragma omp parallel for reduction(min:result)
+            for(size_t i = 0; i < this->length_; ++i)
+                result = std::min(result, data_[i]);
+            return result;
+        }
+        else
+        {
+            return *std::min_element(data_, data_ + this->length_);
+        }
+    }
+
+    /** Max
+     *  Max of all elements, considered as a one dimensional vector
+     *  \return The result of type T
+     */
+    T Max() const
+    {
+#ifdef DO_ARGCHECKS
+        try
+        {
+            IsValid();
+        }
+        catch (const std::exception&)
+        {
+            throw;
+        }
+#endif // DO_ARGCHECKS
+
+        if(omp_get_max_threads() > 1)
+        {
+            T result = -std::numeric_limits<T>::infinity();
+            #pragma omp parallel for reduction(max:result)
+            for(size_t i = 0; i < this->length_; ++i)
+                result = std::max(result, data_[i]);
+            return result;
+        }
+        else
+        {
+            return *std::max_element(data_, data_ + this->length_);
+        }
+    }
+
     void PrintRefQual() const &
     {
         std::cout << "I'm an lvalue !" << std::endl;
