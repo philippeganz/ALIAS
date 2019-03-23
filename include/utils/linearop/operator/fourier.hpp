@@ -18,6 +18,27 @@
 namespace alias
 {
 
+inline void PrimeFactorDecomposition(int number)
+{
+    while (number % 2 == 0)
+    {
+        std::cout << 2;
+        number = number/2;
+    }
+
+    for (int i = 3; i <= std::sqrt(number); i += 2)
+    {
+        while (number % i == 0)
+        {
+            std::cout << i;
+            number = number/i;
+        }
+    }
+
+    if (number > 2)
+        std::cout << number;
+}
+
 template <class T = double>
 class Fourier : public Operator<T>
 {
@@ -214,19 +235,16 @@ public:
     Matrix<std::complex<T>> FFT2D( const Matrix<std::complex<T>>& signal ) const
     {
         Matrix<std::complex<T>> result(0, this->Height(), this->Width());
-        Matrix<std::complex<T>> input_row;
-        input_row.Height(signal.Width());
-        input_row.Width(1);
-        Matrix<std::complex<T>> result_row;
-        result_row.Height(result.Width());
-        result_row.Width(1);
 
         // compute a 1D FFT for every row of the signal
+        #pragma omp parallel for simd
         for( size_t row = 0; row < signal.Height(); ++row )
         {
-            input_row.Data(signal.Data() + row*signal.Width());
-            result_row.Data(result.Data() + row*result.Width());
+            Matrix<std::complex<T>> input_row(signal.Data() + row*signal.Width(), signal.Width(), 1);
+            Matrix<std::complex<T>> result_row(result.Data() + row*result.Width(), result.Width(), 1);
             FFT(input_row, result_row);
+            input_row.Data(nullptr);
+            result_row.Data(nullptr);
         }
 
         // transpose the result
@@ -234,16 +252,15 @@ public:
         Matrix<std::complex<T>> result_final(0, this->Height(), this->Width());
 
         // compute a 1D FFT for every row of the transposed intermediate result, i.e. the columns of the previous FFT
+        #pragma omp parallel for simd
         for( size_t row = 0; row < result_transposed.Height(); ++row )
         {
-            input_row.Data(result_transposed.Data() + row*result_transposed.Width());
-            result_row.Data(result_final.Data() + row*result_final.Width());
+            Matrix<std::complex<T>> input_row(result_transposed.Data() + row*result_transposed.Width(), signal.Width(), 1);
+            Matrix<std::complex<T>> result_row(result_final.Data() + row*result_final.Width(), result.Width(), 1);
             FFT(input_row, result_row);
+            input_row.Data(nullptr);
+            result_row.Data(nullptr);
         }
-
-        // release pointers
-        input_row.Data(nullptr);
-        result_row.Data(nullptr);
 
         // transpose back to have the original orientation
         std::move(result_final).Transpose();
@@ -253,40 +270,36 @@ public:
     Matrix<std::complex<T>> IFFT2D( const Matrix<std::complex<T>>& signal ) const
     {
         Matrix<std::complex<T>> result(this->Height(), this->Width());
-        Matrix<std::complex<T>> input_row;
-        input_row.Height(signal.Width());
-        input_row.Width(1);
-        Matrix<std::complex<T>> result_row;
-        result_row.Height(result.Width());
-        result_row.Width(1);
 
         // compute a 1D IFFT for every row of the signal
+        #pragma omp parallel for simd
         for( size_t row = 0; row < signal.Height(); ++row )
         {
-            input_row.Data(signal.Data() + row*signal.Width());
-            result_row.Data(result.Data() + row*result.Width());
+            Matrix<std::complex<T>> input_row(signal.Data() + row*signal.Width(), signal.Width(), 1);
+            Matrix<std::complex<T>> result_row(result.Data() + row*result.Width(), result.Width(), 1);
             IFFT(input_row, result_row);
+            input_row.Data(nullptr);
+            result_row.Data(nullptr);
         }
 
         // transpose the result in-place
         Matrix<std::complex<T>> result_transposed = result.Transpose();
-        input_row.Height(result_transposed.Height());
+        Matrix<std::complex<T>> result_final(0, this->Height(), this->Width());
 
         // compute a 1D IFFT for every row of the transposed intermediate result, i.e. the columns of the previous IFFT
+        #pragma omp parallel for simd
         for( size_t row = 0; row < result.Height(); ++row )
         {
-            input_row.Data(result_transposed.Data() + row*result_transposed.Width());
-            result_row.Data(result.Data() + row*result.Width());
+            Matrix<std::complex<T>> input_row(result_transposed.Data() + row*result_transposed.Width(), signal.Width(), 1);
+            Matrix<std::complex<T>> result_row(result_final.Data() + row*result_final.Width(), result.Width(), 1);
             IFFT(input_row, result_row);
+            input_row.Data(nullptr);
+            result_row.Data(nullptr);
         }
 
-        // release pointers
-        input_row.Data(nullptr);
-        result_row.Data(nullptr);
-
         // transpose back to have the original orientation
-        std::move(result).Transpose();
-        return result;
+        std::move(result_final).Transpose();
+        return result_final;
     }
 };
 
