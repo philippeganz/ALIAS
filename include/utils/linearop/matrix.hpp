@@ -28,18 +28,21 @@
 
 namespace alias
 {
-template<class T> struct is_complex : std::false_type {};
-template<class T> struct is_complex<std::complex<T>> : std::true_type {};
+template <class T> struct is_complex : std::false_type {};
+template <class T> struct is_complex<std::complex<T>> : std::true_type {};
+
+template <class T> struct ExtractType;
+template <template <class ...> class Main, class Sub> struct ExtractType<Main<Sub>> { using SubType = Sub; };
 
 /** Types of norm currently implemented
  */
 enum NormType {one, two, two_squared, inf};
 
-/** Floating point type comparison function
+/** Number comparison function
  *  \param first First number to compare
  *  \param second Second number to compare
  *  \author mch from https://stackoverflow.com/a/253874/8141262
- *  \author Philippe Ganz <philippe.ganz@gmail.com> 2017-2018
+ *  \author Philippe Ganz <philippe.ganz@gmail.com> 2017-2019
  */
 template <class T, typename std::enable_if_t<std::is_floating_point<T>::value>* = nullptr>
 inline bool IsEqual(T first, T second)
@@ -58,6 +61,26 @@ template <class T, typename std::enable_if_t<is_complex<T> {}>* = nullptr>
 inline bool IsEqual(T first, T second)
 {
     return IsEqual(std::real(first), std::real(second)) && IsEqual(std::imag(first), std::imag(second));
+}
+template <class T, typename std::enable_if_t<std::is_arithmetic<T>::value>* = nullptr>
+inline bool IsSmaller(T first, T second)
+{
+    return first < second;
+}
+template <class T, typename std::enable_if_t<is_complex<T> {}>* = nullptr>
+inline bool IsSmaller(T first, T second)
+{
+    return std::norm(first) < std::norm(second);
+}
+template <class T, typename std::enable_if_t<std::is_arithmetic<T>::value>* = nullptr>
+inline bool IsBigger(T first, T second)
+{
+    return first > second;
+}
+template <class T, typename std::enable_if_t<is_complex<T> {}>* = nullptr>
+inline bool IsBigger(T first, T second)
+{
+    return std::norm(first) > std::norm(second);
 }
 
 #ifdef VERBOSE
@@ -994,6 +1017,10 @@ public:
         return Matrix(*this).RemoveNeg(indices);
     }
 
+    /** Connected components
+     *   Returns a matrix with connected components reduced to the single maximum element or every connected component
+     *   \return A new instance containing the result
+     */
     Matrix ConnectedComponentsMax() const &
     {
         Matrix<T> CC_max(0.0, height_, width_);
@@ -1004,7 +1031,7 @@ public:
             for(size_t col = 0; col < width_; ++col)
             {
                 // consider only non-zero data and point not already marked
-                if( ! IsEqual(data_[row*width_ + col], 0.0) && ! CC_marked[row*width_ + col])
+                if( ! IsEqual(data_[row*width_ + col], (T) 0.0) && ! CC_marked[row*width_ + col])
                 {
                     // mark current point
                     CC_marked[row*width_ + col] = true;
@@ -1033,7 +1060,7 @@ public:
                                 {
                                     CC_marked[point_index] = true;
                                     // consider only if non zero
-                                    if( ! IsEqual( data_[point_index], 0.0) )
+                                    if( ! IsEqual( data_[point_index], (T) 0.0) )
                                     {
                                         CC_current.push_back(point_index);
                                         points.push(std::pair<int, int>(neighbor_row, neighbor_col));
@@ -1049,7 +1076,7 @@ public:
                     // get maximum value of the connected component
                     size_t max_index = CC_current[0];
                     for(size_t i = 1; i < CC_current.size(); ++i)
-                        if(data_[max_index] < data_[CC_current[i]])
+                        if(IsSmaller(data_[max_index], data_[CC_current[i]]))
                             max_index = CC_current[i];
 
                     // assign the maximum value to its index in the result
@@ -1098,29 +1125,10 @@ public:
     size_t NonZeroAmount() const &
     {
         size_t result = 0;
-        if(omp_get_max_threads() > 1)
-        {
-            size_t* local_result = new size_t[omp_get_max_threads()] {0};
-            #pragma omp parallel
-            {
-                size_t my_num = omp_get_thread_num();
-                #pragma omp for
-                for(size_t i = 0; i < this->length_; ++i)
-                    if(data_[i] < 0 || data_[i] > 0)
-                        ++local_result[my_num];
-            }
-
-            for(size_t i = 0; i < (size_t)omp_get_max_threads(); ++i)
-                result += local_result[i];
-
-            delete[] local_result;
-        }
-        else
-        {
-            for(size_t i = 0; i < this->length_; ++i)
-                if(data_[i] < 0 || data_[i] > 0)
-                    ++result;
-        }
+        #pragma omp parallel for reduction(+:result)
+        for(size_t i = 0; i < this->length_; ++i)
+            if(data_[i] < 0 || data_[i] > 0)
+                ++result;
 
         return result;
     }
@@ -1198,33 +1206,11 @@ public:
         {
         case one:
         {
-            if(omp_get_max_threads() > 1)
-            {
-                double* local_result = new double[omp_get_max_threads()] {0.0};
-                #pragma omp parallel
-                {
-                    size_t my_num = omp_get_thread_num();
-                    #pragma omp for
-                    for(size_t i = 0; i < this->length_; ++i)
-                        local_result[my_num] += std::abs(data_[i]);
-                }
-
-                double result = 0.0;
-                for(size_t i = 0; i < (size_t)omp_get_max_threads(); ++i)
-                    result += local_result[i];
-
-                delete[] local_result;
-                return result;
-            }
-            else
-            {
-                return std::accumulate( data_, data_ + (this->length_), 0.0L,
-                                        [](T acc, T next)
-                                        {
-                                            return std::abs(acc) + std::abs(next);
-                                        }
-                                      );
-            }
+            double result = 0.0;
+            #pragma omp parallel for reduction(+:result)
+            for(size_t i = 0; i < this->length_; ++i)
+                result += std::abs(data_[i]);
+            return result;
         }
         case two:
         {
@@ -1232,65 +1218,19 @@ public:
         }
         case two_squared:
         {
-            if(omp_get_max_threads() > 1)
-            {
-                double* local_result = new double[omp_get_max_threads()] {0.0};
-                #pragma omp parallel
-                {
-                    size_t my_num = omp_get_thread_num();
-                    #pragma omp for
-                    for(size_t i = 0; i < this->length_; ++i)
-                        local_result[my_num] += std::norm(data_[i]);
-                }
-
-                double result = 0.0;
-                for(size_t i = 0; i < (size_t)omp_get_max_threads(); ++i)
-                    result += local_result[i];
-
-                delete[] local_result;
-                return result;
-
-            }
-            else
-            {
-                return std::accumulate( data_, data_ + (this->length_), 0.0L,
-                                        [](T acc, T next)
-                                        {
-                                            return std::abs(acc) + std::norm(next);
-                                        }
-                                      );
-            }
+            double result = 0.0;
+            #pragma omp parallel for reduction(+:result)
+            for(size_t i = 0; i < this->length_; ++i)
+                result += std::norm(data_[i]);
+            return result;
         }
         case inf:
         {
-            if(omp_get_max_threads() > 1)
-            {
-                double* local_result = new double[omp_get_max_threads()] {0.0};
-                #pragma omp parallel
-                {
-                    size_t my_num = omp_get_thread_num();
-                    #pragma omp for
-                    for(size_t i = 0; i < this->length_; ++i)
-                    {
-                        double abs_data = std::abs(data_[i]);
-                        if( abs_data > local_result[my_num] )
-                            local_result[my_num] = abs_data;
-                    }
-                }
-
-                double result = *std::max_element(local_result, local_result + omp_get_max_threads());
-                delete[] local_result;
-                return result;
-            }
-            else
-            {
-                return std::abs(*std::max_element(  data_, data_ + (this->length_),
-                                                    [](T current_max, T next)
-                                                    {
-                                                        return (std::abs(current_max) < std::abs(next));
-                                                    }
-                                                 ));
-            }
+            double result = 0.0;
+            #pragma omp parallel for reduction(max:result)
+            for(size_t i = 0; i < this->length_; ++i)
+                result = std::max(result, std::abs(data_[i]));
+            return result;
         }
         default:
         {
@@ -1303,6 +1243,7 @@ public:
      *  Sum of all elements, considered as a one dimensional vector
      *  \return The result of type T
      */
+    template <class U = T, typename std::enable_if_t<std::is_arithmetic<U>::value>* = nullptr>
     T Sum() const
     {
 #ifdef DO_ARGCHECKS
@@ -1316,27 +1257,35 @@ public:
         }
 #endif // DO_ARGCHECKS
 
-        if(omp_get_max_threads() > 1)
+        T result = 0;
+        #pragma omp parallel for reduction(+:result)
+        for(size_t i = 0; i < this->length_; ++i)
+            result += data_[i];
+        return result;
+    }
+    template <class U = T, typename std::enable_if_t<is_complex<U> {}>* = nullptr, class ComplexSubType = typename ExtractType<U>::SubType>
+    T Sum() const
+    {
+#ifdef DO_ARGCHECKS
+        try
         {
-            T* local_result = new T[omp_get_max_threads()] {0};
-            #pragma omp parallel
-            {
-                size_t my_num = omp_get_thread_num();
-                #pragma omp for
-                for(size_t i = 0; i < this->length_; ++i)
-                    local_result[my_num] += data_[i];
-            }
+            IsValid();
+        }
+        catch (const std::exception&)
+        {
+            throw;
+        }
+#endif // DO_ARGCHECKS
 
-            T result = 0;
-            for(size_t i = 0; i < (size_t)omp_get_max_threads(); ++i)
-                result += local_result[i];
-            delete[] local_result;
-            return result;
-        }
-        else
+        double result_real = 0;
+        double result_imag = 0;
+        #pragma omp parallel for reduction(+:result_real, result_imag)
+        for(size_t i = 0; i < this->length_; ++i)
         {
-            return std::accumulate(data_, data_ + this->length_, (T) 0);
+            result_real += data_[i].real();
+            result_imag += data_[i].imag();
         }
+        return std::complex<ComplexSubType>(result_real, result_imag);
     }
 
     /** Min
@@ -1356,18 +1305,12 @@ public:
         }
 #endif // DO_ARGCHECKS
 
-        if(omp_get_max_threads() > 1)
-        {
-            T result = std::numeric_limits<T>::infinity();
-            #pragma omp parallel for reduction(min:result)
-            for(size_t i = 0; i < this->length_; ++i)
-                result = std::min(result, data_[i]);
-            return result;
-        }
-        else
-        {
-            return *std::min_element(data_, data_ + this->length_);
-        }
+        T result = std::numeric_limits<T>::infinity();
+        #pragma omp parallel for reduction(min:result)
+        for(size_t i = 0; i < this->length_; ++i)
+            result = std::min(result, data_[i]);
+        return result;
+
     }
 
     /** Max
@@ -1387,18 +1330,11 @@ public:
         }
 #endif // DO_ARGCHECKS
 
-        if(omp_get_max_threads() > 1)
-        {
-            T result = -std::numeric_limits<T>::infinity();
-            #pragma omp parallel for reduction(max:result)
-            for(size_t i = 0; i < this->length_; ++i)
-                result = std::max(result, data_[i]);
-            return result;
-        }
-        else
-        {
-            return *std::max_element(data_, data_ + this->length_);
-        }
+        T result = -std::numeric_limits<T>::infinity();
+        #pragma omp parallel for reduction(max:result)
+        for(size_t i = 0; i < this->length_; ++i)
+            result = std::max(result, data_[i]);
+        return result;
     }
 
     void PrintRefQual() const &
@@ -1808,28 +1744,11 @@ T Inner(const Matrix<T>& first, const Matrix<T>& second)
     }
 #endif // DO_ARGCHECKS
 
-    if(omp_get_max_threads() > 1)
-    {
-        T* local_result = new T[omp_get_max_threads()] {0};
-        #pragma omp parallel
-        {
-            size_t my_num = omp_get_thread_num();
-            #pragma omp for
-            for(size_t i = 0; i < first.Length(); ++i)
-                local_result[my_num] += first[i] * second[i];
-        }
-
-        T result = 0;
-        for(size_t i = 0; i < (size_t)omp_get_max_threads(); ++i)
-            result += local_result[i];
-
-        delete[] local_result;
-        return result;
-    }
-    else
-    {
-        return std::inner_product( first.Data(), first.Data() + first.Length(), second.Data(), (T) 0 );
-    }
+    T result = 0;
+    #pragma omp parallel for reduction(+:result)
+    for(size_t i = 0; i < first.Length(); ++i)
+        result += first[i] * second[i];
+    return result;
 }
 inline std::complex<double> Inner(const Matrix<std::complex<double>>& first, const Matrix<std::complex<double>>& second)
 {
@@ -1844,21 +1763,16 @@ inline std::complex<double> Inner(const Matrix<std::complex<double>>& first, con
     }
 #endif // DO_ARGCHECKS
 
-    std::complex<double>* local_result = new std::complex<double>[omp_get_max_threads()] {0};
-    #pragma omp parallel
+    double result_real = 0;
+    double result_imag = 0;
+    #pragma omp parallel for reduction(+:result_real, result_imag)
+    for(size_t i = 0; i < first.Length(); ++i)
     {
-        size_t my_num = omp_get_thread_num();
-        #pragma omp for
-        for(size_t i = 0; i < first.Length(); ++i)
-            local_result[my_num] += std::conj(first[i]) * second[i];
+        std::complex<double> local_result = std::conj(first[i]) * second[i];
+        result_real += local_result.real();
+        result_imag += local_result.imag();
     }
-
-    std::complex<double> result = 0;
-    for(size_t i = 0; i < (size_t)omp_get_max_threads(); ++i)
-        result += local_result[i];
-
-    delete[] local_result;
-    return result;
+    return std::complex<double>(result_real, result_imag);
 }
 
 /** Matrix Matrix multiplication
