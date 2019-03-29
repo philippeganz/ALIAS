@@ -31,7 +31,6 @@ struct Parameters
         , blurring_filter(std::string("data/blurring.data"))
         , bootstrap_max(1)
         , wavelet{3,8}
-        , center_offset_max{0}
         , resample_windows_size(4)
         , MC_max(1000)
         , MC_quantile_PF(800)
@@ -60,7 +59,6 @@ struct Parameters
     std::string blurring_filter; //!< Member variable "blurring_filter" path to the blurring filter data file
     size_t bootstrap_max; //!< Member variable "bootstrap_max" total amount of bootstraps computations, 0 for no bootstrapping
     size_t wavelet[2]; //!< Member variable "wavelet" wavelet type and wavelet parameter
-    size_t center_offset_max; //!< Member variable "center_offset" offset in pixel of how much to deviate from center
     size_t resample_windows_size; //!< Member variable "resample_windows_size" side size of the resampling square
     size_t MC_max; //!< Member variable "MC_max" amount of Monte Carlo simulations to perform
     size_t MC_quantile_PF; //!< Member variable "MC_quantile_PF" quantile for lambda

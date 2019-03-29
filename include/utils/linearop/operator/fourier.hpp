@@ -18,6 +18,27 @@
 namespace alias
 {
 
+inline void PrimeFactorDecomposition(int number)
+{
+    while (number % 2 == 0)
+    {
+        std::cout << 2;
+        number = number/2;
+    }
+
+    for (int i = 3; i <= std::sqrt(number); i += 2)
+    {
+        while (number % i == 0)
+        {
+            std::cout << i;
+            number = number/i;
+        }
+    }
+
+    if (number > 2)
+        std::cout << number;
+}
+
 template <class T = double>
 class Fourier : public Operator<T>
 {
@@ -101,9 +122,7 @@ public:
         {
             double depth_length = std::pow(2, depth);
             for(size_t col = 0; col < depth_length/2; ++col)
-            {
-                roots_of_unity_[std::pow(2,depth-1) + col] = std::exp( std::complex(0.0, - 2.0 * PI * col / depth_length ) );
-            }
+                roots_of_unity_[std::pow(2,depth-1) - 1 + col] = std::exp( std::complex(0.0, - 2.0 * PI * col / depth_length ) );
         }
     }
 
@@ -169,43 +188,43 @@ public:
     /** Fast Fourier Transform for temporary instances
      *  \brief Iterative FFT
      *  \param signal Input signal to transform with the FFT
-     *  \return The result returned by value
+     *  \param result Resulting matrix
      *  \author Community from https://en.wikipedia.org/wiki/Cooley%E2%80%93Tukey_FFT_algorithm
      *  \author Philippe Ganz <philippe.ganz@gmail.com> 2018-2019
      */
-    Matrix<std::complex<T>> FFT( const Matrix<std::complex<T>>& signal ) const
+    void FFT( const Matrix<std::complex<T>>& signal, Matrix<std::complex<T>>& result ) const
     {
         // bit reversal step
-        Matrix<std::complex<T>> flipped_signal(0, this->Width(), 1);
+        #pragma omp parallel for simd
         for( size_t i = 0; i < this->Width(); ++i )
             if( bit_reverse_table_[i] < signal.Length() )
-                flipped_signal[i] = signal[bit_reverse_table_[i]];
+                result[i] = signal[bit_reverse_table_[i]];
 
         // iterative radix-2 FFT
         for( size_t depth = 1; depth <= depth_max_; ++depth )
         {
             size_t depth_length = std::pow(2,depth);
+            #pragma omp parallel for simd
             for( size_t row = 0; row < this->Width(); row += depth_length )
                 for( size_t col = 0; col < depth_length/2; ++col )
                 {
-                    std::complex<T> e_k = flipped_signal[ row + col ];
-                    std::complex<T> o_k = roots_of_unity_[std::pow(2,depth-1) + col] * flipped_signal[ row + col + depth_length/2 ];
-                    flipped_signal[ row + col ] = e_k + o_k;
-                    flipped_signal[ row + col + depth_length/2 ] = e_k - o_k;
+                    std::complex<T> e_k = result[ row + col ];
+                    std::complex<T> o_k = roots_of_unity_[std::pow(2,depth-1) - 1 + col] * result[ row + col + depth_length/2 ];
+                    result[ row + col ] = e_k + o_k;
+                    result[ row + col + depth_length/2 ] = e_k - o_k;
                 }
         }
-        return flipped_signal;
     }
 
-    Matrix<std::complex<T>> IFFT( const Matrix<std::complex<T>>& signal ) const
+    void IFFT( const Matrix<std::complex<T>>& signal, Matrix<std::complex<T>>& result ) const
     {
         // compute a forward FFT of the signal and divide by signal length
-        Matrix<std::complex<T>> signal_fft = FFT(signal) / signal.Length();
+        FFT(signal, result);
+        result /= signal.Length();
 
-        // mirror all the value except the first one
+        // mirror all the values except the first one
         for( size_t i = 1; i < signal.Length()/2; ++i )
-            std::swap(signal_fft[i], signal_fft[signal.Length() - i]);
-        return signal_fft;
+            std::swap(result[i], result[signal.Length() - i]);
     }
 
     /** 2D Fast Fourier Transform
@@ -218,35 +237,34 @@ public:
         Matrix<std::complex<T>> result(0, this->Height(), this->Width());
 
         // compute a 1D FFT for every row of the signal
-        #pragma omp parallel for
+        #pragma omp parallel for simd
         for( size_t row = 0; row < signal.Height(); ++row )
         {
             Matrix<std::complex<T>> input_row(signal.Data() + row*signal.Width(), signal.Width(), 1);
-            Matrix<std::complex<T>> result_row_freq_domain = FFT(input_row);
-            #pragma omp simd
-            for( size_t i = 0; i < result.Width(); ++i )
-                result[row*result.Width() + i] = result_row_freq_domain[i];
+            Matrix<std::complex<T>> result_row(result.Data() + row*result.Width(), result.Width(), 1);
+            FFT(input_row, result_row);
             input_row.Data(nullptr);
+            result_row.Data(nullptr);
         }
 
-        // transpose the result in-place
-        Matrix<std::complex<T>> result_transposed = std::move(result).Transpose();
+        // transpose the result
+        Matrix<std::complex<T>> result_transposed = result.Transpose();
+        Matrix<std::complex<T>> result_final(0, this->Height(), this->Width());
 
         // compute a 1D FFT for every row of the transposed intermediate result, i.e. the columns of the previous FFT
-        #pragma omp parallel for
+        #pragma omp parallel for simd
         for( size_t row = 0; row < result_transposed.Height(); ++row )
         {
-            Matrix<std::complex<T>> result_row(result_transposed.Data() + row*result_transposed.Width(), result_transposed.Width(), 1);
-            Matrix<std::complex<T>> result_row_freq_domain = FFT(result_row);
-            #pragma omp simd
-            for( size_t i = 0; i < result_transposed.Width(); ++i )
-                result_transposed[row*result_transposed.Width() + i] = result_row_freq_domain[i];
+            Matrix<std::complex<T>> input_row(result_transposed.Data() + row*result_transposed.Width(), signal.Width(), 1);
+            Matrix<std::complex<T>> result_row(result_final.Data() + row*result_final.Width(), result.Width(), 1);
+            FFT(input_row, result_row);
+            input_row.Data(nullptr);
             result_row.Data(nullptr);
         }
 
         // transpose back to have the original orientation
-        result = std::move(result_transposed).Transpose();
-        return result;
+        std::move(result_final).Transpose();
+        return result_final;
     }
 
     Matrix<std::complex<T>> IFFT2D( const Matrix<std::complex<T>>& signal ) const
@@ -254,38 +272,36 @@ public:
         Matrix<std::complex<T>> result(this->Height(), this->Width());
 
         // compute a 1D IFFT for every row of the signal
-        #pragma omp parallel for
+        #pragma omp parallel for simd
         for( size_t row = 0; row < signal.Height(); ++row )
         {
             Matrix<std::complex<T>> input_row(signal.Data() + row*signal.Width(), signal.Width(), 1);
-            Matrix<std::complex<T>> result_row_time_domain = IFFT(input_row);
-            #pragma omp simd
-            for( size_t i = 0; i < result.Width(); ++i )
-                result[row*result.Width() + i] = result_row_time_domain[i];
+            Matrix<std::complex<T>> result_row(result.Data() + row*result.Width(), result.Width(), 1);
+            IFFT(input_row, result_row);
             input_row.Data(nullptr);
+            result_row.Data(nullptr);
         }
 
         // transpose the result in-place
-        std::move(result).Transpose();
+        Matrix<std::complex<T>> result_transposed = result.Transpose();
+        Matrix<std::complex<T>> result_final(0, this->Height(), this->Width());
 
         // compute a 1D IFFT for every row of the transposed intermediate result, i.e. the columns of the previous IFFT
-        #pragma omp parallel for
+        #pragma omp parallel for simd
         for( size_t row = 0; row < result.Height(); ++row )
         {
-            Matrix<std::complex<T>> result_row(result.Data() + row*result.Width(), result.Width(), 1);
-            Matrix<std::complex<T>> result_row_time_domain = IFFT(result_row);
-            #pragma omp simd
-            for( size_t i = 0; i < result.Width(); ++i )
-                result[row*result.Width() + i] = result_row_time_domain[i];
+            Matrix<std::complex<T>> input_row(result_transposed.Data() + row*result_transposed.Width(), signal.Width(), 1);
+            Matrix<std::complex<T>> result_row(result_final.Data() + row*result_final.Width(), result.Width(), 1);
+            IFFT(input_row, result_row);
+            input_row.Data(nullptr);
             result_row.Data(nullptr);
         }
 
         // transpose back to have the original orientation
-        std::move(result).Transpose();
-        return result;
+        std::move(result_final).Transpose();
+        return result_final;
     }
 };
-
 
 
 } // namespace alias

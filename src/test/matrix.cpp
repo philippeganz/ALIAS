@@ -189,7 +189,7 @@ bool Sum<std::complex<double>>()
 template <>
 bool Shrink<std::complex<double>>()
 {
-    std::cout << "Shrinkage test with complex<double> is not implemented";
+    std::cout << "Shrinkage test with complex<double> is not implemented" << std::endl;
 
     return true;
 }

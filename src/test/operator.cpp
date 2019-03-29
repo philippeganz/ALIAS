@@ -441,6 +441,21 @@ bool BlurTest()
     return test_result;
 }
 
+bool FourierTest()
+{
+    std::cout << "Fourier test : ";
+
+    alias::Fourier<double> fourier(8);
+    alias::Matrix<double> signal(2, 6, 6);
+    alias::Matrix<std::complex<double>> result_signal = fourier.FFT2D(signal);
+    alias::Matrix<std::complex<double>> result_signal_inverted = fourier.IFFT2D(result_signal);
+    std::cout << signal;
+    std::cout << result_signal;
+    std::cout << result_signal_inverted;
+
+    return true;
+}
+
 bool AstroTest()
 {
     std::cout << "Astro operator test : ";

@@ -34,9 +34,8 @@ static Matrix<double> CenterOffset(std::string picture_path, int offset_vert, in
     Matrix<double> raw_picture(picture_path);
     size_t raw_pic_size = (size_t) sqrt(raw_picture.Length());
     size_t offset_base = (raw_pic_size-options.pic_size)/2;
-    size_t offset_height = offset_base + offset_vert;
-    size_t offset_width = offset_base + offset_horiz;
-
+    size_t offset_height = offset_base * (1 + offset_vert/100);
+    size_t offset_width = offset_base * (1 + offset_horiz/100);
     #pragma omp parallel for simd
     for(size_t row = 0; row < options.pic_size; ++row)
         for(size_t col = 0; col < options.pic_size; ++col)
@@ -157,7 +156,7 @@ static void Standardize(const Matrix<double>& mu_hat,
     #pragma omp parallel for schedule(dynamic)
     for(size_t MC_id = 0; MC_id < options.MC_max; ++MC_id)
     {
-        std::default_random_engine generator(rnd() + omp_get_team_num() + std::chrono::system_clock::now().time_since_epoch().count());
+        std::default_random_engine generator(rnd() + omp_get_thread_num() + std::chrono::system_clock::now().time_since_epoch().count());
         if(options.MC_max > 100 && (MC_id % ((options.MC_max)/100) == 0))
             std::cout << "\r" + std::to_string(std::lround(MC_id*100.0/(double)(options.MC_max-1))) + "/100" << std::flush;
 
@@ -503,6 +502,7 @@ Matrix<double> Solve(std::string picture_path,
     Matrix<double> picture = CenterOffset(picture_path, 0, 0, options);
     Matrix<double> sensitivity = CenterOffset(sensitivity_path, 0, 0, options);
     Matrix<double> background = CenterOffset(background_path, 0, 0, options);
+    background += 1e-10 - background.Min();
 
     std::random_device rnd;
     std::default_random_engine generator(rnd() + std::chrono::system_clock::now().time_since_epoch().count());
@@ -519,12 +519,13 @@ Matrix<double> Solve(std::string picture_path,
         else
         {
             // bootstrap center of picture
-            std::uniform_int_distribution random_center(-(int)options.center_offset_max,(int)options.center_offset_max);
+            std::uniform_int_distribution random_center(-100,100);
             int offset_vert = random_center(generator);
             int offset_horiz = random_center(generator);
             picture = CenterOffset(picture_path, offset_vert, offset_horiz, options);
             sensitivity = CenterOffset(sensitivity_path, offset_vert, offset_horiz, options);
             background = CenterOffset(background_path, offset_vert, offset_horiz, options);
+            background += 1e-10 - background.Min();
 
             // resample pixels
             picture = Resample(picture, options.resample_windows_size);
@@ -568,7 +569,7 @@ Matrix<double> Solve(std::string picture_path,
             std::cout << std::string(80, '-') << std::endl;
             std::cout << "Computing with bootstrapping " << "(" << bootstrap_current + 1 << "/" << options.bootstrap_max << "):" << std::endl;
             std::cout << "Wavelets: " << options.wavelet[0] << ", " << options.wavelet[1] << std::endl;
-            std::cout << "Center: " << offset_vert << ", " << offset_horiz << std::endl;
+            std::cout << "Center: " << offset_vert << "%, " << offset_horiz << "%" << std::endl;
             std::cout << "Resample windows size: " << options.resample_windows_size << std::endl << std::endl;
             std::cout << std::string(80, '-') << std::endl << std::endl;
         }
