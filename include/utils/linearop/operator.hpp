@@ -133,6 +133,30 @@ public:
             throw std::invalid_argument("Operator dimensions must be non-zero!");
     }
 
+    /** Array subscript setter operator
+     *  \param index Array subscript
+     *  \return A reference to the array element at index
+     */
+    T& operator[](size_t index) noexcept
+    {
+        return data_[index];
+    }
+
+    /** Array subscript getter operator
+     *  \param index Array subscript
+     *  \return A reference to the array element at index
+     */
+    template <class S = T, typename std::enable_if_t<std::is_arithmetic<S>::value>* = nullptr>
+    const S operator[](size_t index) const noexcept
+    {
+        return data_[index];
+    }
+    template <class S = T, typename std::enable_if_t<is_complex<S> {}>* = nullptr>
+    const S& operator[](size_t index) const noexcept
+    {
+        return data_[index];
+    }
+
     /** Transpose in-place
      *   \return A reference to this
      */
