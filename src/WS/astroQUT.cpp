@@ -498,7 +498,6 @@ Matrix<double> Solve(std::string picture_path,
     options.MC_quantile_PS = (size_t) (options.MC_max * (1.0 - 1.0/(options.pic_size*options.pic_size)));
 
     // result matrix containing a solution on each row
-    Matrix<double> result(options.bootstrap_max, options.model_size);
     Matrix<double> result_fhat(options.bootstrap_max, options.pic_size);
     Matrix<double> result_fhat_cropped(options.bootstrap_max, std::lround((options.pic_size/2)*(1+1/std::sqrt(2)))-std::lround((options.pic_size/2)*(1-1/std::sqrt(2)))+2);
 
@@ -579,8 +578,6 @@ Matrix<double> Solve(std::string picture_path,
         }
 
         Matrix<double> solution = SolveWS(picture, sensitivity, background, options);
-        std::copy(solution.Data(), solution.Data()+options.model_size, result.Data()+bootstrap_current*options.model_size);
-
         Matrix<double> fhatw = Matrix<double>(solution.Data(), options.pic_size, options.pic_size, 1);
         Wavelet<double> wave_op = Wavelet<double>((WaveletType)options.wavelet[0], options.wavelet[1]);
         fhatw = wave_op*fhatw;
