@@ -343,7 +343,7 @@ static Matrix<double> EstimateNonZero(const Matrix<double>& picture,
     std::cout << "Getting non zero elements..." << std::endl;
     Matrix<size_t> non_zero_elements_indices = solution_static.NonZeroIndices();
     size_t non_zero_elements_amount = non_zero_elements_indices.Length();
-    Matrix<double> non_zero_elements_operator(picture.Length(), non_zero_elements_amount);
+    MatMult<double> non_zero_elements_operator(Matrix<double>(picture.Length(), non_zero_elements_amount), picture.Length(), non_zero_elements_amount);
 
     std::cout << "Generating non zero elements operator..." << std::endl;
     Matrix<double> identity(0.0, options.model_size, 1);
@@ -366,20 +366,24 @@ static Matrix<double> EstimateNonZero(const Matrix<double>& picture,
     for(size_t i = 0; i < non_zero_elements_amount; ++i)
         options.fista_params.init_value[i] = solution_static[non_zero_elements_indices[i]] * options.standardize[non_zero_elements_indices[i]];
 
-    std::vector<size_t> remove_neg_indices = {0};
-    for(size_t i = 1; i < non_zero_elements_amount; ++i)
-        if(non_zero_elements_indices[i] > options.pic_size)
-            remove_neg_indices.push_back(i);
-    options.fista_params.indices = Matrix<size_t>(&remove_neg_indices[0], remove_neg_indices.size(), remove_neg_indices.size(), 1);
+    size_t starting_index = 1;
+    while(non_zero_elements_indices[starting_index] < options.pic_size)
+        ++starting_index;
+    Matrix<size_t> remove_neg_indices(non_zero_elements_amount-starting_index, 1);
+    #pragma omp parallel for simd
+    for(size_t i = 0; i < non_zero_elements_amount-starting_index; ++i)
+        remove_neg_indices[i] = i + starting_index;
+    options.fista_params.indices = remove_neg_indices;
 
     std::cout << "Generating the new beta estimates..." << std::endl;
-    Matrix<double> beta_new = fista::poisson::Solve(MatMult<double>(non_zero_elements_operator, non_zero_elements_operator.Height(), non_zero_elements_operator.Width()),
+    Matrix<double> beta_new = fista::poisson::Solve(non_zero_elements_operator,
                                                     background,
                                                     picture,
                                                     0.0,
                                                     options.fista_params);
 
     Matrix<double> result(solution_static);
+    #pragma omp parallel for simd
     for(size_t i = 0; i < non_zero_elements_amount; ++i)
         result[non_zero_elements_indices[i]] = beta_new[i];
 #ifdef DEBUG
@@ -494,7 +498,6 @@ Matrix<double> Solve(std::string picture_path,
     options.MC_quantile_PS = (size_t) (options.MC_max * (1.0 - 1.0/(options.pic_size*options.pic_size)));
 
     // result matrix containing a solution on each row
-    Matrix<double> result(options.bootstrap_max, options.model_size);
     Matrix<double> result_fhat(options.bootstrap_max, options.pic_size);
     Matrix<double> result_fhat_cropped(options.bootstrap_max, std::lround((options.pic_size/2)*(1+1/std::sqrt(2)))-std::lround((options.pic_size/2)*(1-1/std::sqrt(2)))+2);
 
@@ -575,8 +578,6 @@ Matrix<double> Solve(std::string picture_path,
         }
 
         Matrix<double> solution = SolveWS(picture, sensitivity, background, options);
-        std::copy(solution.Data(), solution.Data()+options.model_size, result.Data()+bootstrap_current*options.model_size);
-
         Matrix<double> fhatw = Matrix<double>(solution.Data(), options.pic_size, options.pic_size, 1);
         Wavelet<double> wave_op = Wavelet<double>((WaveletType)options.wavelet[0], options.wavelet[1]);
         fhatw = wave_op*fhatw;

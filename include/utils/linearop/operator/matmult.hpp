@@ -142,7 +142,7 @@ public:
     {
         std::swap(this->height_, this->width_);
         this->transposed_ = !this->transposed_;
-        this->data_ = std::move(this->data_.Transpose());
+        std::move(this->data_).Transpose();
         return *this;
     }
 

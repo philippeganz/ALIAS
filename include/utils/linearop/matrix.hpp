@@ -122,9 +122,7 @@ public:
 #endif // DEBUG
 
         if(this->length_ != 0)
-        {
             data_ = new T[this->length_];
-        }
     }
 
     /** Full member constructor
