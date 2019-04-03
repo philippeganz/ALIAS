@@ -323,6 +323,12 @@ static Matrix<double> Estimate(const Matrix<double>& picture,
 
     result /= options.standardize;
     result.RemoveNeg(options.pic_size*2, options.model_size);
+    Matrix<double> result_ps(&result[options.pic_size*2], options.pic_size, options.pic_size);
+    Matrix<double> ps_cc_max = result_ps.ConnectedComponentsMax();
+    result_ps.Data(nullptr);
+    #pragma omp parallel for simd
+    for(size_t i = 0; i < options.pic_size*options.pic_size; ++i)
+        result[i + options.pic_size*2] = ps_cc_max[i];
 
     std::cout << std::endl;
 #ifdef DEBUG

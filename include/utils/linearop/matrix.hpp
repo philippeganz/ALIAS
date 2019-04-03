@@ -1013,6 +1013,10 @@ public:
      */
     Matrix ConnectedComponentsMax() const &
     {
+#ifdef VERBOSE
+        std::cout << *this;
+#endif // VERBOSE
+        size_t CC_total = 0;
         Matrix<T> CC_max(0.0, height_, width_);
         Matrix<bool> CC_marked(false, height_, width_);
 
@@ -1023,6 +1027,9 @@ public:
                 // consider only non-zero data and point not already marked
                 if( ! IsEqual(data_[row*width_ + col], (T) 0.0) && ! CC_marked[row*width_ + col])
                 {
+                    // this is a new connected component
+                    ++CC_total;
+
                     // mark current point
                     CC_marked[row*width_ + col] = true;
 
@@ -1031,7 +1038,7 @@ public:
                     std::queue<std::pair<int, int>> points;
                     points.push(std::pair<int, int>(row, col));
 #ifdef VERBOSE
-                    std::cout << "(" << row << "," << col << ")" << std::endl;
+                    std::cout << "(" << row << "," << col << ") <=> " << row*width_ + col << std::endl;
 #endif // VERBOSE
 
                     // Breadth First Search to look for all points connected to the currentCC.
@@ -1055,7 +1062,7 @@ public:
                                         CC_current.push_back(point_index);
                                         points.push(std::pair<int, int>(neighbor_row, neighbor_col));
 #ifdef VERBOSE
-                                        std::cout << "(" << neighbor_row << "," << neighbor_col << ")" << std::endl;
+                                        std::cout << "(" << neighbor_row << "," << neighbor_col << ") <=> " << neighbor_row*width_ + neighbor_col << std::endl;
 #endif // VERBOSE
                                     }
                                 }
@@ -1068,17 +1075,21 @@ public:
                     for(size_t i = 1; i < CC_current.size(); ++i)
                         if(IsSmaller(data_[max_index], data_[CC_current[i]]))
                             max_index = CC_current[i];
+#ifdef VERBOSE
+                    std::cout << "Max index: " << max_index << std::endl;
+#endif // VERBOSE
 
                     // assign the maximum value to its index in the result
                     CC_max[max_index] = data_[max_index];
 
 #ifdef VERBOSE
-                    std::cout << *this;
                     std::cout << CC_max;
 #endif // VERBOSE
                 }
             }
         }
+
+        std::cout << CC_total << " connected components found in point source matrix. Keeping only maximum value." << std::endl;
 
         return CC_max;
     }
