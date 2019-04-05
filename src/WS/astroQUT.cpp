@@ -416,6 +416,7 @@ static Matrix<double> SolveWS(const Matrix<double>& picture,
     double prev_beta0 = std::numeric_limits<double>::infinity();
     size_t refine_max = 5;
     double total_time = 0;
+    size_t iter_max = options.fista_params.iter_max;
 
     std::cout << "Computing wavelet and spline estimates." << std::endl;
     while( refine_max-- > 0 && std::abs(options.beta0-prev_beta0)/options.beta0 > 0.1 )
@@ -440,10 +441,13 @@ static Matrix<double> SolveWS(const Matrix<double>& picture,
             for(size_t i = 0; i < zero_elements.Length(); ++i)
                 options.standardize[zero_elements[i]] = std::numeric_limits<double>::infinity();
             astro.Standardize(options.standardize);
+            options.fista_params.iter_max = iter_max;
         }
         else
         {
             first = false;
+            // first approximation should go further because of connected components step
+            options.fista_params.iter_max = iter_max * 2;
         }
 
         start = std::chrono::high_resolution_clock::now();
