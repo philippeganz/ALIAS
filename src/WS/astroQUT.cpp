@@ -479,6 +479,9 @@ static Matrix<double> SolveWS(const Matrix<double>& picture,
 #ifdef DEBUG
     std::cerr << "SolveWS done" << std::endl;
 #endif // DEBUG
+
+    // restoring iter max to its original value
+    options.fista_params.iter_max = iter_max;
     return solution/options.standardize;
 }
 
