@@ -323,6 +323,12 @@ static Matrix<double> Estimate(const Matrix<double>& picture,
 
     result /= options.standardize;
     result.RemoveNeg(options.pic_size*2, options.model_size);
+    Matrix<double> result_ps(&result[options.pic_size*2], options.pic_size, options.pic_size);
+    Matrix<double> ps_cc_max = result_ps.ConnectedComponentsMax();
+    result_ps.Data(nullptr);
+    #pragma omp parallel for simd
+    for(size_t i = 0; i < options.pic_size*options.pic_size; ++i)
+        result[i + options.pic_size*2] = ps_cc_max[i];
 
     std::cout << std::endl;
 #ifdef DEBUG
@@ -410,6 +416,7 @@ static Matrix<double> SolveWS(const Matrix<double>& picture,
     double prev_beta0 = std::numeric_limits<double>::infinity();
     size_t refine_max = 5;
     double total_time = 0;
+    size_t iter_max = options.fista_params.iter_max;
 
     std::cout << "Computing wavelet and spline estimates." << std::endl;
     while( refine_max-- > 0 && std::abs(options.beta0-prev_beta0)/options.beta0 > 0.1 )
@@ -434,10 +441,13 @@ static Matrix<double> SolveWS(const Matrix<double>& picture,
             for(size_t i = 0; i < zero_elements.Length(); ++i)
                 options.standardize[zero_elements[i]] = std::numeric_limits<double>::infinity();
             astro.Standardize(options.standardize);
+            options.fista_params.iter_max = iter_max;
         }
         else
         {
             first = false;
+            // first approximation should go further because of connected components step
+            options.fista_params.iter_max = iter_max * 2;
         }
 
         start = std::chrono::high_resolution_clock::now();
@@ -469,6 +479,9 @@ static Matrix<double> SolveWS(const Matrix<double>& picture,
 #ifdef DEBUG
     std::cerr << "SolveWS done" << std::endl;
 #endif // DEBUG
+
+    // restoring iter max to its original value
+    options.fista_params.iter_max = iter_max;
     return solution/options.standardize;
 }
 
