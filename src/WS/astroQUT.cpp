@@ -39,7 +39,8 @@ static Matrix<double> CenterOffset(std::string picture_path, int offset_vert, in
     #pragma omp parallel for simd
     for(size_t row = 0; row < options.pic_size; ++row)
         for(size_t col = 0; col < options.pic_size; ++col)
-            result[row*options.pic_size + col] = raw_picture[(row+offset_height)*options.pic_size + (col+offset_width)];
+            result[row*options.pic_size + col] = raw_picture[(row+offset_height)*raw_pic_size + (col+offset_width)];
+
 #ifdef DEBUG
     std::cerr << "CenterOffset done" << std::endl;
 #endif // DEBUG
@@ -518,7 +519,7 @@ Matrix<double> Solve(std::string picture_path,
     Matrix<double> picture = CenterOffset(picture_path, 0, 0, options);
     Matrix<double> sensitivity = CenterOffset(sensitivity_path, 0, 0, options);
     Matrix<double> background = CenterOffset(background_path, 0, 0, options);
-    background += 1e-10 - background.Min();
+    background += 1e-4 - background.Min();
 
     std::random_device rnd;
     std::default_random_engine generator(rnd() + std::chrono::system_clock::now().time_since_epoch().count());
