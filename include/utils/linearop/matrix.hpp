@@ -2,9 +2,9 @@
 /// \file include/utils/linearop/matrix.hpp
 /// \brief Matrix class header
 /// \details Provide matrix container with multiple matrix operations used in the whole project.
-/// \author Philippe Ganz <philippe.ganz@gmail.com> 2017-2018
-/// \version 0.6.0
-/// \date March 2019
+/// \author Philippe Ganz <philippe.ganz@gmail.com> 2017-2019
+/// \version 1.0.0
+/// \date July 2019
 /// \copyright GPL-3.0
 ///
 
