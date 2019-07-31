@@ -26,6 +26,12 @@
 #include <string>
 #include <type_traits>
 
+#if defined(__unix__)
+#include <CCfits/CCfits>
+#include <cctype>
+#include <filesystem>
+#endif // __unix__
+
 namespace alias
 {
 template <class T> struct is_complex : std::false_type {};
@@ -81,6 +87,14 @@ template <class T, typename std::enable_if_t<is_complex<T> {}>* = nullptr>
 inline bool IsBigger(T first, T second)
 {
     return std::norm(first) > std::norm(second);
+}
+
+inline std::string str_tolower(std::string str)
+{
+    std::transform(str.begin(), str.end(), str.begin(),
+                   [](unsigned char c){ return std::tolower(c); }
+                  );
+    return str;
 }
 
 #ifdef VERBOSE
@@ -203,34 +217,55 @@ public:
         std::cout << "Matrix : File constructor raw called with filename=" << filename << std::endl;
 #endif // DEBUG
 
-        std::ifstream file(filename, std::ios::binary | std::ios::in | std::ios::ate);
-
-        size_t file_size = file.tellg();
-        if(file_size == 0)
+#if defined(__unix__)
+        if( str_tolower(std::filesystem::path(filename).extension()) == ".fits" )
         {
-            std::cerr << "Input file is empty";
-            throw;
+            CCfits::FITS file(filename, CCfits::Read, true);
+            std::valarray<T> picture;
+            file.pHDU().readAllKeys();
+            file.pHDU().read(picture);
+
+            height_ = file.pHDU().axis(0) * file.pHDU().axis(1);
+            width_ = 1;
+            length_ = height_;
+
+            data_ = new T[length_];
+
+            for(size_t i = 0; i < length_; ++i)
+                data_[i] = picture[i];
         }
-        char* memblock = new char[file_size];
-        file.seekg(0, std::ios::beg);
-        file.read(memblock, file_size);
-        file.close();
+        else
+#endif // __unix__
+        {
+            std::ifstream file(filename, std::ios::binary | std::ios::in | std::ios::ate);
 
-        U* reinterpret_memblock = (U*) memblock;
+            size_t file_size = file.tellg();
+            if(file_size == 0)
+            {
+                std::cerr << "Input file is empty";
+                throw;
+            }
+            char* memblock = new char[file_size];
+            file.seekg(0, std::ios::beg);
+            file.read(memblock, file_size);
+            file.close();
 
-        size_t length = file_size / sizeof(U);
+            U* reinterpret_memblock = (U*) memblock;
 
-        data_ = new T[length];
+            size_t length = file_size / sizeof(U);
 
-        height_ = length;
-        width_ = 1;
-        length_ = height_;
+            data_ = new T[length];
 
-        #pragma omp parallel for simd
-        for(size_t i = 0; i < length_; ++i)
-            data_[i] = reinterpret_memblock[i];
+            height_ = length;
+            width_ = 1;
+            length_ = height_;
 
-        delete[] memblock;
+            #pragma omp parallel for simd
+            for(size_t i = 0; i < length_; ++i)
+                data_[i] = reinterpret_memblock[i];
+
+            delete[] memblock;
+        }
     }
 
     /** Constant number constructor
@@ -1709,20 +1744,34 @@ void operator<<(std::string filename, const Matrix<T>& mat)
     }
 #endif // DO_ARGCHECKS
 
-    std::ofstream file(filename, std::ios::binary | std::ios::out | std::ios::app);
+#if defined(__unix__)
+    if( str_tolower(std::filesystem::path(filename).extension()) == ".fits" )
+    {
+        long axes[2] = { (long)mat.Height(), (long)mat.Width() };
+        CCfits::FITS file(filename, DOUBLE_IMG, 2, axes);
+        std::valarray<T> mat_array(mat.Length());
+        for(size_t i = 0; i < mat.Length(); ++i)
+            mat_array[i] = mat[i];
+        file.pHDU().write(1, mat.Length(), mat_array);
+    }
+    else
+#endif // __unix__
+    {
+        std::ofstream file(filename, std::ios::binary | std::ios::out | std::ios::app);
 
-    T* memblock = new T[mat.Length()];
+        T* memblock = new T[mat.Length()];
 
-    for(size_t i = 0; i < mat.Length(); ++i)
-        memblock[i] = mat[i];
+        for(size_t i = 0; i < mat.Length(); ++i)
+            memblock[i] = mat[i];
 
-    char* reinterpret_memblock = (char*) memblock;
+        char* reinterpret_memblock = (char*) memblock;
 
-    file.write(reinterpret_memblock, mat.Length()*sizeof(T));
+        file.write(reinterpret_memblock, mat.Length()*sizeof(T));
 
-    file.close();
+        file.close();
 
-    delete[] memblock;
+        delete[] memblock;
+    }
 }
 
 /** Inner product

@@ -1,6 +1,7 @@
 CC := g++
 CFLAGS := -std=c++17 -fopenmp -pedantic -Wall -m64 -march=native -mno-sse5
 COPTFLAGS := -O3
+CLIB := -lstdc++fs -lcfitsio -lCCfits
 
 PROJECTNAME := ALIAS
 
@@ -15,7 +16,7 @@ all: $(PROJECTNAME)
 rebuild: clean $(PROJECTNAME)
 
 $(PROJECTNAME): $(OBJECTS)
-	$(CC) $(CFLAGS) $(COPTFLAGS) $(OBJECTS) -fopenmp -o $(PROJECTNAME)
+	$(CC) $(OBJECTS) $(CLIB) -fopenmp -o $(PROJECTNAME)
 
 $(OBJECTDIR)/%.o: %.cpp
 	mkdir -p $(OBJECTDIR)/$(dir $<) && $(CC) $(CFLAGS) $(COPTFLAGS) -I $(HEADERDIR) -c $< -o $@
