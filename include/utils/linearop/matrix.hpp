@@ -231,6 +231,7 @@ public:
 
             data_ = new T[length_];
 
+            #pragma omp parallel for simd
             for(size_t i = 0; i < length_; ++i)
                 data_[i] = picture[i];
         }

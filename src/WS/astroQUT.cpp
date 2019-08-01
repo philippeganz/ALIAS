@@ -36,7 +36,7 @@ static Matrix<double> CenterOffset(std::string picture_path, int offset_vert, in
     size_t offset_base = (raw_pic_size-options.pic_size)/2;
     size_t offset_height = offset_base * (1 + offset_vert/100);
     size_t offset_width = offset_base * (1 + offset_horiz/100);
-    #pragma omp parallel for simd
+    #pragma omp parallel for simd collapse(2)
     for(size_t row = 0; row < options.pic_size; ++row)
         for(size_t col = 0; col < options.pic_size; ++col)
             result[row*options.pic_size + col] = raw_picture[(row+offset_height)*raw_pic_size + (col+offset_width)];
@@ -61,9 +61,8 @@ static Matrix<double> Resample(Matrix<double> picture, size_t resample_windows_s
     std::default_random_engine generator(rnd() + std::chrono::system_clock::now().time_since_epoch().count());
     std::uniform_int_distribution uniform_dist(0,(int)(resample_windows_size*resample_windows_size-1));
 
-    #pragma omp parallel for simd
+    #pragma omp parallel for collapse(2)
     for(size_t block_row = 0; block_row < picture.Height(); block_row += resample_windows_size )
-    {
         for(size_t block_col = 0; block_col < picture.Width(); block_col += resample_windows_size )
         {
             // get all values from the block
@@ -77,7 +76,6 @@ static Matrix<double> Resample(Matrix<double> picture, size_t resample_windows_s
                 for(size_t col = block_col; col < block_col + resample_windows_size; ++col)
                     result[row*picture.Width()+col] = block_values[uniform_dist(generator)];
         }
-    }
 #ifdef DEBUG
     std::cerr << "Resample done" << std::endl;
 #endif // DEBUG
@@ -194,7 +192,7 @@ static void Standardize(const Matrix<double>& mu_hat,
     // spline ok
 
     // remove point sources from centre of the picture
-    #pragma omp parallel for simd
+    #pragma omp parallel for simd collapse(2)
     for(size_t i = 3*options.pic_size/8; i < 5*options.pic_size/8; ++i)
         for(size_t j = 3*options.pic_size/8; j < 5*options.pic_size/8; ++j)
             options.standardize[options.pic_size*2 + i*options.pic_size + j] = std::numeric_limits<double>::infinity();

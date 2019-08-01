@@ -274,7 +274,7 @@ public:
         Matrix<T> result(other.Height(), other.Width());
         size_t filter_offset = (filter_size_ - 1) / 2;
 
-        #pragma omp parallel for simd
+        #pragma omp parallel for simd collapse(2)
         for(size_t row = 0; row < other.Height(); ++row)
             for(size_t col = 0; col < other.Width(); ++col)
                 result[row*other.Width() + col] = full_result[(row+filter_offset)*full_result.Width() + (col+filter_offset)].real();

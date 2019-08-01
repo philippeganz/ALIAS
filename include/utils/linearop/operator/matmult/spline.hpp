@@ -145,18 +145,13 @@ public:
         T* ri = new T[height_sqrt];
 
         for( size_t i = 0; i < height_sqrt; ++i )
-        {
             bi[i] = (T)1/(T)6 + (T)i*((T)10 - (T)1 / (T)6) / ((T)height_sqrt - (T)1);
-        }
 
         for( size_t i = 0; i < height_sqrt; ++i )
-        {
             ri[i] = (T)1 + (T)i*((T)pic_side / (T)2 - (T)1) / ((T)height_sqrt - (T)1);
-        }
 
         size_t row = 0;
         for( size_t subrow1 = 0; subrow1 < height_sqrt; ++subrow1 )
-        {
             for( size_t subrow2 = 0; subrow2 < height_sqrt; ++subrow2 )
             {
                 for( size_t col = 0; col < pic_side/2; ++col )
@@ -173,28 +168,17 @@ public:
                     accumulator += temp[row*pic_side + i];
                 }
                 for( size_t i = 0; i < pic_side; ++i )
-                {
                     temp[row*pic_side + i] /= accumulator;
-                }
                 ++row;
             }
-        }
 
         for( size_t i = 0; i < pic_side/2; ++i )
-        {
             for( size_t j = pic_side/2; j < pic_side; ++j )
-            {
                 temp[i*pic_side + j] = (T)0;
-            }
-        }
 
         for( size_t i = pic_side/2; i < height; ++i )
-        {
             for( size_t j = 0; j < pic_side/2; ++j )
-            {
                 temp[i*pic_side + j] = (T)0;
-            }
-        }
 
         for( size_t i = 0; i < pic_side; ++i )
         {
