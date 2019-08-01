@@ -3,8 +3,8 @@
 /// \brief FISTA (Fast Iterative Shrinkage Tresholding Algorithm) solver for Poisson distributed noise.
 /// \author Hatef Monajemi <monajemi@stanford.edu> 2012-2014
 /// \author Philippe Ganz <philippe.ganz@gmail.com> 2017-2019
-/// \version 1.0.0
-/// \date July 2019
+/// \version 1.0.1
+/// \date August 2019
 /// \copyright GPL-3.0
 ///
 

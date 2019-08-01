@@ -2,8 +2,8 @@
 /// \file include/utils/linearop/operator/astrooperator.hpp
 /// \brief Combination of all operators to create the main operator
 /// \author Philippe Ganz <philippe.ganz@gmail.com> 2017-2019
-/// \version 1.0.0
-/// \date July 2019
+/// \version 1.0.1
+/// \date August 2019
 /// \copyright GPL-3.0
 ///
 
