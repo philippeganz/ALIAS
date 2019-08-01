@@ -1748,6 +1748,7 @@ void operator<<(std::string filename, const Matrix<T>& mat)
 #ifdef __unix__
     if( str_tolower(std::filesystem::path(filename).extension()) == ".fits" )
     {
+        filename = "!" + filename;
         long axes[2] = { (long)mat.Height(), (long)mat.Width() };
         CCfits::FITS file(filename, DOUBLE_IMG, 2, axes);
         std::valarray<T> mat_array(mat.Length());
