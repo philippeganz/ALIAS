@@ -26,7 +26,7 @@
 #include <string>
 #include <type_traits>
 
-#if defined(__unix__)
+#ifdef __unix__
 #include <CCfits/CCfits>
 #include <cctype>
 #include <filesystem>
@@ -217,7 +217,7 @@ public:
         std::cout << "Matrix : File constructor raw called with filename=" << filename << std::endl;
 #endif // DEBUG
 
-#if defined(__unix__)
+#ifdef __unix__
         if( str_tolower(std::filesystem::path(filename).extension()) == ".fits" )
         {
             CCfits::FITS file(filename, CCfits::Read, true);
@@ -1744,32 +1744,31 @@ void operator<<(std::string filename, const Matrix<T>& mat)
     }
 #endif // DO_ARGCHECKS
 
-#if defined(__unix__)
+#ifdef __unix__
     if( str_tolower(std::filesystem::path(filename).extension()) == ".fits" )
     {
         long axes[2] = { (long)mat.Height(), (long)mat.Width() };
         CCfits::FITS file(filename, DOUBLE_IMG, 2, axes);
         std::valarray<T> mat_array(mat.Length());
+        #pragma omp parallel for simd
         for(size_t i = 0; i < mat.Length(); ++i)
             mat_array[i] = mat[i];
+
         file.pHDU().write(1, mat.Length(), mat_array);
     }
     else
 #endif // __unix__
     {
-        std::ofstream file(filename, std::ios::binary | std::ios::out | std::ios::app);
+        std::ofstream file(filename, std::ios::binary | std::ios::out);
 
         T* memblock = new T[mat.Length()];
-
+        #pragma omp parallel for simd
         for(size_t i = 0; i < mat.Length(); ++i)
             memblock[i] = mat[i];
-
         char* reinterpret_memblock = (char*) memblock;
-
         file.write(reinterpret_memblock, mat.Length()*sizeof(T));
 
         file.close();
-
         delete[] memblock;
     }
 }

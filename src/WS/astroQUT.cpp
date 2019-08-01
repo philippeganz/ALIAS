@@ -606,8 +606,8 @@ Matrix<double> Solve(std::string picture_path,
         Matrix<double> fhat_cropped = fhat.Partial(std::lround((options.pic_size/2)*(1-1/std::sqrt(2)))-1, std::lround((options.pic_size/2)*(1+1/std::sqrt(2))));
         std::copy(fhat_cropped.Data(), fhat_cropped.Data()+fhat_cropped.Length(), result_fhat_cropped.Data()+bootstrap_current*fhat_cropped.Length());
 
-        // result is appended to output file
-        solution_path << fhat_cropped;
+        // write current results to disc
+        solution_path << result_fhat_cropped;
 
         ++bootstrap_current;
     }
