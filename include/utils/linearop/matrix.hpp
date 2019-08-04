@@ -1749,7 +1749,7 @@ void operator<<(std::string filename, const Matrix<T>& mat)
     if( str_tolower(std::filesystem::path(filename).extension()) == ".fits" )
     {
         filename = "!" + filename;
-        long axes[2] = { (long)mat.Height(), (long)mat.Width() };
+        long axes[2] = { (long)mat.Width(), (long)mat.Height() };
         CCfits::FITS file(filename, DOUBLE_IMG, 2, axes);
         std::valarray<T> mat_array(mat.Length());
         #pragma omp parallel for simd
